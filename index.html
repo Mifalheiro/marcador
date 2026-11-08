@@ -130,7 +130,14 @@
         }
         if (s.v !== versao) { versao = s.v; desenhar(s); }
       })
-      .catch(function () { ocupado = false; });
+      .catch(function (e) {
+        ocupado = false;
+        if (location.search.indexOf('teste') >= 0) {
+          var d = document.getElementById('erro');
+          if (!d) { d = document.createElement('div'); d.id = 'erro'; d.style.cssText = 'background:#fff;color:#a00;font:18px Arial;padding:8px'; document.body.appendChild(d); }
+          d.textContent = 'Sem dados do Apps Script (' + (e && e.message ? e.message : e) + '). Confirma que o Code.gs novo foi publicado como NOVA VERSÃO e abre o link /exec?formato=json.';
+        }
+      });
   }
 
   atualizar();
