@@ -100,6 +100,9 @@
     <label>Link do marcador para o PRISM (widget Web)</label>
     <div class="url" id="urlOverlay"></div>
     <div class="aviso">Para ver o marcador num browser com fundo verde, junta <b>?teste</b> ao fim do link.</div>
+    <label>Ecrã da sala (tablet / TV)</label>
+    <div class="url" id="urlSala"></div>
+    <div class="aviso">"Trocar lados" troca aqui e no ecrã da sala; o marcador do direto fica sempre igual.</div>
     <button style="margin-top:12px;width:100%;height:44px;border:0;border-radius:10px;background:#2a3c86;color:#fff" onclick="sair()">Terminar sessão</button>
   </details>
 
@@ -117,6 +120,7 @@
   let estado = null, logos = {}, clubes = {}, hist = [], ligado = false;
 
   document.getElementById("urlOverlay").textContent = new URL("./", location.href).href;
+  document.getElementById("urlSala").textContent = new URL("sala.html", location.href).href;
 
   function inicial() {
     return { visivel: true, auto: true, pontosSet: 11, setsJogo: 3, setFechado: false, fimJogo: false,
@@ -184,6 +188,9 @@
       const src = eq.logo === "navais" ? LOGO_NAVAIS : (eq.logo === "slot" ? logos[eq.slot] : "");
       document.getElementById("logo_" + L).innerHTML = src ? '<img src="' + src + '">' : '<div class="sem"></div>';
     });
+    // ordem dos cartões segue o lado da mesa
+    document.getElementById("eq_a").style.order = s.ladosTrocados ? 2 : 1;
+    document.getElementById("eq_b").style.order = s.ladosTrocados ? 1 : 2;
     const v = s.visivel !== false;
     document.getElementById("btVis").textContent = v ? "Esconder" : "Mostrar";
     document.getElementById("btVis").className = v ? "" : "ativo";
@@ -228,7 +235,7 @@
       case "novoSet": s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; break;
       case "novoJogo": s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; break;
       case "zerar": ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; }); s.setFechado = false; s.fimJogo = false; break;
-      case "trocar": { const t = s.a; s.a = s.b; s.b = t; break; }
+      case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // só troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "visivel": s.visivel = s.visivel === false; break;
       case "auto": s.auto = !s.auto; break;
       case "nome": s[L].nome = String(valor || "").trim().slice(0, 30); break;
