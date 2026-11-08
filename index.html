@@ -114,24 +114,29 @@
       .then(function (r) { return r.json(); });
   }
 
+  // Vários pedidos sobrepostos (até 3 ao mesmo tempo, um novo a cada 0,4 s):
+  // assim há quase sempre uma resposta a chegar e a espera fica muito mais curta.
+  var emCurso = 0;
   function atualizar() {
-    if (ocupado) return;
+    if (emCurso >= 3) return;
     if (URL_APP.indexOf('/exec') < 0) {
-      document.body.innerHTML = '<div style="background:#fff;color:#a00;font:20px Arial;padding:10px">Falta o link /exec no marcador.html (URL_APP)</div>';
+      document.body.innerHTML = '<div style="background:#fff;color:#a00;font:20px Arial;padding:10px">Falta o link /exec no marcador (URL_APP)</div>';
       return;
     }
-    ocupado = true;
+    emCurso++;
     pedir('json')
       .then(function (s) {
-        ocupado = false;
+        emCurso--;
+        if (s.v <= versao) return;          // resposta antiga: ignorar
+        versao = s.v;
         if (s.logoV !== versaoLogo) {
           versaoLogo = s.logoV;
           pedir('logos').then(function (l) { logos = l; if (ultimo) desenhar(ultimo); }).catch(function () { versaoLogo = -1; });
         }
-        if (s.v !== versao) { versao = s.v; desenhar(s); }
+        desenhar(s);
       })
       .catch(function (e) {
-        ocupado = false;
+        emCurso--;
         if (location.search.indexOf('teste') >= 0) {
           var d = document.getElementById('erro');
           if (!d) { d = document.createElement('div'); d.id = 'erro'; d.style.cssText = 'background:#fff;color:#a00;font:18px Arial;padding:8px'; document.body.appendChild(d); }
@@ -141,7 +146,7 @@
   }
 
   atualizar();
-  setInterval(atualizar, 1000);
+  setInterval(atualizar, 400);
 </script>
 </body>
 </html>
