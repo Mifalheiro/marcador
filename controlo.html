@@ -25,6 +25,9 @@
   .clube-linha .sem { width: 44px; height: 44px; border-radius: 6px; border: 1px dashed #6677bb; flex: none; }
   .clube-linha select { flex: 1; min-width: 0; }
   #novoPrev img { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 6px; }
+  .tobt { height: 44px; border: 0; border-radius: 10px; background: #000; color: #fff; font-size: 14px; font-weight: 700; }
+  .tobt.ativo { background: #f2b705; color: #0a1748; }
+  .tobt.usado { background: #2a3c86; opacity: .5; }
   .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
   .mais:active { transform: scale(.97); filter: brightness(1.15); }
@@ -172,7 +175,8 @@
       '<button class="peq" onclick="acao(\'sets\',\'' + L + '\',1)">+</button></div>' +
       '<div class="linha"><button class="peq" onclick="acao(\'jogos\',\'' + L + '\',-1)">−</button>' +
       '<div class="rot">Jogos<span class="val" id="jogos_' + L + '">0</span></div>' +
-      '<button class="peq" onclick="acao(\'jogos\',\'' + L + '\',1)">+</button></div>';
+      '<button class="peq" onclick="acao(\'jogos\',\'' + L + '\',1)">+</button></div>' +
+      '<button class="tobt" id="to_' + L + '" onclick="acao(\'timeout\',\'' + L + '\')">Time out</button>';
   }
   document.getElementById("eq_a").innerHTML = cartao("a");
   document.getElementById("eq_b").innerHTML = cartao("b");
@@ -185,6 +189,9 @@
       document.getElementById("pts_" + L).textContent = eq.pontos || 0;
       document.getElementById("sets_" + L).textContent = eq.sets || 0;
       document.getElementById("jogos_" + L).textContent = eq.jogos || 0;
+      const to = document.getElementById("to_" + L), t = eq.timeout || 0;
+      to.textContent = t === 1 ? "⏱ Terminar time out" : t === 2 ? "Time out já usado" : "Time out";
+      to.className = "tobt" + (t === 1 ? " ativo" : t === 2 ? " usado" : "");
       const src = eq.logo === "navais" ? LOGO_NAVAIS : (eq.logo === "slot" ? logos[eq.slot] : "");
       document.getElementById("logo_" + L).innerHTML = src ? '<img src="' + src + '">' : '<div class="sem"></div>';
     });
@@ -218,7 +225,8 @@
     switch (tipo) {
       case "ponto":
         if (n > 0) {
-          if (s.fimJogo) { s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; }
+          if (s.fimJogo) { s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; s.a.timeout = 0; s.b.timeout = 0; }
+          ["a", "b"].forEach(k => { if (s[k].timeout === 1) s[k].timeout = 2; });   // um ponto termina o time out
           if (s.setFechado) { s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; }
           s[L].pontos++;
           if (s.auto) {
@@ -233,8 +241,13 @@
       case "sets": s[L].sets = Math.max(0, s[L].sets + n); break;
       case "jogos": s[L].jogos = Math.max(0, s[L].jogos + n); break;
       case "novoSet": s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; break;
-      case "novoJogo": s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; break;
-      case "zerar": ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; }); s.setFechado = false; s.fimJogo = false; break;
+      case "novoJogo": s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; s.a.timeout = 0; s.b.timeout = 0; break;
+      case "timeout":   // 0 = por usar · 1 = a decorrer · 2 = já usado neste jogo (1 por jogo)
+        if (!s[L].timeout) s[L].timeout = 1;
+        else if (s[L].timeout === 1) s[L].timeout = 2;
+        else { hist.pop(); msg("Time out já usado neste jogo", "erro"); return; }
+        break;
+      case "zerar": ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; s[k].timeout = 0; }); s.setFechado = false; s.fimJogo = false; break;
       case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // só troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "visivel": s.visivel = s.visivel === false; break;
       case "auto": s.auto = !s.auto; break;

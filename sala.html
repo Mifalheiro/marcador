@@ -5,55 +5,77 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Marcador – Sala</title>
 <style>
-  /* Ecrã para a sala de jogo (tablet / TV). Toca no ecrã para ficar em ecrã inteiro. */
-  html, body { margin: 0; height: 100%; background: #071034; color: #fff; overflow: hidden;
-    font-family: 'Arial Narrow', 'Roboto Condensed', Arial, sans-serif; user-select: none; }
+  /* Ecrã para a sala de jogo (tablet / TV). Toca no ecrã para ficar em ecrã inteiro.
+     O lado esquerdo e o direito são posições na mesa: quando o controlo carrega em "Trocar lados", as equipas trocam de posição. */
+  html, body { margin: 0; height: 100%; color: #fff; overflow: hidden; user-select: none;
+    background: linear-gradient(180deg, #13225e, #0a1748);
+    font-family: 'Arial Narrow', 'Roboto Condensed', Arial, sans-serif; }
   #ecra { display: flex; height: 100%; }
-  .lado { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-    padding: 3vh 2vw; background: linear-gradient(180deg, #13225e, #0a1748); }
-  .divisao { width: 0.6vw; background: #f2b705; order: 2; }
-  #lado_a { order: 1; } #lado_b { order: 3; }
-  .topo { display: flex; align-items: center; gap: 2vw; max-width: 100%; min-height: 12vh; }
-  .topo img { height: 12vh; width: 12vh; object-fit: contain; background: #fff; border-radius: 1vh; }
-  .topo .nome { font-size: 6vh; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pontos { font-size: 52vh; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-  .baixo { display: flex; gap: 3vw; align-items: center; }
-  .caixa { text-align: center; }
-  .caixa .rot { font-size: 3.2vh; opacity: .8; letter-spacing: .1em; }
-  .caixa .val { font-size: 11vh; font-weight: 800; line-height: 1.05; min-width: 14vh; padding: 0 2vh; border-radius: 1.2vh;
-    background: linear-gradient(180deg, #ffd84a, #f2b705); color: #0a1748; }
-  .caixa.jogos .val { background: rgba(255,255,255,.12); color: #fff; font-size: 8vh; }
+  .pos { flex: 1; display: grid; grid-template-rows: auto 1fr auto; padding: 2.5vh 2vw; min-width: 0; }
+
+  /* topo: emblema · nome · jogos  (espelhado à direita) */
+  .topo { display: flex; align-items: center; gap: 2vw; min-width: 0; }
+  .dir .topo { flex-direction: row-reverse; }
+  .emblema { flex: none; width: 13vh; height: 13vh; }
+  .emblema img { width: 100%; height: 100%; object-fit: contain; background: #fff; border-radius: 1vh; }
+  .nome { flex: 1; font-size: 7vh; font-weight: 700; white-space: nowrap; overflow: hidden; min-width: 0; }
+  .dir .nome { text-align: right; }
+  .jogos { flex: none; text-align: center; }
+  .jogos .rot { font-size: 3.4vh; letter-spacing: .1em; opacity: .85; }
+  .jogos .val { width: 14vh; height: 11vh; line-height: 11vh; font-size: 9vh; font-weight: 800;
+    background: #fff; color: #0a1748; border-radius: .6vh; font-variant-numeric: tabular-nums; }
+
+  /* pontos */
+  .pontos { display: flex; align-items: center; justify-content: center; font-size: 50vh; font-weight: 800;
+    line-height: 1; font-variant-numeric: tabular-nums; }
+
+  /* fundo: time out · sets  (espelhado à direita) */
+  .fundo { display: flex; align-items: flex-end; justify-content: space-between; }
+  .dir .fundo { flex-direction: row-reverse; }
+  .sets { text-align: center; margin: 0 auto; }
+  .sets .rot { font-size: 4.4vh; letter-spacing: .1em; opacity: .85; }
+  .sets .val { width: 18vh; height: 12vh; line-height: 12vh; font-size: 11vh; font-weight: 800; border-radius: 1.2vh;
+    background: linear-gradient(180deg, #ffd84a, #f2b705); color: #0a1748; font-variant-numeric: tabular-nums; }
+
+  /* T de time out: só aparece quando está a decorrer */
+  .to { flex: none; width: 17vh; height: 15vh; visibility: hidden; }
+  .to.ativo { visibility: visible; animation: pisca 1.6s ease-in-out infinite; }
+  .to .caixa { width: 100%; height: 100%; background: #000; border-radius: .6vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .to .t { font-size: 11vh; font-weight: 900; line-height: .9; font-family: Arial Black, Arial, sans-serif; }
+  .to .txt { font-size: 2.6vh; font-weight: 900; letter-spacing: .02em; font-family: Arial Black, Arial, sans-serif; }
+  @keyframes pisca { 50% { opacity: .75; } }
+
   .flash { animation: flash .6s ease-out; }
   @keyframes flash { 0% { color: #ffd84a; transform: scale(1.06); } 100% { transform: none; } }
   #aviso { position: fixed; bottom: 1vh; left: 0; right: 0; text-align: center; font-size: 2.2vh; opacity: .5; }
 </style>
 </head>
 <body>
-  <div id="ecra">
-    <div class="lado" id="lado_a">
-      <div class="topo"><span id="logo_a"></span><div class="nome" id="nome_a"></div></div>
-      <div class="pontos" id="pts_a">0</div>
-      <div class="baixo">
-        <div class="caixa"><div class="rot">SETS</div><div class="val" id="sets_a">0</div></div>
-        <div class="caixa jogos"><div class="rot">JOGOS</div><div class="val" id="jogos_a">0</div></div>
-      </div>
-    </div>
-    <div class="divisao"></div>
-    <div class="lado" id="lado_b">
-      <div class="topo"><span id="logo_b"></span><div class="nome" id="nome_b"></div></div>
-      <div class="pontos" id="pts_b">0</div>
-      <div class="baixo">
-        <div class="caixa"><div class="rot">SETS</div><div class="val" id="sets_b">0</div></div>
-        <div class="caixa jogos"><div class="rot">JOGOS</div><div class="val" id="jogos_b">0</div></div>
-      </div>
-    </div>
-  </div>
+  <div id="ecra"></div>
   <div id="aviso">Toca no ecrã para ecrã inteiro</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { firebaseConfig } from "./firebase-config.js";
+
+  // Duas posições fixas no ecrã: E (esquerda) e D (direita)
+  const posicao = P => `
+    <div class="pos ${P === "D" ? "dir" : ""}">
+      <div class="topo">
+        <div class="emblema" id="emb${P}"></div>
+        <div class="nome" id="nome${P}"></div>
+        <div class="jogos"><div class="rot">JOGOS</div><div class="val" id="jogos${P}">0</div></div>
+      </div>
+      <div class="pontos" id="pts${P}">0</div>
+      <div class="fundo">
+        <div class="to" id="to${P}"><div class="caixa"><div class="t">T</div><div class="txt">TIME OUT</div></div></div>
+        <div class="sets"><div class="rot">SETS</div><div class="val" id="sets${P}">0</div></div>
+        <div class="to" style="visibility:hidden"></div>
+      </div>
+    </div>`;
+  document.getElementById("ecra").innerHTML = posicao("E") + posicao("D");
 
   const db = getDatabase(initializeApp(firebaseConfig));
   let logos = {}, ultimo = null;
@@ -62,19 +84,26 @@
     const el = document.getElementById(id);
     if (el.textContent !== String(v)) { el.textContent = v; el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
   }
+  // nome encolhe a letra até caber
+  function ajustarNome(el) {
+    let t = 7; el.style.fontSize = t + "vh";
+    while (el.scrollWidth > el.clientWidth && t > 3) { t -= 0.25; el.style.fontSize = t + "vh"; }
+  }
+  window.addEventListener("resize", () => { ajustarNome(document.getElementById("nomeE")); ajustarNome(document.getElementById("nomeD")); });
+  function pintar(P, eq) {
+    const n = document.getElementById("nome" + P);
+    if (n.textContent !== (eq.nome || "")) { n.textContent = eq.nome || ""; }
+    ajustarNome(n);
+    num("pts" + P, eq.pontos || 0); num("sets" + P, eq.sets || 0); num("jogos" + P, eq.jogos || 0);
+    const src = eq.logo === "navais" ? "navais.png" : (eq.logo === "slot" ? logos[eq.slot] : "");
+    document.getElementById("emb" + P).innerHTML = src ? '<img src="' + src + '">' : "";
+    document.getElementById("to" + P).className = "to" + (eq.timeout === 1 ? " ativo" : "");
+  }
   function desenhar(s) {
     if (!s || !s.a || !s.b) return;
     ultimo = s;
-    // os lados trocam quando o controlo carrega em "Trocar lados"
-    document.getElementById("lado_a").style.order = s.ladosTrocados ? 3 : 1;
-    document.getElementById("lado_b").style.order = s.ladosTrocados ? 1 : 3;
-    ["a", "b"].forEach(L => {
-      const eq = s[L];
-      document.getElementById("nome_" + L).textContent = eq.nome || "";
-      num("pts_" + L, eq.pontos || 0); num("sets_" + L, eq.sets || 0); num("jogos_" + L, eq.jogos || 0);
-      const src = eq.logo === "navais" ? "navais.png" : (eq.logo === "slot" ? logos[eq.slot] : "");
-      document.getElementById("logo_" + L).innerHTML = src ? '<img src="' + src + '">' : "";
-    });
+    const esq = s.ladosTrocados ? s.b : s.a, dir = s.ladosTrocados ? s.a : s.b;
+    pintar("E", esq); pintar("D", dir);
   }
   onValue(ref(db, "marcador/estado"), snap => desenhar(snap.val()));
   onValue(ref(db, "marcador/logos"), snap => { logos = snap.val() || {}; if (ultimo) desenhar(ultimo); });
