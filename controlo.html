@@ -20,6 +20,11 @@
   .lista-clubes img { width: 32px; height: 32px; object-fit: contain; background: #fff; border-radius: 4px; }
   .lista-clubes span { flex: 1; }
   .lista-clubes button { border: 0; border-radius: 8px; background: #8a2b2b; color: #fff; padding: 6px 10px; }
+  .clube-linha { display: flex; gap: 8px; align-items: center; }
+  .clube-linha img { width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; }
+  .clube-linha .sem { width: 44px; height: 44px; border-radius: 6px; border: 1px dashed #6677bb; flex: none; }
+  .clube-linha select { flex: 1; min-width: 0; }
+  #novoPrev img { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 6px; }
   .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
   .mais:active { transform: scale(.97); filter: brightness(1.15); }
@@ -84,8 +89,13 @@
     <input id="pontosSet" type="number" min="1" onchange="enviar('pontosSet', null, this.value)">
     <label>Sets para ganhar um jogo (3 = melhor de 5)</label>
     <input id="setsJogo" type="number" min="1" onchange="enviar('setsJogo', null, this.value)">
+    <label>Adicionar ou atualizar clube</label>
+    <input id="novoNome" placeholder="Nome do clube (ex.: A. R. CANIDELO - B)">
+    <div class="logo-linha" style="margin-top:8px"><span id="novoPrev"></span>
+      <label>Escolher emblema<input id="novoLogo" type="file" accept="image/*" style="display:none" onchange="lerLogoNovo(this)"></label>
+      <button onclick="guardarClube()">Guardar clube</button></div>
+    <div class="aviso">Para mudar o emblema de um clube, escreve o mesmo nome e escolhe a imagem nova.</div>
     <label>Clubes guardados</label>
-    <div class="aviso">Para juntar um clube: escolhe "Novo clube…" num dos lados, escreve o nome, carrega o emblema e toca em "Guardar na lista".</div>
     <div class="lista-clubes" id="listaClubes"></div>
     <label>Link do marcador para o PRISM (widget Web)</label>
     <div class="url" id="urlOverlay"></div>
@@ -148,8 +158,8 @@
 
   /* ---------- Desenho do controlo ---------- */
   function cartao(L) {
-    return '<select class="clube" id="sel_' + L + '" onchange="escolherClube(\'' + L + '\',this)"></select>' +
-      '<input class="nome" id="nome_' + L + '" onchange="acao(\'nome\',\'' + L + '\',this.value)">' +
+    return '<div class="clube-linha"><span id="logo_' + L + '"></span>' +
+      '<select class="clube" id="sel_' + L + '" onchange="escolherClube(\'' + L + '\',this)"></select></div>' +
       '<div class="pts" id="pts_' + L + '">0</div>' +
       '<button class="mais" onclick="acao(\'ponto\',\'' + L + '\',1)">+1 PONTO</button>' +
       '<button class="menos-pt" onclick="acao(\'ponto\',\'' + L + '\',-1)">−1 ponto</button>' +
@@ -158,11 +168,7 @@
       '<button class="peq" onclick="acao(\'sets\',\'' + L + '\',1)">+</button></div>' +
       '<div class="linha"><button class="peq" onclick="acao(\'jogos\',\'' + L + '\',-1)">−</button>' +
       '<div class="rot">Jogos<span class="val" id="jogos_' + L + '">0</span></div>' +
-      '<button class="peq" onclick="acao(\'jogos\',\'' + L + '\',1)">+</button></div>' +
-      '<div class="logo-linha"><span id="logo_' + L + '"></span>' +
-      '<label>Emblema<input type="file" accept="image/*" style="display:none" onchange="carregarLogo(\'' + L + '\',this)"></label>' +
-      '<button onclick="acao(\'semLogo\',\'' + L + '\')">Sem</button>' +
-      '<button onclick="guardarNaLista(\'' + L + '\')">Guardar na lista</button></div>';
+      '<button class="peq" onclick="acao(\'jogos\',\'' + L + '\',1)">+</button></div>';
   }
   document.getElementById("eq_a").innerHTML = cartao("a");
   document.getElementById("eq_b").innerHTML = cartao("b");
@@ -170,8 +176,8 @@
   function mostrar() {
     const s = estado;
     ["a", "b"].forEach(L => {
-      const eq = s[L], inp = document.getElementById("nome_" + L);
-      if (document.activeElement !== inp) inp.value = eq.nome || "";
+      const eq = s[L];
+      preencherLista(L);
       document.getElementById("pts_" + L).textContent = eq.pontos || 0;
       document.getElementById("sets_" + L).textContent = eq.sets || 0;
       document.getElementById("jogos_" + L).textContent = eq.jogos || 0;
@@ -236,56 +242,42 @@
     gravar(); mostrar();
   };
 
-  /* ---------- Emblemas ---------- */
-  window.carregarLogo = function (L, input) {
-    const f = input.files && input.files[0];
-    if (!f || !estado) return;
-    const img = new Image();
-    img.onload = () => {
-      const h = 120, w = Math.round(img.width * h / img.height);
-      const c = document.createElement("canvas"); c.width = w; c.height = h;
-      c.getContext("2d").drawImage(img, 0, 0, w, h);
-      const url = c.toDataURL("image/png");
-      const slot = estado[L].slot;
-      set(ref(db, "marcador/logos/" + slot), url).then(() => { acaoLogoSlot(L); });
-    };
-    img.src = URL.createObjectURL(f);
-    input.value = "";
-  };
-  function acaoLogoSlot(L) {
-    hist.push(JSON.parse(JSON.stringify(estado)));
-    estado[L].logo = "slot"; gravar(); mostrar();
-  }
-
   /* ---------- Clubes guardados ---------- */
   function idClube(nome) {
     return String(nome).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
       .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 60) || "clube";
   }
   function esc(t) { return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
-  function mostrarClubes() {
-    const lista = Object.keys(clubes).map(id => ({ id, ...clubes[id] })).sort((x, y) => x.nome.localeCompare(y.nome, "pt"));
-    ["a", "b"].forEach(L => {
-      let op = '<option value="">Escolher clube…</option><option value="navais">C. D. C. NAVAIS</option>';
-      lista.forEach(c => { op += '<option value="' + c.id + '">' + esc(c.nome) + "</option>"; });
-      op += '<option value="_novo">＋ Novo clube…</option>';
-      document.getElementById("sel_" + L).innerHTML = op;
+  function listaOrdenada() {
+    return Object.keys(clubes).map(id => ({ id, ...clubes[id] })).sort((x, y) => x.nome.localeCompare(y.nome, "pt"));
+  }
+  function preencherLista(L) {
+    if (!estado) return;
+    const sel = document.getElementById("sel_" + L), eq = estado[L];
+    if (document.activeElement === sel) return;
+    let op = "", achou = false;
+    const opcoes = [{ id: "navais", nome: "C. D. C. NAVAIS" }].concat(listaOrdenada());
+    opcoes.forEach(c => {
+      const escolhido = c.id === eq.clubeId || (!eq.clubeId && c.nome === eq.nome);
+      if (escolhido) achou = true;
+      op += '<option value="' + c.id + '"' + (escolhido ? " selected" : "") + ">" + esc(c.nome) + "</option>";
     });
-    document.getElementById("listaClubes").innerHTML = lista.map(c =>
+    if (!achou) op = '<option value="" selected>' + esc(eq.nome || "Escolher clube…") + "</option>" + op;
+    sel.innerHTML = op;
+  }
+  function mostrarClubes() {
+    ["a", "b"].forEach(preencherLista);
+    document.getElementById("listaClubes").innerHTML = listaOrdenada().map(c =>
       "<div>" + (c.logo ? '<img src="' + c.logo + '">' : "<img>") + "<span>" + esc(c.nome) + "</span>" +
       '<button onclick="apagar(\'' + c.id + '\')">Apagar</button></div>').join("") ||
       '<div class="aviso">Ainda não há clubes guardados.</div>';
   }
   window.escolherClube = function (L, sel) {
-    const v = sel.value; sel.value = "";
+    const v = sel.value;
+    sel.blur();
     if (!v || !estado) return;
-    if (v === "_novo") {
-      acao("semLogo", L); acao("nome", L, "");
-      setTimeout(() => { const i = document.getElementById("nome_" + L); i.value = ""; i.focus(); }, 50);
-      msg('Escreve o nome, carrega o emblema e toca em "Guardar na lista"', "espera");
-      return;
-    }
     hist.push(JSON.parse(JSON.stringify(estado)));
+    estado[L].clubeId = v;
     if (v === "navais") { estado[L].nome = "C. D. C. NAVAIS"; estado[L].logo = "navais"; gravar(); mostrar(); return; }
     const c = clubes[v]; if (!c) return;
     estado[L].nome = c.nome;
@@ -293,15 +285,32 @@
       set(ref(db, "marcador/logos/" + estado[L].slot), c.logo).then(() => { estado[L].logo = "slot"; gravar(); mostrar(); });
     } else { estado[L].logo = ""; gravar(); mostrar(); }
   };
-  window.guardarNaLista = function (L) {
-    const nome = document.getElementById("nome_" + L).value.trim();
-    if (!nome) { msg("Escreve primeiro o nome do clube", "erro"); return; }
-    if (estado[L].nome !== nome) acao("nome", L, nome);
-    if (estado[L].logo === "navais") { msg("O Navais já está na lista", "erro"); return; }
-    const logo = estado[L].logo === "slot" ? (logos[estado[L].slot] || "") : "";
-    set(ref(db, "marcador/clubes/" + idClube(nome)), { nome, logo })
-      .then(() => msg('✓ "' + nome + '" guardado na lista', "ok"))
-      .catch(e => msg("Erro: " + e.message, "erro"));
+
+  // Adicionar / atualizar um clube (nas Definições)
+  let logoNovo = "";
+  window.lerLogoNovo = function (input) {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    const img = new Image();
+    img.onload = () => {
+      const h = 120, w = Math.round(img.width * h / img.height);
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      logoNovo = c.toDataURL("image/png");
+      document.getElementById("novoPrev").innerHTML = '<img src="' + logoNovo + '">';
+    };
+    img.src = URL.createObjectURL(f);
+  };
+  window.guardarClube = function () {
+    const nome = document.getElementById("novoNome").value.trim();
+    if (!nome) { msg("Escreve o nome do clube", "erro"); return; }
+    const id = idClube(nome), antigo = clubes[id];
+    const logo = logoNovo || (antigo && antigo.logo) || "";
+    set(ref(db, "marcador/clubes/" + id), { nome, logo }).then(() => {
+      msg('✓ "' + nome + '" guardado', "ok");
+      document.getElementById("novoNome").value = ""; document.getElementById("novoLogo").value = "";
+      document.getElementById("novoPrev").innerHTML = ""; logoNovo = "";
+    }).catch(e => msg("Erro: " + e.message, "erro"));
   };
   window.apagar = function (id) {
     if (confirm("Apagar este clube da lista?")) remove(ref(db, "marcador/clubes/" + id));
