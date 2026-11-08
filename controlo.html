@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Marcador – Controlo</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; font-family: system-ui, -apple-system, Roboto, Arial, sans-serif; background: #0b1440; color: #fff; touch-action: manipulation; user-select: none; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #071034; }
+  header h1 { font-size: 16px; margin: 0; }
+  #estado { font-size: 13px; opacity: .85; }
+  .ok { color: #7be08a; } .erro { color: #ff7b7b; } .espera { color: #ffd84a; }
+
+  .equipas { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 8px; padding: 8px; }
+  .eq { min-width: 0; background: #13225e; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .eq input.nome { width: 100%; font-size: 17px; font-weight: 700; padding: 8px; border-radius: 8px; border: 0; text-align: center; }
+  select.clube { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; background: #2a3c86; color: #fff; }
+  .lista-clubes div { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #24346f; }
+  .lista-clubes img { width: 32px; height: 32px; object-fit: contain; background: #fff; border-radius: 4px; }
+  .lista-clubes span { flex: 1; }
+  .lista-clubes button { border: 0; border-radius: 8px; background: #8a2b2b; color: #fff; padding: 6px 10px; }
+  .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
+  .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
+  .mais:active { transform: scale(.97); filter: brightness(1.15); }
+  .linha { display: grid; grid-template-columns: 44px minmax(0,1fr) 44px; align-items: center; gap: 6px; }
+  .linha .rot { text-align: center; font-size: 13px; opacity: .8; }
+  .linha .val { display: block; font-size: 24px; font-weight: 800; opacity: 1; }
+  .peq { height: 44px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 22px; font-weight: 700; }
+  .menos-pt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 15px; }
+  .logo-linha { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .logo-linha img { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 6px; }
+  .logo-linha .sem { width: 40px; height: 40px; border-radius: 6px; border: 1px dashed #6677bb; }
+  .logo-linha button, .logo-linha label { flex: 1 1 30%; min-width: 0; font-size: 12px; padding: 8px 4px; border-radius: 8px; border: 0; background: #2a3c86; color: #fff; text-align: center; }
+
+  .barra { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 8px 8px; }
+  .barra button { height: 52px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 15px; font-weight: 600; }
+  .barra .anular { background: #6b3fa0; }
+  .barra .perigo { background: #8a2b2b; }
+  .barra .ativo { background: #2f8a46; }
+
+  details { margin: 0 8px 8px; background: #13225e; border-radius: 10px; padding: 10px; }
+  details summary { font-weight: 600; }
+  details label { display: block; margin: 10px 0 4px; font-size: 14px; }
+  details input { width: 100%; padding: 8px; border-radius: 8px; border: 0; font-size: 15px; }
+  .url { word-break: break-all; font-size: 13px; background: #0b1440; padding: 8px; border-radius: 8px; margin-top: 6px; }
+  .aviso { font-size: 12px; opacity: .75; margin-top: 6px; }
+
+  #pinEcra { position: fixed; inset: 0; background: #0b1440; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 9; }
+  #pinEcra input { font-size: 20px; width: 260px; text-align: center; padding: 10px; border-radius: 10px; border: 0; }
+  #pinEcra button { font-size: 18px; padding: 12px 30px; border-radius: 10px; border: 0; background: #f2b705; color: #0a1748; font-weight: 700; }
+  .fim { outline: 3px solid #f2b705; }
+</style>
+</head>
+<body>
+  <div id="pinEcra">
+    <div style="font-size:20px;font-weight:700">Marcador – Controlo</div>
+    <input id="email" type="email" placeholder="Email" autocomplete="username">
+    <input id="pass" type="password" placeholder="Palavra-passe" autocomplete="current-password">
+    <button onclick="entrar()">Entrar</button>
+    <div id="pinErro" class="erro"></div>
+  </div>
+
+  <header><h1>Marcador</h1><div id="estado">…</div></header>
+
+  <div class="equipas">
+    <div class="eq" id="eq_a"></div>
+    <div class="eq" id="eq_b"></div>
+  </div>
+
+  <div class="barra">
+    <button class="anular" onclick="enviar('anular')">↶ Anular</button>
+    <button onclick="enviar('novoSet')">Novo set</button>
+    <button onclick="enviar('novoJogo')">Novo jogo</button>
+    <button onclick="enviar('trocar')">⇄ Trocar lados</button>
+    <button id="btVis" onclick="enviar('visivel')">Esconder</button>
+    <button class="perigo" onclick="if (confirm('Pôr tudo a zero (jogos, sets e pontos)?')) enviar('zerar')">Zerar tudo</button>
+  </div>
+
+  <details>
+    <summary>Definições</summary>
+    <label><input type="checkbox" id="auto" style="width:auto" onchange="enviar('auto')"> Contagem automática (fecha o set e o jogo sozinho)</label>
+    <label>Pontos para ganhar um set</label>
+    <input id="pontosSet" type="number" min="1" onchange="enviar('pontosSet', null, this.value)">
+    <label>Sets para ganhar um jogo (3 = melhor de 5)</label>
+    <input id="setsJogo" type="number" min="1" onchange="enviar('setsJogo', null, this.value)">
+    <label>Clubes guardados</label>
+    <div class="aviso">Para juntar um clube: escolhe "Novo clube…" num dos lados, escreve o nome, carrega o emblema e toca em "Guardar na lista".</div>
+    <div class="lista-clubes" id="listaClubes"></div>
+    <label>Link do marcador para o PRISM (widget Web)</label>
+    <div class="url" id="urlOverlay"></div>
+    <div class="aviso">Para ver o marcador num browser com fundo verde, junta <b>?teste</b> ao fim do link.</div>
+    <button style="margin-top:12px;width:100%;height:44px;border:0;border-radius:10px;background:#2a3c86;color:#fff" onclick="sair()">Terminar sessão</button>
+  </details>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { firebaseConfig } from "./firebase-config.js";
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app), auth = getAuth(app);
+  const LOGO_NAVAIS = "navais.png";
+  const MAX_HIST = 15;
+
+  let estado = null, logos = {}, clubes = {}, hist = [], ligado = false;
+
+  document.getElementById("urlOverlay").textContent = new URL("./", location.href).href;
+
+  function inicial() {
+    return { visivel: true, auto: true, pontosSet: 11, setsJogo: 3, setFechado: false, fimJogo: false,
+      a: { nome: "C. D. C. NAVAIS", jogos: 0, sets: 0, pontos: 0, logo: "navais", slot: "1" },
+      b: { nome: "VISITANTE", jogos: 0, sets: 0, pontos: 0, logo: "", slot: "2" } };
+  }
+
+  /* ---------- Entrar / sair ---------- */
+  window.entrar = async function () {
+    const e = document.getElementById("email").value.trim(), p = document.getElementById("pass").value;
+    document.getElementById("pinErro").textContent = "";
+    try { await signInWithEmailAndPassword(auth, e, p); }
+    catch (err) { document.getElementById("pinErro").textContent = "Email ou palavra-passe errados"; }
+  };
+  window.sair = function () { signOut(auth); };
+
+  onAuthStateChanged(auth, user => {
+    document.getElementById("pinEcra").style.display = user ? "none" : "flex";
+    if (user && !ligado) ligar();
+  });
+
+  function ligar() {
+    ligado = true;
+    onValue(ref(db, ".info/connected"), s => msg(s.val() ? "✓ Ligado" : "Sem ligação…", s.val() ? "ok" : "erro"));
+    onValue(ref(db, "marcador/estado"), snap => {
+      estado = snap.val();
+      if (!estado) { estado = inicial(); gravar(); }
+      mostrar();
+    });
+    onValue(ref(db, "marcador/logos"), snap => { logos = snap.val() || {}; if (estado) mostrar(); });
+    onValue(ref(db, "marcador/clubes"), snap => { clubes = snap.val() || {}; mostrarClubes(); });
+  }
+
+  function msg(t, c) { const e = document.getElementById("estado"); e.textContent = t; e.className = c || ""; }
+
+  function gravar() {
+    set(ref(db, "marcador/estado"), estado).catch(e => msg("Erro: " + e.message, "erro"));
+  }
+
+  /* ---------- Desenho do controlo ---------- */
+  function cartao(L) {
+    return '<select class="clube" id="sel_' + L + '" onchange="escolherClube(\'' + L + '\',this)"></select>' +
+      '<input class="nome" id="nome_' + L + '" onchange="acao(\'nome\',\'' + L + '\',this.value)">' +
+      '<div class="pts" id="pts_' + L + '">0</div>' +
+      '<button class="mais" onclick="acao(\'ponto\',\'' + L + '\',1)">+1 PONTO</button>' +
+      '<button class="menos-pt" onclick="acao(\'ponto\',\'' + L + '\',-1)">−1 ponto</button>' +
+      '<div class="linha"><button class="peq" onclick="acao(\'sets\',\'' + L + '\',-1)">−</button>' +
+      '<div class="rot">Sets<span class="val" id="sets_' + L + '">0</span></div>' +
+      '<button class="peq" onclick="acao(\'sets\',\'' + L + '\',1)">+</button></div>' +
+      '<div class="linha"><button class="peq" onclick="acao(\'jogos\',\'' + L + '\',-1)">−</button>' +
+      '<div class="rot">Jogos<span class="val" id="jogos_' + L + '">0</span></div>' +
+      '<button class="peq" onclick="acao(\'jogos\',\'' + L + '\',1)">+</button></div>' +
+      '<div class="logo-linha"><span id="logo_' + L + '"></span>' +
+      '<label>Emblema<input type="file" accept="image/*" style="display:none" onchange="carregarLogo(\'' + L + '\',this)"></label>' +
+      '<button onclick="acao(\'logoNavais\',\'' + L + '\')">Navais</button>' +
+      '<button onclick="acao(\'semLogo\',\'' + L + '\')">Sem</button>' +
+      '<button onclick="guardarNaLista(\'' + L + '\')">Guardar na lista</button></div>';
+  }
+  document.getElementById("eq_a").innerHTML = cartao("a");
+  document.getElementById("eq_b").innerHTML = cartao("b");
+
+  function mostrar() {
+    const s = estado;
+    ["a", "b"].forEach(L => {
+      const eq = s[L], inp = document.getElementById("nome_" + L);
+      if (document.activeElement !== inp) inp.value = eq.nome || "";
+      document.getElementById("pts_" + L).textContent = eq.pontos || 0;
+      document.getElementById("sets_" + L).textContent = eq.sets || 0;
+      document.getElementById("jogos_" + L).textContent = eq.jogos || 0;
+      const src = eq.logo === "navais" ? LOGO_NAVAIS : (eq.logo === "slot" ? logos[eq.slot] : "");
+      document.getElementById("logo_" + L).innerHTML = src ? '<img src="' + src + '">' : '<div class="sem"></div>';
+    });
+    const v = s.visivel !== false;
+    document.getElementById("btVis").textContent = v ? "Esconder" : "Mostrar";
+    document.getElementById("btVis").className = v ? "" : "ativo";
+    document.getElementById("auto").checked = !!s.auto;
+    if (document.activeElement.id !== "pontosSet") document.getElementById("pontosSet").value = s.pontosSet;
+    if (document.activeElement.id !== "setsJogo") document.getElementById("setsJogo").value = s.setsJogo;
+    const fim = s.fimJogo ? "Fim do jogo — próximo ponto começa jogo novo"
+              : s.setFechado ? "Set fechado — próximo ponto começa set novo" : "";
+    if (fim) msg(fim, "espera");
+  }
+
+  /* ---------- Ações (mesma lógica do Code.gs antigo) ---------- */
+  window.enviar = (t, l, v) => acao(t, l, v);   // nomes usados pelos botões de baixo
+  window.acao = function (tipo, lado, valor) {
+    if (!estado) return;
+    if (navigator.vibrate) navigator.vibrate(25);
+    if (tipo === "anular") {
+      const ant = hist.pop();
+      if (ant) { estado = ant; gravar(); mostrar(); }
+      return;
+    }
+    hist.push(JSON.parse(JSON.stringify(estado)));
+    if (hist.length > MAX_HIST) hist.shift();
+    const s = estado, L = lado === "b" ? "b" : "a", O = L === "a" ? "b" : "a", n = Number(valor) || 0;
+    switch (tipo) {
+      case "ponto":
+        if (n > 0) {
+          if (s.fimJogo) { s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; }
+          if (s.setFechado) { s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; }
+          s[L].pontos++;
+          if (s.auto) {
+            const p = s[L].pontos, q = s[O].pontos;
+            if (p >= s.pontosSet && p - q >= 2) {
+              s[L].sets++; s.setFechado = true;
+              if (s[L].sets >= s.setsJogo) { s[L].jogos++; s.fimJogo = true; }
+            }
+          }
+        } else s[L].pontos = Math.max(0, s[L].pontos - 1);
+        break;
+      case "sets": s[L].sets = Math.max(0, s[L].sets + n); break;
+      case "jogos": s[L].jogos = Math.max(0, s[L].jogos + n); break;
+      case "novoSet": s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; break;
+      case "novoJogo": s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; break;
+      case "zerar": ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; }); s.setFechado = false; s.fimJogo = false; break;
+      case "trocar": { const t = s.a; s.a = s.b; s.b = t; break; }
+      case "visivel": s.visivel = s.visivel === false; break;
+      case "auto": s.auto = !s.auto; break;
+      case "nome": s[L].nome = String(valor || "").trim().slice(0, 30); break;
+      case "pontosSet": s.pontosSet = Math.max(1, n || 11); break;
+      case "setsJogo": s.setsJogo = Math.max(1, n || 3); break;
+      case "logoNavais": s[L].logo = "navais"; break;
+      case "semLogo": s[L].logo = ""; break;
+      default: hist.pop(); return;
+    }
+    if (tipo !== "nome" && tipo !== "auto" && tipo !== "visivel") msg("✓ Ligado", "ok");
+    gravar(); mostrar();
+  };
+
+  /* ---------- Emblemas ---------- */
+  window.carregarLogo = function (L, input) {
+    const f = input.files && input.files[0];
+    if (!f || !estado) return;
+    const img = new Image();
+    img.onload = () => {
+      const h = 120, w = Math.round(img.width * h / img.height);
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      const url = c.toDataURL("image/png");
+      const slot = estado[L].slot;
+      set(ref(db, "marcador/logos/" + slot), url).then(() => { acaoLogoSlot(L); });
+    };
+    img.src = URL.createObjectURL(f);
+    input.value = "";
+  };
+  function acaoLogoSlot(L) {
+    hist.push(JSON.parse(JSON.stringify(estado)));
+    estado[L].logo = "slot"; gravar(); mostrar();
+  }
+
+  /* ---------- Clubes guardados ---------- */
+  function idClube(nome) {
+    return String(nome).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 60) || "clube";
+  }
+  function esc(t) { return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+  function mostrarClubes() {
+    const lista = Object.keys(clubes).map(id => ({ id, ...clubes[id] })).sort((x, y) => x.nome.localeCompare(y.nome, "pt"));
+    ["a", "b"].forEach(L => {
+      let op = '<option value="">Escolher clube…</option><option value="navais">C. D. C. NAVAIS</option>';
+      lista.forEach(c => { op += '<option value="' + c.id + '">' + esc(c.nome) + "</option>"; });
+      op += '<option value="_novo">＋ Novo clube…</option>';
+      document.getElementById("sel_" + L).innerHTML = op;
+    });
+    document.getElementById("listaClubes").innerHTML = lista.map(c =>
+      "<div>" + (c.logo ? '<img src="' + c.logo + '">' : "<img>") + "<span>" + esc(c.nome) + "</span>" +
+      '<button onclick="apagar(\'' + c.id + '\')">Apagar</button></div>').join("") ||
+      '<div class="aviso">Ainda não há clubes guardados.</div>';
+  }
+  window.escolherClube = function (L, sel) {
+    const v = sel.value; sel.value = "";
+    if (!v || !estado) return;
+    if (v === "_novo") {
+      acao("semLogo", L); acao("nome", L, "");
+      setTimeout(() => { const i = document.getElementById("nome_" + L); i.value = ""; i.focus(); }, 50);
+      msg('Escreve o nome, carrega o emblema e toca em "Guardar na lista"', "espera");
+      return;
+    }
+    hist.push(JSON.parse(JSON.stringify(estado)));
+    if (v === "navais") { estado[L].nome = "C. D. C. NAVAIS"; estado[L].logo = "navais"; gravar(); mostrar(); return; }
+    const c = clubes[v]; if (!c) return;
+    estado[L].nome = c.nome;
+    if (c.logo) {
+      set(ref(db, "marcador/logos/" + estado[L].slot), c.logo).then(() => { estado[L].logo = "slot"; gravar(); mostrar(); });
+    } else { estado[L].logo = ""; gravar(); mostrar(); }
+  };
+  window.guardarNaLista = function (L) {
+    const nome = document.getElementById("nome_" + L).value.trim();
+    if (!nome) { msg("Escreve primeiro o nome do clube", "erro"); return; }
+    if (estado[L].nome !== nome) acao("nome", L, nome);
+    if (estado[L].logo === "navais") { msg("O Navais já está na lista", "erro"); return; }
+    const logo = estado[L].logo === "slot" ? (logos[estado[L].slot] || "") : "";
+    set(ref(db, "marcador/clubes/" + idClube(nome)), { nome, logo })
+      .then(() => msg('✓ "' + nome + '" guardado na lista', "ok"))
+      .catch(e => msg("Erro: " + e.message, "erro"));
+  };
+  window.apagar = function (id) {
+    if (confirm("Apagar este clube da lista?")) remove(ref(db, "marcador/clubes/" + id));
+  };
+</script>
+</body>
+</html>

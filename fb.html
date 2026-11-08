@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  /* O marcador ocupa a largura toda da página: no PRISM ajusta o tamanho do widget. */
+  html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+  body { font-family: 'Arial Narrow', 'Roboto Condensed', Arial, sans-serif; }
+  .fundo-teste { background: #3a7d3a; }
+
+  #bug {
+    --h: 7.4vw;                       /* altura de cada linha */
+    width: 100vw;
+    display: grid;
+    grid-template-columns: var(--h) var(--h) auto calc(var(--h) * 1.05) 1fr var(--h) calc(var(--h) * 1.15);
+    grid-template-rows: var(--h) var(--h);
+    background: linear-gradient(180deg, #0f2366 0%, #0a1748 50%, #0c1c58 100%);
+    transition: opacity .4s, transform .4s;
+  }
+  #bug.escondido { opacity: 0; transform: translateY(20%); }
+
+  .logo { display: flex; align-items: center; justify-content: center; background: #fff; border-bottom: 1px solid #0a1748; }
+  .logo img { max-width: 88%; max-height: 88%; }
+  .logo.vazio { background: transparent; }
+
+  .num {
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: calc(var(--h) * .78); line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .jogos, .sets {
+    background: linear-gradient(180deg, #ffd84a 0%, #f2b705 100%);
+    color: #0a1748; border-bottom: 1px solid #0a1748;
+  }
+  .pontos { color: #fff; background: rgba(0,0,0,.25); }
+
+  .nome {
+    display: flex; align-items: center;
+    padding: 0 calc(var(--h) * .25);
+    color: #fff; font-size: calc(var(--h) * .66); white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
+  }
+  .chev { grid-row: 1 / span 2; grid-column: 4; }
+  .chev svg { width: 100%; height: 100%; display: block; }
+  .meio { grid-row: 1 / span 2; grid-column: 5; }
+
+  .flash { animation: flash .6s ease-out; }
+  @keyframes flash { 0% { filter: brightness(1.8); transform: scale(1.18); } 100% { filter: none; transform: none; } }
+</style>
+</head>
+<body>
+  <div id="bug" class="escondido">
+    <div class="logo" id="la"></div>
+    <div class="num jogos" id="ja">0</div>
+    <div class="nome" id="na"></div>
+    <div class="chev">
+      <svg viewBox="0 0 40 100" preserveAspectRatio="none">
+        <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#d99a00"/></linearGradient></defs>
+        <polygon points="0,0 14,0 40,50 14,100 0,100 26,50" fill="url(#g)"/>
+      </svg>
+    </div>
+    <div class="meio"></div>
+    <div class="num sets" id="sa" style="grid-column:6;grid-row:1">0</div>
+    <div class="num pontos" id="pa" style="grid-column:7;grid-row:1">0</div>
+
+    <div class="logo" id="lb" style="grid-column:1;grid-row:2"></div>
+    <div class="num jogos" id="jb" style="grid-column:2;grid-row:2">0</div>
+    <div class="nome" id="nb" style="grid-column:3;grid-row:2"></div>
+    <div class="num sets" id="sb" style="grid-column:6;grid-row:2">0</div>
+    <div class="num pontos" id="pb" style="grid-column:7;grid-row:2">0</div>
+  </div>
+
+<script type="module">
+  // Marcador ligado à Firebase (Realtime Database): recebe cada alteração no momento.
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import { firebaseConfig } from "./firebase-config.js";
+
+  const LOGO_NAVAIS = "navais.png";
+  if (location.search.indexOf("teste") >= 0) document.body.className = "fundo-teste";
+
+  const db = getDatabase(initializeApp(firebaseConfig));
+  let logos = { "1": "", "2": "" }, ultimo = null;
+
+  function porNumero(id, valor) {
+    const el = document.getElementById(id);
+    if (el.textContent !== String(valor)) {
+      el.textContent = valor;
+      el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+    }
+  }
+  function porLogo(id, eq) {
+    const el = document.getElementById(id);
+    const src = eq.logo === "navais" ? LOGO_NAVAIS : (eq.logo === "slot" ? logos[eq.slot] : "");
+    if (src) { el.className = "logo"; el.innerHTML = '<img src="' + src + '">'; }
+    else { el.className = "logo vazio"; el.innerHTML = ""; }
+  }
+  function desenhar(s) {
+    if (!s || !s.a || !s.b) return;
+    ultimo = s;
+    document.getElementById("bug").className = s.visivel === false ? "escondido" : "";
+    document.getElementById("na").textContent = s.a.nome || "";
+    document.getElementById("nb").textContent = s.b.nome || "";
+    porNumero("ja", s.a.jogos || 0); porNumero("jb", s.b.jogos || 0);
+    porNumero("sa", s.a.sets || 0);  porNumero("sb", s.b.sets || 0);
+    porNumero("pa", s.a.pontos || 0); porNumero("pb", s.b.pontos || 0);
+    porLogo("la", s.a); porLogo("lb", s.b);
+  }
+
+  onValue(ref(db, "marcador/estado"), snap => desenhar(snap.val()), erro);
+  onValue(ref(db, "marcador/logos"), snap => { logos = snap.val() || {}; if (ultimo) desenhar(ultimo); }, erro);
+
+  function erro(e) {
+    if (location.search.indexOf("teste") < 0) return;
+    const d = document.createElement("div");
+    d.style.cssText = "background:#fff;color:#a00;font:18px Arial;padding:8px";
+    d.textContent = "Erro Firebase: " + (e && e.message ? e.message : e);
+    document.body.appendChild(d);
+  }
+</script>
+</body>
+</html>
