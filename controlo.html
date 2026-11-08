@@ -28,6 +28,7 @@
   .tobt { height: 44px; border: 0; border-radius: 10px; background: #000; color: #fff; font-size: 14px; font-weight: 700; }
   .tobt.ativo { background: #f2b705; color: #0a1748; }
   .tobt.usado { background: #2a3c86; opacity: .5; }
+  .atl { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; }
   .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
   .mais:active { transform: scale(.97); filter: brightness(1.15); }
@@ -120,7 +121,11 @@
   const LOGO_NAVAIS = "navais.png";
   const MAX_HIST = 15;
 
-  let estado = null, logos = {}, clubes = {}, hist = [], ligado = false;
+  let estado = null, logos = {}, clubes = {}, hist = [], ligado = false, desvio = 0, atletas = {};
+  const DURACAO_TO = 60;
+  const agora = () => Date.now() + desvio;
+  const faltaTO = eq => (eq.timeout && eq.toInicio) ? Math.ceil(DURACAO_TO - (agora() - eq.toInicio) / 1000) : 0;
+  setInterval(() => { if (estado) botoesTO(); }, 500);
 
   document.getElementById("urlOverlay").textContent = new URL("./", location.href).href;
   document.getElementById("urlSala").textContent = new URL("sala.html", location.href).href;
@@ -155,6 +160,8 @@
     });
     onValue(ref(db, "marcador/logos"), snap => { logos = snap.val() || {}; if (estado) mostrar(); });
     onValue(ref(db, "marcador/clubes"), snap => { clubes = snap.val() || {}; mostrarClubes(); });
+    onValue(ref(db, ".info/serverTimeOffset"), snap => { desvio = snap.val() || 0; });
+    onValue(ref(db, "marcador/atletas"), snap => { atletas = snap.val() || {}; if (estado) listasAtletas(); });
   }
 
   function msg(t, c) { const e = document.getElementById("estado"); e.textContent = t; e.className = c || ""; }
@@ -167,6 +174,7 @@
   function cartao(L) {
     return '<div class="clube-linha"><span id="logo_' + L + '"></span>' +
       '<select class="clube" id="sel_' + L + '" onchange="escolherClube(\'' + L + '\',this)"></select></div>' +
+      '<input class="atl" id="atl_' + L + '" list="dl_' + L + '" placeholder="Atleta(s) a jogar" onchange="mudarAtleta(\'' + L + '\',this)"><datalist id="dl_' + L + '"></datalist>' +
       '<div class="pts" id="pts_' + L + '">0</div>' +
       '<button class="mais" onclick="acao(\'ponto\',\'' + L + '\',1)">+1 PONTO</button>' +
       '<button class="menos-pt" onclick="acao(\'ponto\',\'' + L + '\',-1)">−1 ponto</button>' +
@@ -181,6 +189,26 @@
   document.getElementById("eq_a").innerHTML = cartao("a");
   document.getElementById("eq_b").innerHTML = cartao("b");
 
+  function botoesTO() {
+    ["a", "b"].forEach(L => {
+      const eq = estado[L], to = document.getElementById("to_" + L), f = faltaTO(eq);
+      to.textContent = !eq.timeout ? "Time out" : f > 0 ? "⏱ " + f + " s — parar contagem" : "Time out já usado";
+      to.className = "tobt" + (!eq.timeout ? "" : f > 0 ? " ativo" : " usado");
+    });
+  }
+  // nomes de atletas já usados, por clube (para escolher depressa)
+  function chaveNome(t) { return String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 60); }
+  function listasAtletas() {
+    ["a", "b"].forEach(L => {
+      const lista = atletas[estado[L].clubeId || "sem_clube"] || {};
+      document.getElementById("dl_" + L).innerHTML = Object.values(lista).sort().map(n => '<option value="' + esc(n) + '">').join("");
+    });
+  }
+  window.mudarAtleta = function (L, inp) {
+    const v = inp.value.trim();
+    acao("atleta", L, v);
+    if (v) set(ref(db, "marcador/atletas/" + (estado[L].clubeId || "sem_clube") + "/" + chaveNome(v)), v);
+  };
   function mostrar() {
     const s = estado;
     ["a", "b"].forEach(L => {
@@ -189,9 +217,8 @@
       document.getElementById("pts_" + L).textContent = eq.pontos || 0;
       document.getElementById("sets_" + L).textContent = eq.sets || 0;
       document.getElementById("jogos_" + L).textContent = eq.jogos || 0;
-      const to = document.getElementById("to_" + L), t = eq.timeout || 0;
-      to.textContent = t === 1 ? "⏱ Terminar time out" : t === 2 ? "Time out já usado" : "Time out";
-      to.className = "tobt" + (t === 1 ? " ativo" : t === 2 ? " usado" : "");
+      const inpA = document.getElementById("atl_" + L);
+      if (document.activeElement !== inpA) inpA.value = eq.atleta || "";
       const src = eq.logo === "navais" ? LOGO_NAVAIS : (eq.logo === "slot" ? logos[eq.slot] : "");
       document.getElementById("logo_" + L).innerHTML = src ? '<img src="' + src + '">' : '<div class="sem"></div>';
     });
@@ -202,6 +229,7 @@
     document.getElementById("btVis").textContent = v ? "Esconder" : "Mostrar";
     document.getElementById("btVis").className = v ? "" : "ativo";
     document.getElementById("auto").checked = !!s.auto;
+    botoesTO(); listasAtletas();
     if (document.activeElement.id !== "pontosSet") document.getElementById("pontosSet").value = s.pontosSet;
     if (document.activeElement.id !== "setsJogo") document.getElementById("setsJogo").value = s.setsJogo;
     const fim = s.fimJogo ? "Fim do jogo — próximo ponto começa jogo novo"
@@ -226,7 +254,6 @@
       case "ponto":
         if (n > 0) {
           if (s.fimJogo) { s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; s.a.timeout = 0; s.b.timeout = 0; }
-          ["a", "b"].forEach(k => { if (s[k].timeout === 1) s[k].timeout = 2; });   // um ponto termina o time out
           if (s.setFechado) { s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; }
           s[L].pontos++;
           if (s.auto) {
@@ -242,11 +269,12 @@
       case "jogos": s[L].jogos = Math.max(0, s[L].jogos + n); break;
       case "novoSet": s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; break;
       case "novoJogo": s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; s.a.timeout = 0; s.b.timeout = 0; break;
-      case "timeout":   // 0 = por usar · 1 = a decorrer · 2 = já usado neste jogo (1 por jogo)
-        if (!s[L].timeout) s[L].timeout = 1;
-        else if (s[L].timeout === 1) s[L].timeout = 2;
+      case "timeout":   // 1 por jogo: o T fica até ao jogo seguinte; os primeiros 60 s têm contagem
+        if (!s[L].timeout) { s[L].timeout = 1; s[L].toInicio = agora(); }
+        else if (faltaTO(s[L]) > 0) { s[L].toInicio = 0; }            // parar a contagem antes do fim
         else { hist.pop(); msg("Time out já usado neste jogo", "erro"); return; }
         break;
+      case "atleta": s[L].atleta = String(valor || "").trim().slice(0, 40); break;
       case "zerar": ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; s[k].timeout = 0; }); s.setFechado = false; s.fimJogo = false; break;
       case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // só troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "visivel": s.visivel = s.visivel === false; break;

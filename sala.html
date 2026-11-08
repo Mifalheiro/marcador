@@ -39,7 +39,11 @@
 
   /* T de time out: só aparece quando está a decorrer */
   .to { flex: none; width: 17vh; height: 15vh; visibility: hidden; }
-  .to.ativo { visibility: visible; animation: pisca 1.6s ease-in-out infinite; }
+  .to.usado { visibility: visible; }
+  .to .caixa { position: relative; }
+  .to .seg { display: none; position: absolute; inset: 0; border-radius: .6vh; align-items: center; justify-content: center;
+    background: #f2b705; color: #0a1748; font-size: 9vh; font-weight: 900; font-family: Arial, sans-serif; }
+  .to.contar .seg { display: flex; }
   .to .caixa { width: 100%; height: 100%; background: #000; border-radius: .6vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .to .t { font-size: 11vh; font-weight: 900; line-height: .9; font-family: Arial Black, Arial, sans-serif; }
@@ -70,7 +74,7 @@
       </div>
       <div class="pontos" id="pts${P}">0</div>
       <div class="fundo">
-        <div class="to" id="to${P}"><div class="caixa"><div class="t">T</div><div class="txt">TIME OUT</div></div></div>
+        <div class="to" id="to${P}"><div class="caixa"><div class="t">T</div><div class="txt">TIME OUT</div><div class="seg"></div></div></div>
         <div class="sets"><div class="rot">SETS</div><div class="val" id="sets${P}">0</div></div>
         <div class="to" style="visibility:hidden"></div>
       </div>
@@ -97,7 +101,14 @@
     num("pts" + P, eq.pontos || 0); num("sets" + P, eq.sets || 0); num("jogos" + P, eq.jogos || 0);
     const src = eq.logo === "navais" ? "navais.png" : (eq.logo === "slot" ? logos[eq.slot] : "");
     document.getElementById("emb" + P).innerHTML = src ? '<img src="' + src + '">' : "";
-    document.getElementById("to" + P).className = "to" + (eq.timeout === 1 ? " ativo" : "");
+    porTimeOut(P, eq);
+  }
+  const DURACAO_TO = 60; let desvio = 0;
+  function porTimeOut(P, eq) {
+    const el = document.getElementById("to" + P), usado = (eq.timeout || 0) > 0;
+    const falta = usado && eq.toInicio ? Math.ceil(DURACAO_TO - (Date.now() + desvio - eq.toInicio) / 1000) : 0;
+    el.className = "to" + (usado ? " usado" : "") + (falta > 0 ? " contar" : "");
+    el.querySelector(".seg").textContent = falta > 0 ? falta : "";
   }
   function desenhar(s) {
     if (!s || !s.a || !s.b) return;
@@ -105,7 +116,9 @@
     const esq = s.ladosTrocados ? s.b : s.a, dir = s.ladosTrocados ? s.a : s.b;
     pintar("E", esq); pintar("D", dir);
   }
+  onValue(ref(db, ".info/serverTimeOffset"), snap => { desvio = snap.val() || 0; });
   onValue(ref(db, "marcador/estado"), snap => desenhar(snap.val()));
+  setInterval(() => { if (ultimo) desenhar(ultimo); }, 250);
   onValue(ref(db, "marcador/logos"), snap => { logos = snap.val() || {}; if (ultimo) desenhar(ultimo); });
 
   // Toque: ecrã inteiro + não deixar o ecrã apagar
