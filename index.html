@@ -143,8 +143,6 @@
     porNumero("sa", s.a.sets || 0);  porNumero("sb", s.b.sets || 0);
     porNumero("pa", s.a.pontos || 0); porNumero("pb", s.b.pontos || 0);
     porLogo("la", s.a); porLogo("lb", s.b);
-    const sv = servidor(s);
-    if (sv) document.getElementById(sv === "a" ? "la" : "lb").insertAdjacentHTML("beforeend", '<div class="sq"></div>');
     porTimeOut("ta", s.a); porTimeOut("tb", s.b);
   }
 
