@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ecrã do direto</title>
+<style>
+  /* Página do tamanho do ecrã do direto (16:9): faixa em cima + marcador em baixo à esquerda.
+     No PRISM: um só widget Web, esticado a ocupar o ecrã todo. */
+  html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; width: 100%; height: 100%; }
+  .fundo-teste { background: #3a7d3a; }
+  #faixa { position: absolute; top: 0; left: 0; width: 100%; display: block; }
+  #marcador {
+    position: absolute; left: 2%; bottom: 3%;
+    width: 46%; height: calc(46vw * 0.148);
+    border: 0; background: transparent;
+  }
+</style>
+</head>
+<body>
+  <img id="faixa" src="faixa.png" alt="">
+  <iframe id="marcador" allowtransparency="true" scrolling="no"></iframe>
+<script>
+  var q = location.search;
+  var app = q.match(/[?&]app=[^&]+/);
+  document.getElementById('marcador').src = 'index.html' + (app ? '?' + app[0].slice(1) : '');
+  if (q.indexOf('teste') >= 0) document.body.className = 'fundo-teste';
+  // ?semfaixa  → esconde a faixa | ?semmarcador → esconde o marcador
+  if (q.indexOf('semfaixa') >= 0) document.getElementById('faixa').style.display = 'none';
+  if (q.indexOf('semmarcador') >= 0) document.getElementById('marcador').style.display = 'none';
+</script>
+</body>
+</html>
