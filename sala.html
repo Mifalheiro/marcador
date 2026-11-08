@@ -16,7 +16,10 @@
   /* topo: emblema · nome · jogos  (espelhado à direita) */
   .topo { display: flex; align-items: center; gap: 2vw; min-width: 0; }
   .dir .topo { flex-direction: row-reverse; }
-  .emblema { flex: none; width: 13vh; height: 13vh; }
+  .emblema { flex: none; width: 13vh; height: 13vh; position: relative; }
+  .saque { display: none; position: absolute; left: 50%; top: calc(100% + 1.6vh); width: 4vh; height: 4vh; margin-left: -2vh;
+    border-radius: 50%; background: #22c55e; box-shadow: 0 0 1.5vh rgba(34,197,94,.8); }
+  .saque.sim { display: block; }
   .emblema img { width: 100%; height: 100%; object-fit: contain; background: #fff; border-radius: 1vh; }
   .nome { flex: 1; font-size: 7vh; font-weight: 700; white-space: nowrap; overflow: hidden; min-width: 0; }
   .dir .nome { text-align: right; }
@@ -68,7 +71,7 @@
   const posicao = P => `
     <div class="pos ${P === "D" ? "dir" : ""}">
       <div class="topo">
-        <div class="emblema" id="emb${P}"></div>
+        <div class="emblema"><div id="emb${P}" style="width:100%;height:100%"></div><div class="saque" id="sq${P}"></div></div>
         <div class="nome" id="nome${P}"></div>
         <div class="jogos"><div class="rot">JOGOS</div><div class="val" id="jogos${P}">0</div></div>
       </div>
@@ -110,11 +113,25 @@
     el.className = "to" + (usado ? " usado" : "") + (falta > 0 ? " contar" : "");
     el.querySelector(".seg").textContent = falta > 0 ? falta : "";
   }
+  // Quem serve: troca a cada 2 pontos; a partir de 10-10 troca a cada ponto;
+  // em cada set novo começa quem recebeu primeiro no set anterior.
+  function servidor(s) {
+    if (!s || !s.saqueInicial || s.fimJogo) return null;
+    const P = s.pontosSet || 11, outro = x => (x === "a" ? "b" : "a");
+    const k = (s.a.sets || 0) + (s.b.sets || 0);
+    const primeiro = k % 2 === 0 ? s.saqueInicial : outro(s.saqueInicial);
+    const total = s.setFechado ? 0 : (s.a.pontos || 0) + (s.b.pontos || 0), d = 2 * (P - 1);
+    const idx = total < d ? Math.floor(total / 2) : (P - 1) + (total - d);
+    return idx % 2 === 0 ? primeiro : outro(primeiro);
+  }
   function desenhar(s) {
     if (!s || !s.a || !s.b) return;
     ultimo = s;
     const esq = s.ladosTrocados ? s.b : s.a, dir = s.ladosTrocados ? s.a : s.b;
     pintar("E", esq); pintar("D", dir);
+    const sv = servidor(s), ladoE = s.ladosTrocados ? "b" : "a";
+    document.getElementById("sqE").className = "saque" + (sv && sv === ladoE ? " sim" : "");
+    document.getElementById("sqD").className = "saque" + (sv && sv !== ladoE ? " sim" : "");
   }
   onValue(ref(db, ".info/serverTimeOffset"), snap => { desvio = snap.val() || 0; });
   onValue(ref(db, "marcador/estado"), snap => desenhar(snap.val()));
