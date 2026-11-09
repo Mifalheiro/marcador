@@ -54,11 +54,14 @@
 
   .flash { animation: flash .6s ease-out; }
   @keyframes flash { 0% { color: #ffd84a; transform: scale(1.06); } 100% { transform: none; } }
+  #tituloJogos { position: fixed; top: 2.5vh; left: 0; right: 0; text-align: center;
+    font-size: 3.4vh; letter-spacing: .1em; opacity: .85; pointer-events: none; }
   #aviso { position: fixed; bottom: 1vh; left: 0; right: 0; text-align: center; font-size: 2.2vh; opacity: .5; }
 </style>
 </head>
 <body>
   <div id="ecra"></div>
+  <div id="tituloJogos">RESULTADO FINAL</div>
   <div id="aviso">Toca no ecrã para ecrã inteiro</div>
 
 <script type="module">
@@ -72,7 +75,7 @@
       <div class="topo">
         <div class="emblema"><div id="emb${P}" style="width:100%;height:100%"></div><div class="saque" id="sq${P}"></div></div>
         <div class="nome" id="nome${P}"></div>
-        <div class="jogos"><div class="rot">JOGOS</div><div class="val" id="jogos${P}">0</div></div>
+        <div class="jogos"><div class="rot">&nbsp;</div><div class="val" id="jogos${P}">0</div></div>
       </div>
       <div class="pontos" id="pts${P}">0</div>
       <div class="fundo">
