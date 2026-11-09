@@ -23,9 +23,6 @@
   .logo { display: flex; align-items: center; justify-content: center; background: #fff; border-bottom: 1px solid #0a1748; }
   .logo img { max-width: 88%; max-height: 88%; }
   .logo.vazio { background: transparent; }
-  .logo { position: relative; }
-  .logo .sq { position: absolute; right: 3%; bottom: 4%; width: 22%; height: 22%; border-radius: 50%;
-    background: #22c55e; box-shadow: 0 0 0 2px #fff; }
 
   .num { display: flex; align-items: center; justify-content: center;
     font-weight: 700; font-size: calc(var(--h) * .78); line-height: 1; font-variant-numeric: tabular-nums; }
@@ -120,17 +117,6 @@
     el.textContent = txt || "";
     let f = 0.44; el.style.fontSize = "calc(var(--h) * " + f + ")";
     while (el.scrollWidth > el.clientWidth && f > 0.26) { f -= 0.02; el.style.fontSize = "calc(var(--h) * " + f.toFixed(2) + ")"; }
-  }
-  // Quem serve: troca a cada 2 pontos; a partir de 10-10 troca a cada ponto;
-  // em cada set novo começa quem recebeu primeiro no set anterior.
-  function servidor(s) {
-    if (!s || !s.saqueInicial || s.fimJogo) return null;
-    const P = s.pontosSet || 11, outro = x => (x === "a" ? "b" : "a");
-    const k = (s.a.sets || 0) + (s.b.sets || 0);
-    const primeiro = k % 2 === 0 ? s.saqueInicial : outro(s.saqueInicial);
-    const total = s.setFechado ? 0 : (s.a.pontos || 0) + (s.b.pontos || 0), d = 2 * (P - 1);
-    const idx = total < d ? Math.floor(total / 2) : (P - 1) + (total - d);
-    return idx % 2 === 0 ? primeiro : outro(primeiro);
   }
   function desenhar(s) {
     if (!s || !s.a || !s.b) return;

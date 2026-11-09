@@ -14,7 +14,6 @@
 
   .equipas { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 8px; padding: 8px; }
   .eq { min-width: 0; background: #13225e; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
-  .eq input.nome { width: 100%; font-size: 17px; font-weight: 700; padding: 8px; border-radius: 8px; border: 0; text-align: center; }
   select.clube { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; background: #2a3c86; color: #fff; }
   .lista-clubes div { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #24346f; }
   .lista-clubes img { width: 32px; height: 32px; object-fit: contain; background: #fff; border-radius: 4px; }
@@ -41,7 +40,6 @@
   .menos-pt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 15px; }
   .logo-linha { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .logo-linha img { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 6px; }
-  .logo-linha .sem { width: 40px; height: 40px; border-radius: 6px; border: 1px dashed #6677bb; }
   .logo-linha button, .logo-linha label { flex: 1 1 30%; min-width: 0; font-size: 12px; padding: 8px 4px; border-radius: 8px; border: 0; background: #2a3c86; color: #fff; text-align: center; }
 
   .barra { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 8px 8px; }
@@ -60,7 +58,6 @@
   #pinEcra { position: fixed; inset: 0; background: #0b1440; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 9; }
   #pinEcra input { font-size: 20px; width: 260px; text-align: center; padding: 10px; border-radius: 10px; border: 0; }
   #pinEcra button { font-size: 18px; padding: 12px 30px; border-radius: 10px; border: 0; background: #f2b705; color: #0a1748; font-weight: 700; }
-  .fim { outline: 3px solid #f2b705; }
 </style>
 </head>
 <body>
@@ -254,7 +251,7 @@
     if (fim) msg(fim, "espera");
   }
 
-  /* ---------- Ações (mesma lógica do Code.gs antigo) ---------- */
+  /* ---------- Ações ---------- */
   window.enviar = (t, l, v) => acao(t, l, v);   // nomes usados pelos botões de baixo
   window.acao = function (tipo, lado, valor) {
     if (!estado) return;
@@ -301,14 +298,11 @@
       case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // só troca no ecrã da sala; o controlo e o marcador do direto ficam fixos
       case "visivel": s.visivel = s.visivel === false; break;
       case "auto": s.auto = !s.auto; break;
-      case "nome": s[L].nome = String(valor || "").trim().slice(0, 30); break;
       case "pontosSet": s.pontosSet = Math.max(1, n || 11); break;
       case "setsJogo": s.setsJogo = Math.max(1, n || 3); break;
-      case "logoNavais": s[L].logo = "navais"; break;
-      case "semLogo": s[L].logo = ""; break;
       default: hist.pop(); return;
     }
-    if (tipo !== "nome" && tipo !== "auto" && tipo !== "visivel") msg("✓ Ligado", "ok");
+    if (tipo !== "auto" && tipo !== "visivel") msg("✓ Ligado", "ok");
     gravar(); mostrar();
   };
 

@@ -40,18 +40,17 @@
   .sets .val { width: 18vh; height: 12vh; line-height: 12vh; font-size: 11vh; font-weight: 800; border-radius: 1.2vh;
     background: linear-gradient(180deg, #ffd84a, #f2b705); color: #0a1748; font-variant-numeric: tabular-nums; }
 
-  /* T de time out: só aparece quando está a decorrer */
+  /* T de time out: aparece quando a equipa pede time out e fica até ao jogo seguinte;
+     nos primeiros 60 s tem a contagem por cima */
   .to { flex: none; width: 17vh; height: 15vh; visibility: hidden; }
   .to.usado { visibility: visible; }
-  .to .caixa { position: relative; }
   .to .seg { display: none; position: absolute; inset: 0; border-radius: .6vh; align-items: center; justify-content: center;
     background: #f2b705; color: #0a1748; font-size: 9vh; font-weight: 900; font-family: Arial, sans-serif; }
   .to.contar .seg { display: flex; }
-  .to .caixa { width: 100%; height: 100%; background: #000; border-radius: .6vh;
+  .to .caixa { position: relative; width: 100%; height: 100%; background: #000; border-radius: .6vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .to .t { font-size: 11vh; font-weight: 900; line-height: .9; font-family: Arial Black, Arial, sans-serif; }
   .to .txt { font-size: 2.6vh; font-weight: 900; letter-spacing: .02em; font-family: Arial Black, Arial, sans-serif; }
-  @keyframes pisca { 50% { opacity: .75; } }
 
   .flash { animation: flash .6s ease-out; }
   @keyframes flash { 0% { color: #ffd84a; transform: scale(1.06); } 100% { transform: none; } }
