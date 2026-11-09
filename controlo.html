@@ -110,7 +110,7 @@
     <div class="aviso">Para ver o marcador num browser com fundo verde, junta <b>?teste</b> ao fim do link.</div>
     <label>Ecrã da sala (tablet / TV)</label>
     <div class="url" id="urlSala"></div>
-    <div class="aviso">"Trocar lados" só troca no ecrã da sala; o controlo e o marcador do direto ficam sempre iguais.</div>
+    <div class="aviso">"Trocar lados" troca aqui e no ecrã da sala; o marcador do direto fica sempre igual.</div>
     <button style="margin-top:12px;width:100%;height:44px;border:0;border-radius:10px;background:#2a3c86;color:#fff" onclick="sair()">Terminar sessão</button>
   </details>
 
@@ -258,6 +258,9 @@
       const src = eq.logo === "navais" ? LOGO_NAVAIS : (eq.logo === "slot" ? logos[eq.slot] : "");
       document.getElementById("logo_" + L).innerHTML = src ? '<img src="' + src + '">' : '<div class="sem"></div>';
     });
+    // ordem dos cartões segue o lado da mesa (como no ecrã da sala)
+    document.getElementById("eq_a").style.order = s.ladosTrocados ? 2 : 1;
+    document.getElementById("eq_b").style.order = s.ladosTrocados ? 1 : 2;
     const v = s.visivel !== false;
     document.getElementById("btVis").textContent = v ? "Esconder" : "Mostrar";
     document.getElementById("btVis").className = v ? "" : "ativo";
@@ -320,7 +323,7 @@
       }
       case "atleta": s[L].atleta = String(valor || "").trim().slice(0, 40); break;
       case "zerar": s.saqueInicial = null; ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; s[k].timeout = 0; }); s.setFechado = false; s.fimJogo = false; break;
-      case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // só troca no ecrã da sala; o controlo e o marcador do direto ficam fixos
+      case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "visivel": s.visivel = s.visivel === false; break;
       case "auto": s.auto = !s.auto; break;
       case "pontosSet": s.pontosSet = Math.max(1, n || 11); break;
