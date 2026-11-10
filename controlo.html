@@ -161,6 +161,10 @@
       <label>Escolher emblema<input id="novoLogo" type="file" accept="image/*" style="display:none" onchange="lerLogoNovo(this)"></label>
       <button onclick="guardarClube()">Guardar clube</button></div>
     <div class="aviso">Para mudar o emblema de um clube, escreve o mesmo nome e escolhe a imagem nova.</div>
+    <label>Código do boletim</label>
+    <div class="logo-linha"><input id="codBol" type="password" placeholder="Novo código" style="flex:2">
+      <button onclick="guardarCodigo()">Guardar código</button></div>
+    <div class="aviso">Depois de a equipa da casa confirmar a sua equipa, só se volta atrás no boletim com este código.</div>
     <label>Clubes guardados</label>
     <div class="lista-clubes" id="listaClubes"></div>
     <label>Link do marcador para o PRISM (widget Web)</label>
@@ -177,7 +181,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim } from "./boletim.js";
+  import { instalarBoletim, resumo } from "./boletim.js";
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -491,8 +495,17 @@
     aplicarClubes: async (casa, vis) => { await aplicarClube("a", casa); await aplicarClube("b", vis); },
     lerAssinaturas: async () => (await get(ref(db, "marcador/assinaturas"))).val(),
     guardarAssinatura: (id, dados) => set(ref(db, "marcador/assinaturas/" + id), dados),
-    apagarAssinaturas: () => remove(ref(db, "marcador/assinaturas"))
+    apagarAssinaturas: () => remove(ref(db, "marcador/assinaturas")),
+    lerCodigo: async () => (await get(ref(db, "marcador/config/codigo"))).val()
   });
+
+  window.guardarCodigo = async function () {
+    const c = document.getElementById("codBol").value.trim();
+    if (c.length < 4) { msg("O código tem de ter pelo menos 4 caracteres", "erro"); return; }
+    await set(ref(db, "marcador/config/codigo"), await resumo(c));
+    document.getElementById("codBol").value = "";
+    msg("✓ Código do boletim guardado", "ok");
+  };
 
   window.apagar = function (id) {
     if (confirm("Apagar este clube da lista?")) remove(ref(db, "marcador/clubes/" + id));

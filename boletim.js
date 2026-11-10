@@ -51,7 +51,7 @@ function norm(b) {
   const n = novo();
   b.cab = Object.assign(n.cab, b.cab || {});
   ["casa", "vis"].forEach(k => {
-    b[k] = Object.assign({ clubeId: "", nome: "" }, b[k] || {});
+    b[k] = Object.assign({ clubeId: "", nome: "", ok: false }, b[k] || {});
     const a = b[k].atl || [];
     b[k].atl = [0, 1, 2, 3, 4].map(i => Object.assign({ n: "", l: "" }, a[i] || {}));
   });
@@ -178,7 +178,22 @@ window.abrirBoletim = function () {
   $("bolPainel").style.display = "block";
 };
 window.fecharBoletim = function () { aberto = false; $("bolPainel").style.display = "none"; api.mostrar(); };
-window.bolPasso = function (p) { if (bloqueado(bol()) && p !== "assinar") return; guardarCampos(); mudar(b => { b.passo = p; }); desenhar(); window.scrollTo(0, 0); $("bolPainel").scrollTop = 0; };
+// Voltar atrás depois de a equipa da casa confirmar a sua equipa precisa do código do boletim
+const ORDEM_PASSOS = ["cab", "casa", "vis", "jogos", "assinar"];
+async function pedirCodigo() {
+  const certo = await api.lerCodigo();
+  if (!certo) { alert("Para voltar atrás é preciso um código. Define-o no controlo, em Definições → Código do boletim."); return false; }
+  const c = prompt("Código para voltar atrás:");
+  if (c === null) return false;
+  if (await resumo(c.trim()) !== certo) { alert("Código errado."); return false; }
+  return true;
+}
+window.bolPasso = async function (p) {
+  const b0 = bol();
+  if (bloqueado(b0) && p !== "assinar") return;
+  const de = ORDEM_PASSOS.indexOf(b0.passo), para = ORDEM_PASSOS.indexOf(p);
+  if (b0.casa.ok && para < de && para <= 2 && !(await pedirCodigo())) return;
+  guardarCampos(); mudar(b => { b.passo = p; }); desenhar(); window.scrollTo(0, 0); $("bolPainel").scrollTop = 0; };
 
 // Chamado pelo controlo sempre que o estado muda
 window.boletimMostrar = function (s) {
@@ -310,6 +325,7 @@ window.bolConfirmarClube = function (lado, seguir) {
   if (!c.clubeId) { alert("Escolhe o clube."); return; }
   if (c.atl.slice(0, 3).some(a => !a.n)) { alert("Preenche pelo menos os 3 primeiros atletas."); return; }
   api.guardarPlantel(c.clubeId, c.atl);
+  mudar(b => { b[lado].ok = true; });   // equipa confirmada (a partir daqui, voltar atrás pede código)
   if (seguir === "jogos") {
     // marcador: a = casa, b = visitante
     api.aplicarClubes(b.casa.clubeId, b.vis.clubeId).then(() => {
@@ -561,6 +577,12 @@ window.bolPDF = async function () {
 };
 
 /* ------------------------------------------------------------------ */
+// Código guardado como resumo (SHA-256), não em texto
+export async function resumo(t) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("marcador:" + t));
+  return [...new Uint8Array(d)].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+
 export function instalarBoletim(funcoes) {
   api = funcoes;
   api.lerAssinaturas().then(a => { assinaturas = a || {}; });
