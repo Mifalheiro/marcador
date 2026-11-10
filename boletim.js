@@ -386,7 +386,11 @@ function passoClube(b, lado) {
       campoNome = '<select class="bol-atl" onchange="bolAtleta(\'' + lado + '\',' + i + ',this.value)">' +
         '<option value=""' + (a.n ? "" : " selected") + ">— escolher atleta —</option>" +
         (a.n && j < 0 ? '<option value="x" selected>' + esc(a.n) + "</option>" : "") +
-        lista.map((x, k) => '<option value="' + k + '"' + (k === j ? " selected" : "") + ">" + esc(x[0]) + "</option>").join("") +
+        // atletas já escolhidos noutra linha desta equipa ficam desativados
+        lista.map((x, k) => {
+          const usado = k !== j && c.atl.some((o, oi) => oi !== i && o.n === x[0]);
+          return '<option value="' + k + '"' + (k === j ? " selected" : "") + (usado ? " disabled" : "") + ">" + esc(x[0]) + (usado ? " (já escolhido)" : "") + "</option>";
+        }).join("") +
         '<option value="__editar">✎ Escrever / corrigir nome…</option></select>' +
         '<input type="hidden" id="t_n' + i + '" value="' + esc(a.n) + '">';
     } else campoNome = '<input id="t_n' + i + '" value="' + esc(a.n) + '" placeholder="Nome do atleta">';
@@ -436,6 +440,7 @@ window.bolAtleta = function (lado, i, v) {
     n = t.trim().toUpperCase();
   } else if (v === "") { n = ""; l = ""; }
   else if (lista[Number(v)]) { n = lista[Number(v)][0]; l = lista[Number(v)][1]; }
+  if (n && c.atl.some((o, oi) => oi !== i && o.n === n)) { alert("Esse atleta já está escolhido nesta equipa."); desenhar(); return; }
   mudar(b => { b[lado].atl[i] = { n, l }; });
   desenhar();
 };
@@ -453,6 +458,10 @@ window.bolConfirmarClube = function (lado, seguir) {
   const b = bol(), c = b[lado];
   if (!c.clubeId) { alert("Escolhe o clube."); return; }
   if (c.atl.slice(0, 3).some(a => !a.n)) { alert("Preenche pelo menos os 3 primeiros atletas."); return; }
+  const nomes = c.atl.map(a => a.n.trim().toUpperCase()).filter(Boolean);
+  if (new Set(nomes).size !== nomes.length) { alert("Há um atleta repetido nesta equipa."); return; }
+  const lics = c.atl.map(a => a.l.trim()).filter(Boolean);
+  if (new Set(lics).size !== lics.length) { alert("Há uma licença repetida nesta equipa."); return; }
   mudar(b => { b[lado].ok = true; });   // equipa confirmada (a partir daqui, voltar atrás pede código)
   if (seguir === "jogos") {
     // marcador: a = casa, b = visitante
