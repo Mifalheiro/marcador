@@ -353,17 +353,18 @@ window.bolConfirmarClube = function (lado, seguir) {
 /* ---------- Passo 4: jogos ---------- */
 function passoJogos(b) {
   const w = vitorias(b), s = api.estado(), prox = proximo(b);
-  const opc = (lado, sel) => '<option value="-1">—</option>' + b[lado].atl.map((a, i) => a.n ? '<option value="' + i + '"' + (i === sel ? " selected" : "") + ">" + esc(a.n) + "</option>" : "").join("");
+  // listas do par: o atleta já escolhido no outro lugar do mesmo par não aparece disponível
+  const opc = (lado, sel, outro) => '<option value="-1">—</option>' + b[lado].atl.map((a, i) => a.n ? '<option value="' + i + '"' + (i === sel ? " selected" : "") + (i === outro ? " disabled" : "") + ">" + esc(a.n) + "</option>" : "").join("");
   let linhas = "";
   ORDEM.forEach((o, g) => {
     const jogo = b.jogos[g], n = nomesJogo(b, g);
     const ativo = b.atual === g, fora = !jogo.venc && !ativo && (decidido(b) || g !== prox);
     let nomes;
     if (o.par) {
-      nomes = '<div class="bol-par"><select onchange="bolPar(\'casa\',0,this.value)">' + opc("casa", b.par.casa[0]) + "</select>" +
-        '<select onchange="bolPar(\'casa\',1,this.value)">' + opc("casa", b.par.casa[1]) + "</select>" +
-        '<span>vs</span><select onchange="bolPar(\'vis\',0,this.value)">' + opc("vis", b.par.vis[0]) + "</select>" +
-        '<select onchange="bolPar(\'vis\',1,this.value)">' + opc("vis", b.par.vis[1]) + "</select></div>";
+      nomes = '<div class="bol-par"><select onchange="bolPar(\'casa\',0,this.value)">' + opc("casa", b.par.casa[0], b.par.casa[1]) + "</select>" +
+        '<select onchange="bolPar(\'casa\',1,this.value)">' + opc("casa", b.par.casa[1], b.par.casa[0]) + "</select>" +
+        '<span>vs</span><select onchange="bolPar(\'vis\',0,this.value)">' + opc("vis", b.par.vis[0], b.par.vis[1]) + "</select>" +
+        '<select onchange="bolPar(\'vis\',1,this.value)">' + opc("vis", b.par.vis[1], b.par.vis[0]) + "</select></div>";
     } else nomes = esc(juntar(n.casa)) + " <span class=\"bol-vs\">vs</span> " + esc(juntar(n.vis));
     let sets = "";
     for (let k = 0; k < 5; k++) {
@@ -399,6 +400,7 @@ function passoJogos(b) {
 
 window.bolPar = function (lado, i, v) {
   if (bloqueado(bol())) return;
+  if (Number(v) >= 0 && bol().par[lado][1 - i] === Number(v)) { alert("Esse atleta já está no par."); desenhar(); return; }
   mudar((b, s) => {
     b.par[lado][i] = Number(v);
     if (b.atual === 3) { const n = nomesJogo(b, 3); s.a.atleta = juntar(n.casa); s.b.atleta = juntar(n.vis); }

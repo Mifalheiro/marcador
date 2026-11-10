@@ -58,6 +58,13 @@
     background: #f2b705; color: #0a1748; border-radius: 3px; font-size: calc(var(--h) * .5); font-family: Arial, sans-serif; font-weight: 800; }
   .to.contar .seg { display: flex; }
 
+  /* Fim do encontro (uma equipa chegou aos 4 jogos): faixa por cima do marcador durante 30 s */
+  #final { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    background: linear-gradient(180deg, #0f2366, #0a1748); color: #fff; opacity: 0; pointer-events: none; transition: opacity .6s; }
+  #final.ver { opacity: 1; }
+  #final .t1 { color: #f2b705; font-weight: 800; letter-spacing: .12em; }
+  #final .t2 { font-weight: 700; white-space: nowrap; }
+  #final .t2 b { color: #ffd84a; margin: 0 .4em; }
   .flash { animation: flash .6s ease-out; }
   @keyframes flash { 0% { filter: brightness(1.8); transform: scale(1.18); } 100% { filter: none; transform: none; } }
 </style>
@@ -86,6 +93,8 @@
     <div class="num pontos" id="pb" style="grid-row:2">0</div>
     <div class="to" id="tb" style="grid-row:2"><div class="t">T<div class="seg"></div></div></div>
   </div>
+
+  <div id="final"><div class="t1">RESULTADO FINAL</div><div class="t2" id="finalTxt"></div></div>
 
 <script type="module">
   // Marcador ligado à Firebase (Realtime Database): recebe cada alteração no momento.
@@ -171,6 +180,27 @@
     bug.style.gridTemplateColumns = "var(--h) var(--h) calc(var(--h) * 4.2) calc(var(--h) * 1.05) calc(var(--h) * 5) var(--h) " +
       "var(--h) ".repeat(n) + "calc(var(--h) * 1.15) calc(var(--h) * .95)";
   }
+  // Faixa de resultado final (30 s depois de uma equipa chegar aos 4 jogos)
+  let chaveFinal = "", fimFinal = 0;
+  function porFinal(s) {
+    const el = document.getElementById("final"), bug = document.getElementById("bug");
+    const ja = s.a.jogos || 0, jb = s.b.jogos || 0;
+    const acabou = s.fimJogo && (ja >= 4 || jb >= 4);
+    if (acabou) {
+      const chave = ja + "-" + jb + "|" + s.a.nome + "|" + s.b.nome;
+      if (chave !== chaveFinal) { chaveFinal = chave; fimFinal = Date.now() + 30000; }
+      document.getElementById("finalTxt").innerHTML = "";
+      const t = document.getElementById("finalTxt");
+      t.append(s.a.nome || ""); const bb = document.createElement("b"); bb.textContent = ja + " - " + jb; t.append(bb); t.append(s.b.nome || "");
+    } else chaveFinal = "";
+    const r = bug.getBoundingClientRect();
+    el.style.width = r.width + "px"; el.style.height = r.height + "px";
+    const h = r.height / 2;
+    el.querySelector(".t1").style.fontSize = (h * .42) + "px";
+    const t2 = el.querySelector(".t2"); let f = h * .62; t2.style.fontSize = f + "px";
+    while (t2.scrollWidth > r.width * .96 && f > 8) { f -= 1; t2.style.fontSize = f + "px"; }   // nomes compridos encolhem
+    el.classList.toggle("ver", acabou && Date.now() < fimFinal && s.visivel !== false);
+  }
   function desenhar(s) {
     if (!s || !s.a || !s.b) return;
     ultimo = s;
@@ -183,12 +213,13 @@
     porNumero("pa", s.a.pontos || 0); porNumero("pb", s.b.pontos || 0);
     porLogo("la", s.a); porLogo("lb", s.b);
     porTimeOut("ta", s.a); porTimeOut("tb", s.b);
+    porFinal(s);
   }
 
   onValue(ref(db, ".info/serverTimeOffset"), snap => { desvio = snap.val() || 0; });
   onValue(ref(db, "marcador/estado"), snap => desenhar(snap.val()), erro);
   onValue(ref(db, "marcador/logos"), snap => { logos = snap.val() || {}; if (ultimo) desenhar(ultimo); }, erro);
-  setInterval(() => { if (ultimo) { porTimeOut("ta", ultimo.a); porTimeOut("tb", ultimo.b); } }, 250);
+  setInterval(() => { if (ultimo) { porTimeOut("ta", ultimo.a); porTimeOut("tb", ultimo.b); porFinal(ultimo); } }, 250);
 
   function erro(e) {
     if (location.search.indexOf("teste") < 0) return;

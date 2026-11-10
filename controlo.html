@@ -34,6 +34,7 @@
   .tobt.usado { background: #2a3c86; opacity: .5; }
   .atl { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; }
   .sqbt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 14px; font-weight: 700; }
+  .sqbt.chama { background: #f2b705; color: #0a1748; animation: chama 1s ease-in-out infinite; }
   .sqbt.sim { background: #22c55e; color: #05230f; }
   .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
@@ -175,6 +176,8 @@
     <div class="logo-linha"><input id="codBol" type="password" placeholder="Novo código" style="flex:2">
       <button onclick="guardarCodigo()">Guardar código</button></div>
     <div class="aviso">Depois de a equipa da casa confirmar a sua equipa, só se volta atrás no boletim com este código.</div>
+    <button class="bol-sec" style="width:100%;height:44px;border:0;border-radius:10px;margin-top:8px" onclick="importarEmblemas()">Importar emblemas dos clubes</button>
+    <div class="aviso">Junta os emblemas da ATMP (Canidelense, Canidelo, Valbom, Juvenorte, Mariadeira, Orfeão, S. Cosme, Távola, Valongo). Os clubes já guardados com esse nome ficam com o emblema; os que faltam são criados.</div>
     <label>Clubes guardados</label>
     <div class="lista-clubes" id="listaClubes"></div>
     <label>Link do marcador para o PRISM (widget Web)</label>
@@ -201,7 +204,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo } from "./boletim.js?v=20";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo } from "./boletim.js?v=21";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -344,7 +347,7 @@
     // ordem dos cartões segue o lado da mesa (como no ecrã da sala)
     document.getElementById("eq_a").style.order = s.ladosTrocados ? 2 : 1;
     document.getElementById("eq_b").style.order = s.ladosTrocados ? 1 : 2;
-    const parado = !!(s.fimJogo || s.setFechado);
+    const parado = !!(s.fimJogo || s.setFechado || !s.saqueInicial);
     document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.toggle("bloq", parado));
     document.getElementById("btNovoSet").classList.toggle("chama", !!s.setFechado && !s.fimJogo);
     document.getElementById("btNovoJogo").classList.toggle("chama", !!s.fimJogo);
@@ -358,7 +361,7 @@
     const sv = servidor(s);
     ["a", "b"].forEach(L => {
       const b = document.getElementById("sq_" + L);
-      b.className = "sqbt" + (sv === L ? " sim" : "");
+      b.className = "sqbt" + (sv === L ? " sim" : "") + (!s.saqueInicial && !s.fimJogo ? " chama" : "");
       b.textContent = sv === L ? "● A servir" : (s.saqueInicial && !s.fimJogo ? "Serve" : "Começa a servir?");
     });
     if (document.activeElement.id !== "pontosSet") document.getElementById("pontosSet").value = s.pontosSet;
@@ -397,6 +400,11 @@
         }
         if (n > 0) {
           if (window.boletimAntesPonto) window.boletimAntesPonto(s);   // boletim: começa o jogo seguinte
+          if (!s.saqueInicial) {   // cada jogo só começa depois de escolher quem serve
+            hist.pop(); msg("Escolhe primeiro quem começa a servir", "erro");
+            if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+            mostrar(); return;
+          }
           if (s.fimJogo) { s.parciais = []; s.saqueInicial = null; s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; s.a.timeout = 0; s.b.timeout = 0; }
           if (s.setFechado) { s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; }
           s[L].pontos++;
@@ -543,6 +551,24 @@
     await set(ref(db, "marcador/config/codigo"), await resumo(c));
     document.getElementById("codBol").value = "";
     msg("✓ Código do boletim guardado", "ok");
+  };
+
+  // Emblemas preparados no ficheiro emblemas.json (no GitHub)
+  window.importarEmblemas = async function () {
+    try {
+      const lista = await fetch("emblemas.json?v=1").then(r => r.json());
+      const norm = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      let atualizados = 0, novos = 0;
+      for (const e of lista) {
+        const iguais = Object.keys(clubes).filter(id => norm(clubes[id].nome).includes(e.chave));
+        if (iguais.length) {
+          for (const id of iguais) { await set(ref(db, "marcador/clubes/" + id + "/logo"), e.logo); atualizados++; }
+        } else {
+          await set(ref(db, "marcador/clubes/" + idClube(e.nome)), { nome: e.nome, logo: e.logo }); novos++;
+        }
+      }
+      msg("✓ Emblemas: " + atualizados + " atualizados, " + novos + " clubes novos", "ok");
+    } catch (e) { msg("Erro a importar: " + e.message, "erro"); }
   };
 
   window.apagar = function (id) {
