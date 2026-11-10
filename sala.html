@@ -56,6 +56,30 @@
   @keyframes flash { 0% { color: #ffd84a; transform: scale(1.06); } 100% { transform: none; } }
   #tituloJogos { position: fixed; top: 2.5vh; left: 0; right: 0; text-align: center;
     font-size: 3.4vh; letter-spacing: .1em; opacity: .85; pointer-events: none; }
+  /* ---- Telemóvel em pé: uma equipa em cima e outra em baixo ---- */
+  @media (orientation: portrait) {
+    #ecra { flex-direction: column; }
+    .pos { padding: 1.5vh 4vw; }
+    .pos.dir { border-top: .6vh solid #f2b705; }
+    .dir .topo, .dir .fundo { flex-direction: row; }
+    .dir .nome { text-align: left; }
+    .nome { white-space: normal; line-height: 1.1; max-height: 10vh; }   /* nomes compridos em 2 linhas */
+    .topo { gap: 3vw; }
+    .emblema { width: 7vh; height: 7vh; }
+    .saque { width: 2.6vh; height: 2.6vh; margin-left: -1.3vh; top: calc(100% + .8vh); }
+    .jogos .rot { font-size: 1.8vh; }
+    .jogos .rot::after { content: "JOGOS"; }
+    .jogos .val { width: 9vh; height: 6.5vh; line-height: 6.5vh; font-size: 5vh; }
+    .pontos { font-size: min(27vh, 62vw); }
+    .sets .rot { font-size: 2.2vh; }
+    .sets .val { width: 11vh; height: 7vh; line-height: 7vh; font-size: 6vh; }
+    .to { width: 10vh; height: 8vh; }
+    .to .t { font-size: 5.5vh; }
+    .to .txt { font-size: 1.4vh; }
+    .to .seg { font-size: 4.5vh; }
+    #tituloJogos { display: none; }
+    #aviso { font-size: 1.6vh; }
+  }
   #aviso { position: fixed; bottom: 1vh; left: 0; right: 0; text-align: center; font-size: 2.2vh; opacity: .5; }
 </style>
 </head>
@@ -95,9 +119,11 @@
   }
   // nome encolhe a letra até caber
   function ajustarNome(el) {
-    let t = 7; el.style.fontSize = t + "vh";
-    while (el.scrollWidth > el.clientWidth && t > 3) { t -= 0.25; el.style.fontSize = t + "vh"; }
+    let t = matchMedia("(orientation: portrait)").matches ? 4.6 : 7; el.style.fontSize = t + "vh";
+    const min = matchMedia("(orientation: portrait)").matches ? 2.4 : 3;
+    while ((el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight + 1) && t > min) { t -= 0.2; el.style.fontSize = t + "vh"; }
   }
+  // ao mudar o tamanho (inclui rodar o telemóvel)
   window.addEventListener("resize", () => { ajustarNome(document.getElementById("nomeE")); ajustarNome(document.getElementById("nomeD")); });
   function pintar(P, eq) {
     const n = document.getElementById("nome" + P);
