@@ -361,7 +361,16 @@ function passoJogos(b) {
   if (decidido(b)) acao = '<div class="bol-res">Resultado final: <b>' + w.casa + " - " + w.vis + "</b> a favor de <b>" + esc(w.casa > w.vis ? b.casa.nome : b.vis.nome) + "</b></div>";
   else if (b.atual < 0 && prox >= 0) acao = '<button class="bol-pri" onclick="bolComecar(' + prox + ')">▶ Começar jogo ' + (prox + 1) + " (" + ORDEM[prox].et + ")</button>";
   else if (b.atual >= 0) acao = '<div class="aviso">Jogo ' + (b.atual + 1) + " em curso — cada set que fecha no marcador fica registado aqui.</div>";
-  return '<div class="bol-cartao"><div class="bol-sub">' + esc(b.casa.nome) + " " + w.casa + " - " + w.vis + " " + esc(b.vis.nome) + "</div>" +
+  // formações das duas equipas (com licenças), por cima da tabela dos jogos
+  const formacao = (lado, titulo) => {
+    const letras = lado === "casa" ? LET_C : LET_V;
+    return '<div class="bol-form"><div class="bol-form-tit">' + titulo + ": <b>" + esc(b[lado].nome) + "</b></div>" +
+      '<table class="bol-tab"><tr><th></th><th>Atletas</th><th>Licenças</th></tr>' +
+      b[lado].atl.map((a, i) => a.n || a.l ? "<tr><td class=\"bol-let\">" + (letras[i] ? letras[i] + " -" : "") + "</td><td>" + esc(a.n) + "</td><td>" + esc(a.l) + "</td></tr>" : "").join("") +
+      "</table></div>";
+  };
+  return '<div class="bol-cartao"><div class="bol-formacoes">' + formacao("casa", "Clube visitado") + formacao("vis", "Clube visitante") + "</div></div>" +
+    '<div class="bol-cartao"><div class="bol-sub">' + esc(b.casa.nome) + " " + w.casa + " - " + w.vis + " " + esc(b.vis.nome) + "</div>" +
     '<div class="bol-scroll"><table class="bol-tab bol-jogos"><tr><th></th><th>Jogos</th><th>1º</th><th>2º</th><th>3º</th><th>4º</th><th>5º</th><th>Vencedores</th></tr>' + linhas + "</table></div>" +
     acao + '<div class="aviso">Os sets ficam registados sozinhos (com a contagem automática ligada). Para corrigir, escreve no quadrado, por exemplo 11-9.</div></div>' +
     '<div class="bol-nav"><button class="bol-sec" onclick="bolPasso(\'vis\')">‹ Equipas</button>' +

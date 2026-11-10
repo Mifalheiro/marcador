@@ -111,6 +111,11 @@
   .bol-ok { margin-top: 6px; color: #7be08a; font-weight: 700; }
   .bol-ass-img { display: block; max-width: 100%; max-height: 90px; background: #fff; border-radius: 8px; padding: 4px; }
   .bol-nav button:disabled { opacity: .45; }
+  .bol-formacoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .bol-form-tit { font-size: 14px; margin-bottom: 2px; }
+  .bol-form .bol-tab { margin-top: 4px; }
+  .bol-form .bol-tab td { padding: 5px 4px; }
+  .bol-form .bol-tab td:last-child, .bol-form .bol-tab th:last-child { text-align: right; width: 70px; }
   .bol-alerta { margin: 8px; padding: 10px; background: #8a2b2b; border-radius: 8px; opacity: 1; font-size: 13px; }
 
   #pinEcra { position: fixed; inset: 0; background: #0b1440; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 9; }
@@ -193,7 +198,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo } from "./boletim.js?v=15";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo } from "./boletim.js?v=16";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
