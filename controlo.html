@@ -175,10 +175,14 @@
       <label>Escolher emblema<input id="novoLogo" type="file" accept="image/*" style="display:none" onchange="lerLogoNovo(this)"></label>
       <button onclick="guardarClube()">Guardar clube</button></div>
     <div class="aviso">Para mudar o emblema de um clube, escreve o mesmo nome e escolhe a imagem nova.</div>
-    <label>Código (boletim e Definições)</label>
+    <label>Código das Definições</label>
+    <div class="logo-linha"><input id="codDef" type="password" placeholder="Novo código" style="flex:2">
+      <button onclick="guardarCodigo('codDef', 'codigoDef')">Guardar código</button></div>
+    <div class="aviso">Pedido para abrir estas Definições.</div>
+    <label>Código do boletim</label>
     <div class="logo-linha"><input id="codBol" type="password" placeholder="Novo código" style="flex:2">
-      <button onclick="guardarCodigo()">Guardar código</button></div>
-    <div class="aviso">Pedido para abrir estas Definições e para voltar atrás no boletim depois de a equipa da casa confirmar.</div>
+      <button onclick="guardarCodigo('codBol', 'codigo')">Guardar código</button></div>
+    <div class="aviso">Pedido para voltar atrás no boletim depois de a equipa da casa confirmar, e para reabrir um boletim submetido.</div>
     <button class="bol-sec" style="width:100%;height:44px;border:0;border-radius:10px;margin-top:8px" onclick="importarEmblemas()">Importar emblemas dos clubes</button>
     <div class="aviso">Junta os emblemas da ATMP (Canidelense, Canidelo, Valbom, Juvenorte, Mariadeira, Orfeão, S. Cosme, Távola, Valongo). Os clubes já guardados com esse nome ficam com o emblema; os que faltam são criados.</div>
     <label>Lista de atletas da FPTM</label>
@@ -558,25 +562,26 @@
     e.preventDefault();
     const d = document.getElementById("defs");
     if (d.open) { d.open = false; return; }
-    const certo = (await get(ref(db, "marcador/config/codigo"))).val();
+    const certo = (await get(ref(db, "marcador/config/codigoDef"))).val();
     if (certo) {
-      const c = prompt("Código para abrir as Definições:");
+      const c = prompt("Código das Definições:");
       if (c === null) return;
       let ok = false;
       try { ok = (await resumo(c.trim())) === certo; }
       catch (err) { alert("Este browser não conseguiu verificar o código: " + err.message); return; }
       if (!ok) { alert("Código errado."); return; }
-    } else msg("Ainda não há código: define-o em Definições → Código", "espera");
+    } else msg("Ainda não há código das Definições: define-o aqui", "espera");
     d.open = true;
     d.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  window.guardarCodigo = async function () {
-    const c = document.getElementById("codBol").value.trim();
+  // guarda um código (como resumo SHA-256) em marcador/config/<chave>
+  window.guardarCodigo = async function (campo, chave) {
+    const c = document.getElementById(campo).value.trim();
     if (c.length < 4) { msg("O código tem de ter pelo menos 4 caracteres", "erro"); return; }
-    await set(ref(db, "marcador/config/codigo"), await resumo(c));
-    document.getElementById("codBol").value = "";
-    msg("✓ Código do boletim guardado", "ok");
+    await set(ref(db, "marcador/config/" + chave), await resumo(c));
+    document.getElementById(campo).value = "";
+    msg(chave === "codigoDef" ? "✓ Código das Definições guardado" : "✓ Código do boletim guardado", "ok");
   };
 
   // Emblemas preparados no ficheiro emblemas.json (no GitHub)
