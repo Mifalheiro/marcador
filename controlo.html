@@ -162,8 +162,8 @@
 
   <div id="bolPainel"></div>
 
-  <details>
-    <summary>Definições</summary>
+  <details id="defs">
+    <summary onclick="abrirDefinicoes(event)">🔒 Definições</summary>
     <label><input type="checkbox" id="auto" style="width:auto" onchange="enviar('auto')"> Contagem automática (fecha o set e o jogo sozinho)</label>
     <label>Pontos para ganhar um set</label>
     <input id="pontosSet" type="number" min="1" onchange="enviar('pontosSet', null, this.value)">
@@ -175,10 +175,10 @@
       <label>Escolher emblema<input id="novoLogo" type="file" accept="image/*" style="display:none" onchange="lerLogoNovo(this)"></label>
       <button onclick="guardarClube()">Guardar clube</button></div>
     <div class="aviso">Para mudar o emblema de um clube, escreve o mesmo nome e escolhe a imagem nova.</div>
-    <label>Código do boletim</label>
+    <label>Código (boletim e Definições)</label>
     <div class="logo-linha"><input id="codBol" type="password" placeholder="Novo código" style="flex:2">
       <button onclick="guardarCodigo()">Guardar código</button></div>
-    <div class="aviso">Depois de a equipa da casa confirmar a sua equipa, só se volta atrás no boletim com este código.</div>
+    <div class="aviso">Pedido para abrir estas Definições e para voltar atrás no boletim depois de a equipa da casa confirmar.</div>
     <button class="bol-sec" style="width:100%;height:44px;border:0;border-radius:10px;margin-top:8px" onclick="importarEmblemas()">Importar emblemas dos clubes</button>
     <div class="aviso">Junta os emblemas da ATMP (Canidelense, Canidelo, Valbom, Juvenorte, Mariadeira, Orfeão, S. Cosme, Távola, Valongo). Os clubes já guardados com esse nome ficam com o emblema; os que faltam são criados.</div>
     <label>Lista de atletas da FPTM</label>
@@ -552,6 +552,20 @@
     lerFptm: async () => (await get(ref(db, "fptm"))).val(),
     guardarMapaFptm: (id, k) => set(ref(db, "fptm/mapa/" + id), k)
   });
+
+  // Definições só abrem com o código (se ainda não houver código, abrem para o poderes definir)
+  window.abrirDefinicoes = async function (e) {
+    e.preventDefault();
+    const d = document.getElementById("defs");
+    if (d.open) { d.open = false; return; }
+    const certo = (await get(ref(db, "marcador/config/codigo"))).val();
+    if (certo) {
+      const c = prompt("Código para abrir as Definições:");
+      if (c === null) return;
+      if (await resumo(c.trim()) !== certo) { msg("Código errado", "erro"); return; }
+    } else msg("Ainda não há código: define-o em Definições → Código", "espera");
+    d.open = true;
+  };
 
   window.guardarCodigo = async function () {
     const c = document.getElementById("codBol").value.trim();
