@@ -156,7 +156,7 @@
     <button class="anular" onclick="enviar('anular')">↶ Anular</button>
     <button id="btNovoSet" onclick="enviar('novoSet')">Novo set</button>
     <button id="btNovoJogo" onclick="enviar('novoJogo')">Novo jogo</button>
-    <button onclick="enviar('trocar')">⇄ Trocar lados</button>
+    <button id="btTrocar" onclick="enviar('trocar')">⇄ Trocar lados</button>
     <button id="btVis" onclick="enviar('visivel')">Esconder</button>
     <button class="perigo" onclick="if (confirm('Pôr tudo a zero (jogos, sets, pontos e boletim de jogo)?')) enviar('zerar')">Zerar tudo</button>
     <button class="bol" onclick="abrirBoletim()">📋 Boletim de jogo</button>
@@ -218,7 +218,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=23";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=24";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -370,7 +370,9 @@
       at.placeholder = editavel ? "Atleta(s) a jogar" : "";
     });
     document.getElementById("amigavel").checked = !!s.amigavel;
-    const parado = !!(s.fimJogo || s.setFechado || !s.saqueInicial);
+    const parado = !!(s.fimJogo || s.setFechado || !s.saqueInicial || s.trocarPendente);
+    document.getElementById("btTrocar").classList.toggle("chama", !!s.trocarPendente);
+    if (s.trocarPendente) msg("Mudança de campo — carrega em Trocar lados", "espera");
     document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.toggle("bloq", parado));
     document.getElementById("btNovoSet").classList.toggle("chama", !!s.setFechado && !s.fimJogo);
     document.getElementById("btNovoJogo").classList.toggle("chama", !!s.fimJogo);
@@ -423,14 +425,22 @@
         }
         if (n > 0) {
           if (window.boletimAntesPonto) window.boletimAntesPonto(s);   // boletim: começa o jogo seguinte
+          if (s.trocarPendente) {   // set decisivo: aos 5 pontos é obrigatório mudar de campo
+            hist.pop(); msg("Mudança de campo — carrega em Trocar lados", "erro");
+            if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+            return;
+          }
           if (!s.saqueInicial) {   // cada jogo só começa depois de escolher quem serve
             hist.pop(); msg("Escolhe primeiro quem começa a servir", "erro");
             if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
             mostrar(); return;
           }
-          if (s.fimJogo) { s.parciais = []; s.saqueInicial = null; s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; s.a.timeout = 0; s.b.timeout = 0; }
-          if (s.setFechado) { s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; }
+          if (s.fimJogo) { s.trocarPendente = false; s.trocaFeita = false; s.parciais = []; s.saqueInicial = null; s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; s.a.timeout = 0; s.b.timeout = 0; }
+          if (s.setFechado) { s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; s.trocarPendente = false; s.trocaFeita = false; }
           s[L].pontos++;
+          // set decisivo (ex.: 2-2 em sets): quando alguém chega aos 5 pontos, muda-se de campo
+          const decisivo = (s.a.sets || 0) === (s.setsJogo || 3) - 1 && (s.b.sets || 0) === (s.setsJogo || 3) - 1;
+          if (decisivo && !s.trocaFeita && s[L].pontos === 5) s.trocarPendente = true;
           if (s.auto) {
             const p = s[L].pontos, q = s[O].pontos;
             if (p >= s.pontosSet && p - q >= 2) {
@@ -447,8 +457,9 @@
       case "novoSet":
         // sem contagem automática, guarda aqui o resultado do set que acabou
         if (!s.setFechado && (s.a.pontos || s.b.pontos)) s.parciais = (s.parciais || []).concat([[s.a.pontos, s.b.pontos]]);
-        s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; break;
+        s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; s.trocarPendente = false; s.trocaFeita = false; break;
       case "novoJogo":
+        s.trocarPendente = false; s.trocaFeita = false;
         // com o boletim ativo, começa o jogo seguinte do boletim (nomes dos atletas já atualizados)
         if (window.boletimNovoJogo && window.boletimNovoJogo(s)) break;
         s.parciais = []; s.saqueInicial = null; s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; s.a.timeout = 0; s.b.timeout = 0; break;
@@ -466,13 +477,16 @@
       case "zerar": if (window.boletimZerar) window.boletimZerar(s); s.parciais = []; s.saqueInicial = null;
         // tudo a zero e sem clubes nem atletas: voltam a ser escolhidos no boletim
         ["a", "b"].forEach(k => { s[k] = { nome: "", clubeId: "", logo: "", slot: s[k].slot || (k === "a" ? "1" : "2"), atleta: "", pontos: 0, sets: 0, jogos: 0, timeout: 0 }; });
-        s.ladosTrocados = false; s.setFechado = false; s.fimJogo = false; break;
+        s.ladosTrocados = false; s.setFechado = false; s.fimJogo = false; s.trocarPendente = false; s.trocaFeita = false; break;
       case "amigavel":
         if (!s.amigavel && s.boletim && (s.boletim.passo === "jogos" || s.boletim.passo === "assinar")) {
           hist.pop(); alert("Há um boletim de jogo a decorrer. Para um jogo amigável, faz primeiro Zerar tudo."); mostrar(); return;
         }
         s.amigavel = !s.amigavel; break;
-      case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
+      case "trocar":
+        s.ladosTrocados = !s.ladosTrocados;
+        if (s.trocarPendente) { s.trocarPendente = false; s.trocaFeita = true; }   // mudança de campo do set decisivo feita
+        break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "visivel": s.visivel = s.visivel === false; break;
       case "auto": s.auto = !s.auto; break;
       case "pontosSet": s.pontosSet = Math.max(1, n || 11); break;
