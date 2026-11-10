@@ -32,6 +32,9 @@
   .jogos, .sets { background: linear-gradient(180deg, #ffd84a 0%, #f2b705 100%); color: #0a1748; border-bottom: 1px solid #0a1748; }
   .pontos { color: #fff; background: rgba(0,0,0,.25); }
   /* pontos dos sets anteriores, à esquerda dos pontos do set em curso */
+  /* em cada set acabado, o número de quem ganhou fica em negrito e o outro mais fino */
+  .num.ganhou { font-weight: 900; }
+  .num.perdeu { font-weight: 400; opacity: .7; }
   .parc { color: #fff; background: rgba(255,255,255,.06); border-left: 1px solid rgba(255,255,255,.12); }
 
   .nome { display: flex; align-items: center; min-width: 0; padding: 0 calc(var(--h) * .2);
@@ -148,11 +151,19 @@
     lista.forEach((p, i) => {
       ["a", "b"].forEach((L, r) => {
         const d = document.createElement("div");
-        d.className = "num parc"; d.textContent = p[r];
+        const meu = Number(p[r]), outro = Number(p[1 - r]);
+        d.className = "num parc " + (meu > outro ? "ganhou" : meu < outro ? "perdeu" : ""); d.textContent = p[r];
         d.style.gridColumn = 7 + i; d.style.gridRow = r + 1;
         bug.appendChild(d);
       });
     });
+    // set acabado de fechar (ainda na coluna dos pontos): também mostra quem ganhou
+    const pa = document.getElementById("pa"), pb = document.getElementById("pb");
+    [pa, pb].forEach(el => el.classList.remove("ganhou", "perdeu"));
+    if (s.setFechado) {
+      const x = s.a.pontos || 0, y = s.b.pontos || 0;
+      if (x !== y) { (x > y ? pa : pb).classList.add("ganhou"); (x > y ? pb : pa).classList.add("perdeu"); }
+    }
     const n = lista.length;
     ["pa", "pb"].forEach(id => document.getElementById(id).style.gridColumn = 7 + n);
     ["ta", "tb"].forEach(id => document.getElementById(id).style.gridColumn = 8 + n);
