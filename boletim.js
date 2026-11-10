@@ -412,23 +412,23 @@ window.bolSet = function (g, k, txt) {
 /* ---------- Passo 5: assinaturas ---------- */
 function passoAssinar(b) {
   const a = b.assin, w = vitorias(b), fechado = bloqueado(b);
-  const prot = (lado, val, sub) => sub
+  const prot = (lado, val, sub) => fechado
     ? '<div class="bol-prot">Declara protestar o jogo? <b>' + (val === "sim" ? "Sim" : "Não") + "</b></div>"
     : '<div class="bol-prot">Declara protestar o jogo? ' +
       '<button class="' + (val === "sim" ? "sel" : "") + '" onclick="bolProt(\'' + lado + '\',\'sim\')">Sim</button>' +
       '<button class="' + (val === "nao" ? "sel" : "") + '" onclick="bolProt(\'' + lado + '\',\'nao\')">Não</button></div>';
-  const pad = (id, rot, nomeId, nome, sub, chave) => sub
+  const pad = (id, rot, nomeId, nome, sub, chave) => fechado
     ? '<div class="bol-ass"><div class="bol-ass-rot">' + rot + (nome ? ": <b>" + esc(nome) + "</b>" : "") + "</div>" +
       (assinaturas[id] ? '<img class="bol-ass-img" src="' + assinaturas[id] + '">' : "") +
-      '<div class="bol-ok">✔ Submetido</div></div>'
+      "</div>"
     : '<div class="bol-ass"><div class="bol-ass-rot">' + rot + "</div>" +
       '<input id="' + nomeId + '" value="' + esc(nome) + '" placeholder="Nome (opcional)">' +
       '<canvas id="pad_' + id + '" width="600" height="180"></canvas>' +
-      '<button class="bol-limpar" onclick="bolLimpar(\'' + id + '\')">Limpar assinatura</button>' +
-      '<button class="bol-pri bol-submeter" onclick="bolSubmeter(\'' + chave + '\')">Submeter</button></div>';
-  const podePDF = a.subCasa && a.subVis;
+      '<button class="bol-limpar" onclick="bolLimpar(\'' + id + '\')">Limpar assinatura</button></div>';
+  const podePDF = true;
   return (decidido(b) ? "" : '<div class="aviso bol-alerta">Atenção: o encontro ainda não está decidido (' + w.casa + " - " + w.vis + ").</div>") +
-    '<div class="aviso" style="margin:8px">Depois de submeter, essa parte já não pode ser alterada' + (fechado ? "" : " e o boletim (jogos e resultados) fica fechado") + ".</div>" +
+    (fechado ? '<div class="bol-ok" style="margin:8px">✔ Boletim submetido — já não pode ser alterado.</div>'
+             : '<div class="aviso" style="margin:8px">Ao carregar em Gerar PDF, o boletim é submetido (equipas, resultados e assinaturas) e já não pode ser alterado.</div>') +
     '<div class="bol-cartao"><div class="bol-sub">Clube visitado: ' + esc(b.casa.nome) + "</div>" + prot("Casa", a.protCasa, a.subCasa) +
     pad("casa", "Delegado ou Capitão", "a_nomeCasa", a.nomeCasa, a.subCasa, "Casa") + "</div>" +
     '<div class="bol-cartao"><div class="bol-sub">Clube visitante: ' + esc(b.vis.nome) + "</div>" + prot("Vis", a.protVis, a.subVis) +
@@ -437,22 +437,11 @@ function passoAssinar(b) {
     (fechado ? '<div class="bol-ass-rot">Hora de fim: <b>' + esc(b.cab.fim) + "</b></div>" : campo("a_fim", "Hora de fim", b.cab.fim || horaAgora(), "time")) + "</div>" +
     '<div class="bol-nav">' + (fechado ? "" : '<button class="bol-sec" onclick="bolPasso(\'jogos\')">‹ Jogos</button>') +
     '<button class="bol-pri" id="bolBtPDF" onclick="bolPDF()"' + (podePDF ? "" : " disabled") + ">📄 Gerar PDF</button></div>" +
-    (podePDF ? "" : '<div class="aviso" style="margin:8px">O PDF fica disponível quando os dois clubes tiverem submetido.</div>');
+    "";
 }
 
-window.bolProt = function (lado, v) { if (bol().assin["sub" + lado]) return; guardarCampos(); mudar(b => { b.assin["prot" + lado] = v; }); desenhar(); };
+window.bolProt = function (lado, v) { if (bloqueado(bol())) return; guardarCampos(); mudar(b => { b.assin["prot" + lado] = v; }); desenhar(); };
 window.bolLimpar = function (id) { delete assinaturas[id]; api.guardarAssinatura(id, null); const c = $("pad_" + id); c.getContext("2d").clearRect(0, 0, c.width, c.height); };
-
-// Submeter a parte de um clube (Casa / Vis) ou do árbitro (Arb): fica definitivo
-window.bolSubmeter = function (chave) {
-  guardarCampos();
-  const b = bol(), id = { Casa: "casa", Vis: "vis", Arb: "arb" }[chave];
-  if (chave !== "Arb" && !b.assin["prot" + chave]) { alert("Indica se o clube declara protestar o jogo (Sim ou Não)."); return; }
-  if (!assinaturas[id]) { alert("Falta a assinatura."); return; }
-  if (!confirm("Submeter? Depois disto já não é possível alterar esta parte nem os resultados do boletim.")) return;
-  mudar(b => { if (!b.cab.fim) b.cab.fim = horaAgora(); b.assin["sub" + chave] = true; }, false);
-  desenhar();
-};
 
 // Corta o espaço em branco à volta da assinatura (para ficar maior no PDF)
 function recortar(c) {
@@ -496,7 +485,17 @@ const dataPT = d => { const m = String(d || "").match(/(\d{4})-(\d{2})-(\d{2})/)
 
 window.bolPDF = async function () {
   guardarCampos();
-  const b = bol(), w = vitorias(b);
+  let b = bol();
+  if (!bloqueado(b)) {
+    if (!b.assin.protCasa || !b.assin.protVis) { alert("Falta indicar se cada clube declara protestar o jogo (Sim ou Não)."); return; }
+    if (!assinaturas.casa || !assinaturas.vis) { alert("Faltam as assinaturas dos delegados ou capitães dos dois clubes."); return; }
+    const semArb = !assinaturas.arb ? "\n\n(Sem assinatura do árbitro.)" : "";
+    if (!confirm("Gerar o PDF submete o boletim: equipas, resultados e assinaturas deixam de poder ser alterados. Continuar?" + semArb)) return;
+    mudar(x => { if (!x.cab.fim) x.cab.fim = horaAgora(); x.assin.subCasa = true; x.assin.subVis = true; x.assin.subArb = true; }, false);
+    desenhar();
+    b = bol();
+  }
+  const w = vitorias(b);
   const botao = document.getElementById("bolBtPDF"); if (botao) { botao.disabled = true; botao.textContent = "A gerar…"; }
   try {
     if (!window.PDFLib) await carregarScript("https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js");
