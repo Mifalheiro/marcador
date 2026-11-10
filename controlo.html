@@ -26,7 +26,7 @@
   .lista-clubes button { border: 0; border-radius: 8px; background: #8a2b2b; color: #fff; padding: 6px 10px; }
   .clube-linha { display: flex; gap: 8px; align-items: center; }
   .clube-linha img { width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; }
-  .clube-linha .sem { width: 44px; height: 44px; border-radius: 6px; border: 1px dashed #6677bb; flex: none; }
+  .clube-linha .sem { width: 44px; height: 44px; border-radius: 6px; background: #e8ebf5; flex: none; }
   .clube-linha select { flex: 1; min-width: 0; }
   #novoPrev img { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 6px; }
   .tobt { height: 44px; border: 0; border-radius: 10px; background: #000; color: #fff; font-size: 14px; font-weight: 700; }
@@ -34,8 +34,6 @@
   .tobt.usado { background: #2a3c86; opacity: .5; }
   select.clube:disabled { opacity: 1; color: #fff; -webkit-text-fill-color: #fff; appearance: none; -webkit-appearance: none; }
   .atl.fixo { background: #e8ebf5; color: #0a1748; font-weight: 600; }
-  .manual { display: grid; gap: 6px; }
-  .manual button { height: 44px; border: 0; border-radius: 10px; background: #f2b705; color: #0a1748; font-weight: 700; font-size: 15px; }
   .atl { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; }
   .sqbt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 14px; font-weight: 700; }
   .sqbt.chama { background: #f2b705; color: #0a1748; animation: chama 1s ease-in-out infinite; }
@@ -173,13 +171,8 @@
     <input id="pontosSet" type="number" min="1" onchange="enviar('pontosSet', null, this.value)">
     <label>Sets para ganhar um jogo (3 = melhor de 5)</label>
     <input id="setsJogo" type="number" min="1" onchange="enviar('setsJogo', null, this.value)">
-    <label>Jogo sem boletim (amigável)</label>
-    <div class="manual">
-      <select id="manA" class="clube"></select><input id="manAtlA" class="atl" placeholder="Atleta(s) do lado de cima">
-      <select id="manB" class="clube"></select><input id="manAtlB" class="atl" placeholder="Atleta(s) do lado de baixo">
-      <button onclick="aplicarManual()">Aplicar ao marcador</button>
-    </div>
-    <div class="aviso">Escolhe os clubes e atletas à mão, sem boletim. Só funciona quando não há boletim de jogo a decorrer.</div>
+    <label><input type="checkbox" id="amigavel" style="width:auto" onchange="enviar('amigavel')"> Jogo amigável (sem boletim)</label>
+    <div class="aviso">Ligado: escolhes o clube e escreves os atletas diretamente nos cartões. Desligado: clubes e atletas vêm do boletim de jogo.</div>
     <label>Adicionar ou atualizar clube</label>
     <input id="novoNome" placeholder="Nome do clube (ex.: A. R. CANIDELO - B)">
     <div class="logo-linha" style="margin-top:8px"><span id="novoPrev"></span>
@@ -348,7 +341,7 @@
     });
   }
   window.mudarAtleta = function (L, inp) {
-    if (doBoletim()) { mostrar(); return; }
+    if (!podeEditar(estado)) { mostrar(); return; }
     const v = inp.value.trim();
     acao("atleta", L, v);
     if (v) set(ref(db, "marcador/atletas/" + (estado[L].clubeId || "sem_clube") + "/" + chaveNome(v)), v);
@@ -369,12 +362,14 @@
     // ordem dos cartões segue o lado da mesa (como no ecrã da sala)
     document.getElementById("eq_a").style.order = s.ladosTrocados ? 2 : 1;
     document.getElementById("eq_b").style.order = s.ladosTrocados ? 1 : 2;
-    // clubes e atletas vêm sempre do boletim de jogo: aqui só se mostram
+    // clubes e atletas: escolhem-se aqui só em jogo amigável; senão vêm do boletim de jogo
+    const editavel = podeEditar(s);
     ["a", "b"].forEach(L => {
-      document.getElementById("sel_" + L).disabled = true;
-      const at = document.getElementById("atl_" + L); at.readOnly = true; at.classList.add("fixo");
-      at.placeholder = "Atleta (definido no boletim)";
+      document.getElementById("sel_" + L).disabled = !editavel;
+      const at = document.getElementById("atl_" + L); at.readOnly = !editavel; at.classList.toggle("fixo", !editavel);
+      at.placeholder = editavel ? "Atleta(s) a jogar" : "";
     });
+    document.getElementById("amigavel").checked = !!s.amigavel;
     const parado = !!(s.fimJogo || s.setFechado || !s.saqueInicial);
     document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.toggle("bloq", parado));
     document.getElementById("btNovoSet").classList.toggle("chama", !!s.setFechado && !s.fimJogo);
@@ -472,6 +467,11 @@
         // tudo a zero e sem clubes nem atletas: voltam a ser escolhidos no boletim
         ["a", "b"].forEach(k => { s[k] = { nome: "", clubeId: "", logo: "", slot: s[k].slot || (k === "a" ? "1" : "2"), atleta: "", pontos: 0, sets: 0, jogos: 0, timeout: 0 }; });
         s.ladosTrocados = false; s.setFechado = false; s.fimJogo = false; break;
+      case "amigavel":
+        if (!s.amigavel && s.boletim && (s.boletim.passo === "jogos" || s.boletim.passo === "assinar")) {
+          hist.pop(); alert("Há um boletim de jogo a decorrer. Para um jogo amigável, faz primeiro Zerar tudo."); mostrar(); return;
+        }
+        s.amigavel = !s.amigavel; break;
       case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "visivel": s.visivel = s.visivel === false; break;
       case "auto": s.auto = !s.auto; break;
@@ -503,18 +503,12 @@
       if (escolhido) achou = true;
       op += '<option value="' + c.id + '"' + (escolhido ? " selected" : "") + ">" + esc(c.nome) + "</option>";
     });
-    if (!achou) op = '<option value="" selected>' + esc(eq.nome || "Sem clube (escolher no boletim)") + "</option>" + op;
+    if (!achou) op = '<option value="" selected>' + esc(eq.nome || "— clube —") + "</option>" + op;
     sel.innerHTML = op;
   }
   function mostrarClubes() {
     ["a", "b"].forEach(preencherLista);
-    // listas do jogo sem boletim (Definições)
-    ["manA", "manB"].forEach(id => {
-      const sel = document.getElementById(id), atual = sel.value;
-      sel.innerHTML = '<option value="">— clube —</option><option value="navais">C. D. C. NAVAIS</option>' +
-        listaOrdenada().map(c => '<option value="' + c.id + '">' + esc(c.nome) + "</option>").join("");
-      sel.value = atual;
-    });
+
     document.getElementById("listaClubes").innerHTML = listaOrdenada().map(c =>
       "<div>" + (c.logo ? '<img src="' + c.logo + '">' : "<img>") + "<span>" + esc(c.nome) + "</span>" +
       '<button onclick="apagar(\'' + c.id + '\')">Apagar</button></div>').join("") ||
@@ -530,10 +524,11 @@
     else estado[L].logo = "";
   }
   const doBoletim = () => !!(estado && estado.boletim && (estado.boletim.passo === "jogos" || estado.boletim.passo === "assinar"));
+  function podeEditar(s) { return !!(s && s.amigavel && !(s.boletim && (s.boletim.passo === "jogos" || s.boletim.passo === "assinar"))); }
   window.escolherClube = async function (L, sel) {
     const v = sel.value;
     sel.blur();
-    if (!v || !estado || doBoletim()) { mostrar(); return; }
+    if (!v || !estado || !podeEditar(estado)) { mostrar(); return; }
     hist.push(JSON.parse(JSON.stringify(estado)));
     await aplicarClube(L, v);
     gravar(); mostrar();
@@ -652,21 +647,6 @@
       msg("Erro a importar a lista: " + (e && e.message ? e.message : e), "erro");
       if (String(e && e.message).toLowerCase().includes("permission")) alert("A Firebase recusou guardar a lista. Confirma que juntaste a regra \"fptm\" nas regras da Realtime Database.");
     }
-  };
-
-  // Jogo sem boletim: clubes e atletas escolhidos à mão nas Definições
-  window.aplicarManual = async function () {
-    if (!estado) return;
-    if (doBoletim()) { alert("Há um boletim de jogo a decorrer. Para escolher à mão, faz primeiro Zerar tudo."); return; }
-    const va = document.getElementById("manA").value, vb = document.getElementById("manB").value;
-    if (!va && !vb) { msg("Escolhe pelo menos um clube", "erro"); return; }
-    hist.push(JSON.parse(JSON.stringify(estado)));
-    if (va) await aplicarClube("a", va);
-    if (vb) await aplicarClube("b", vb);
-    estado.a.atleta = document.getElementById("manAtlA").value.trim().slice(0, 40);
-    estado.b.atleta = document.getElementById("manAtlB").value.trim().slice(0, 40);
-    gravar(); mostrar();
-    msg("✓ Clubes aplicados ao marcador", "ok");
   };
 
   window.apagar = function (id) {
