@@ -360,12 +360,11 @@
     // ordem dos cartões segue o lado da mesa (como no ecrã da sala)
     document.getElementById("eq_a").style.order = s.ladosTrocados ? 2 : 1;
     document.getElementById("eq_b").style.order = s.ladosTrocados ? 1 : 2;
-    // com o boletim a decorrer, clubes e atletas vêm do boletim e não se mudam aqui
-    const doBoletim = !!(s.boletim && (s.boletim.passo === "jogos" || s.boletim.passo === "assinar"));
+    // clubes e atletas vêm sempre do boletim de jogo: aqui só se mostram
     ["a", "b"].forEach(L => {
-      document.getElementById("sel_" + L).disabled = doBoletim;
-      const at = document.getElementById("atl_" + L); at.readOnly = doBoletim; at.classList.toggle("fixo", doBoletim);
-      at.title = doBoletim ? "Definido no boletim de jogo" : "";
+      document.getElementById("sel_" + L).disabled = true;
+      const at = document.getElementById("atl_" + L); at.readOnly = true; at.classList.add("fixo");
+      at.placeholder = "Atleta (definido no boletim)";
     });
     const parado = !!(s.fimJogo || s.setFechado || !s.saqueInicial);
     document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.toggle("bloq", parado));
@@ -460,7 +459,10 @@
         break;
       }
       case "atleta": s[L].atleta = String(valor || "").trim().slice(0, 40); break;
-      case "zerar": if (window.boletimZerar) window.boletimZerar(s); s.parciais = []; s.saqueInicial = null; ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; s[k].timeout = 0; }); s.setFechado = false; s.fimJogo = false; break;
+      case "zerar": if (window.boletimZerar) window.boletimZerar(s); s.parciais = []; s.saqueInicial = null;
+        // tudo a zero e sem clubes nem atletas: voltam a ser escolhidos no boletim
+        ["a", "b"].forEach(k => { s[k] = { nome: "", clubeId: "", logo: "", slot: s[k].slot || (k === "a" ? "1" : "2"), atleta: "", pontos: 0, sets: 0, jogos: 0, timeout: 0 }; });
+        s.ladosTrocados = false; s.setFechado = false; s.fimJogo = false; break;
       case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "visivel": s.visivel = s.visivel === false; break;
       case "auto": s.auto = !s.auto; break;
@@ -492,7 +494,7 @@
       if (escolhido) achou = true;
       op += '<option value="' + c.id + '"' + (escolhido ? " selected" : "") + ">" + esc(c.nome) + "</option>";
     });
-    if (!achou) op = '<option value="" selected>' + esc(eq.nome || "Escolher clube…") + "</option>" + op;
+    if (!achou) op = '<option value="" selected>' + esc(eq.nome || "Sem clube (escolher no boletim)") + "</option>" + op;
     sel.innerHTML = op;
   }
   function mostrarClubes() {
