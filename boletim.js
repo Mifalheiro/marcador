@@ -119,7 +119,7 @@ function iniciarJogo(s, g) {
   const n = nomesJogo(b, g);
   s.a.atleta = juntar(n.casa); s.b.atleta = juntar(n.vis);
   ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].timeout = 0; s[k].toInicio = 0; });
-  s.saqueInicial = null; s.setFechado = false; s.fimJogo = false;
+  s.saqueInicial = null; s.setFechado = false; s.fimJogo = false; s.parciais = [];
   const w = vitorias(b); s.a.jogos = w.casa; s.b.jogos = w.vis;
 }
 

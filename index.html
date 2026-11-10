@@ -29,6 +29,8 @@
     font-weight: 700; font-size: calc(var(--h) * .78); line-height: 1; font-variant-numeric: tabular-nums; }
   .jogos, .sets { background: linear-gradient(180deg, #ffd84a 0%, #f2b705 100%); color: #0a1748; border-bottom: 1px solid #0a1748; }
   .pontos { color: #fff; background: rgba(0,0,0,.25); }
+  /* pontos dos sets anteriores, à esquerda dos pontos do set em curso */
+  .parc { color: #fff; background: rgba(255,255,255,.06); border-left: 1px solid rgba(255,255,255,.12); }
 
   .nome { display: flex; align-items: center; min-width: 0; padding: 0 calc(var(--h) * .2);
     color: #fff; font-size: calc(var(--h) * .58); white-space: nowrap; overflow: hidden; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
@@ -68,16 +70,16 @@
     </div>
     <div class="atleta" id="aa" style="grid-column:5;grid-row:1"></div>
     <div class="num sets" id="sa" style="grid-column:6;grid-row:1">0</div>
-    <div class="num pontos" id="pa" style="grid-column:7;grid-row:1">0</div>
-    <div class="to" id="ta" style="grid-column:8;grid-row:1"><div class="t">T<div class="seg"></div></div></div>
+    <div class="num pontos" id="pa" style="grid-row:1">0</div>
+    <div class="to" id="ta" style="grid-row:1"><div class="t">T<div class="seg"></div></div></div>
 
     <div class="logo" id="lb" style="grid-column:1;grid-row:2"></div>
     <div class="num jogos" id="jb" style="grid-column:2;grid-row:2">0</div>
     <div class="nome" id="nb" style="grid-column:3;grid-row:2"></div>
     <div class="atleta" id="ab" style="grid-column:5;grid-row:2"></div>
     <div class="num sets" id="sb" style="grid-column:6;grid-row:2">0</div>
-    <div class="num pontos" id="pb" style="grid-column:7;grid-row:2">0</div>
-    <div class="to" id="tb" style="grid-column:8;grid-row:2"><div class="t">T<div class="seg"></div></div></div>
+    <div class="num pontos" id="pb" style="grid-row:2">0</div>
+    <div class="to" id="tb" style="grid-row:2"><div class="t">T<div class="seg"></div></div></div>
   </div>
 
 <script type="module">
@@ -122,7 +124,7 @@
   function porNome(id, txt) {
     const el = document.getElementById(id);
     if (el.textContent !== (txt || "")) el.textContent = txt || "";
-    caber(el, 0.58, 0.24);
+    caber(el, 0.58, 0.18);
   }
   // atletas: um nome numa linha; num par ("A / B") cada nome na sua linha
   function porAtleta(id, txt) {
@@ -134,10 +136,32 @@
     el.style.fontSize = "";
     el.querySelectorAll("span").forEach(sp => caber(sp, tam, min));
   }
+  // Sets anteriores do jogo: uma coluna por set, entre os sets (amarelo) e os pontos do set em curso.
+  // Enquanto o set acabado de fechar ainda está nos pontos, não se repete.
+  function porParciais(s) {
+    let lista = Array.isArray(s.parciais) ? s.parciais : Object.values(s.parciais || {});
+    if (s.setFechado && lista.length) lista = lista.slice(0, -1);
+    const bug = document.getElementById("bug");
+    bug.querySelectorAll(".parc").forEach(el => el.remove());
+    lista.forEach((p, i) => {
+      ["a", "b"].forEach((L, r) => {
+        const d = document.createElement("div");
+        d.className = "num parc"; d.textContent = p[r];
+        d.style.gridColumn = 7 + i; d.style.gridRow = r + 1;
+        bug.appendChild(d);
+      });
+    });
+    const n = lista.length;
+    ["pa", "pb"].forEach(id => document.getElementById(id).style.gridColumn = 7 + n);
+    ["ta", "tb"].forEach(id => document.getElementById(id).style.gridColumn = 8 + n);
+    bug.style.gridTemplateColumns = "var(--h) var(--h) minmax(0, 1fr) calc(var(--h) * 1.05) minmax(0, 1.25fr) var(--h) " +
+      "calc(var(--h) * 1.0) ".repeat(n) + "calc(var(--h) * 1.15) calc(var(--h) * .95)";
+  }
   function desenhar(s) {
     if (!s || !s.a || !s.b) return;
     ultimo = s;
     document.getElementById("bug").className = s.visivel === false ? "escondido" : "";
+    porParciais(s);   // primeiro as colunas, para os nomes encolherem ao espaço certo
     porNome("na", s.a.nome); porNome("nb", s.b.nome);
     porAtleta("aa", s.a.atleta); porAtleta("ab", s.b.atleta);
     porNumero("ja", s.a.jogos || 0); porNumero("jb", s.b.jogos || 0);

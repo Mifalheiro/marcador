@@ -193,7 +193,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo } from "./boletim.js?v=14";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo } from "./boletim.js?v=15";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -376,13 +376,14 @@
       case "ponto":
         if (n > 0) {
           if (window.boletimAntesPonto) window.boletimAntesPonto(s);   // boletim: começa o jogo seguinte
-          if (s.fimJogo) { s.saqueInicial = null; s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; s.a.timeout = 0; s.b.timeout = 0; }
+          if (s.fimJogo) { s.parciais = []; s.saqueInicial = null; s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; s.a.timeout = 0; s.b.timeout = 0; }
           if (s.setFechado) { s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; }
           s[L].pontos++;
           if (s.auto) {
             const p = s[L].pontos, q = s[O].pontos;
             if (p >= s.pontosSet && p - q >= 2) {
               s[L].sets++; s.setFechado = true;
+              s.parciais = (s.parciais || []).concat([[s.a.pontos, s.b.pontos]]);   // resultado do set, para o direto
               if (s[L].sets >= s.setsJogo) { s[L].jogos++; s.fimJogo = true; }
               if (window.boletimAposSet) window.boletimAposSet(s, L);   // boletim: regista o set
             }
@@ -391,8 +392,11 @@
         break;
       case "sets": s[L].sets = Math.max(0, s[L].sets + n); break;
       case "jogos": s[L].jogos = Math.max(0, s[L].jogos + n); break;
-      case "novoSet": s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; break;
-      case "novoJogo": s.saqueInicial = null; s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; s.a.timeout = 0; s.b.timeout = 0; break;
+      case "novoSet":
+        // sem contagem automática, guarda aqui o resultado do set que acabou
+        if (!s.setFechado && (s.a.pontos || s.b.pontos)) s.parciais = (s.parciais || []).concat([[s.a.pontos, s.b.pontos]]);
+        s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; break;
+      case "novoJogo": s.parciais = []; s.saqueInicial = null; s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; s.a.timeout = 0; s.b.timeout = 0; break;
       case "timeout":   // 1 por jogo: o T fica até ao jogo seguinte; os primeiros 60 s têm contagem
         if (!s[L].timeout) { s[L].timeout = 1; s[L].toInicio = agora(); }
         else if (faltaTO(s[L]) > 0) { s[L].toInicio = 0; }            // parar a contagem antes do fim
@@ -404,7 +408,7 @@
         break;
       }
       case "atleta": s[L].atleta = String(valor || "").trim().slice(0, 40); break;
-      case "zerar": if (window.boletimZerar) window.boletimZerar(s); s.saqueInicial = null; ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; s[k].timeout = 0; }); s.setFechado = false; s.fimJogo = false; break;
+      case "zerar": if (window.boletimZerar) window.boletimZerar(s); s.parciais = []; s.saqueInicial = null; ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; s[k].timeout = 0; }); s.setFechado = false; s.fimJogo = false; break;
       case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "visivel": s.visivel = s.visivel === false; break;
       case "auto": s.auto = !s.auto; break;
