@@ -7,5 +7,6 @@ Dados em tempo real na Firebase (projeto `marcador-ded9b`, Realtime Database, ca
 | `index.html` | Marcador do direto (widget Web do PRISM): https://mifalheiro.github.io/marcador/ — `?teste` = fundo verde |
 | `controlo.html` | Controlo de quem marca (entrada com email/palavra-passe da Firebase) |
 | `sala.html` | Ecrã da sala (tablet/TV); segue o "Trocar lados" |
+| `boletim.js` + `boletim-fundo.jpg` | Boletim de jogo ATMP (Swaythling Modificado) dentro do controlo: cabeçalho, equipas, jogos, assinaturas e PDF |
 | `firebase-config.js` | Ligação ao projeto Firebase |
 | `navais.png` | Emblema do Navais |

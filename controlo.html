@@ -60,6 +60,55 @@
   .url { word-break: break-all; font-size: 13px; background: #0b1440; padding: 8px; border-radius: 8px; margin-top: 6px; }
   .aviso { font-size: 12px; opacity: .75; margin-top: 6px; }
 
+  /* ---- boletim ---- */
+  #bolFaixa { display: none; margin: 8px 8px 0; padding: 10px 12px; border-radius: 10px; background: #f2b705; color: #0a1748; font-size: 14px; font-weight: 700; }
+  .barra .bol { grid-column: span 3; background: #0f6b8a; }
+  #bolPainel { display: none; position: fixed; inset: 0; z-index: 8; overflow-y: auto; background: #0b1440; padding-bottom: 30px; user-select: text; }
+  .bol-topo { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #071034; position: sticky; top: 0; z-index: 2; }
+  .bol-topo button { border: 0; border-radius: 8px; background: #2a3c86; color: #fff; padding: 8px 12px; font-size: 14px; }
+  .bol-passos { display: flex; gap: 4px; padding: 8px; overflow-x: auto; }
+  .bol-passos span { flex: none; font-size: 12px; padding: 6px 8px; border-radius: 8px; background: #13225e; opacity: .7; }
+  .bol-passos span.sel { background: #f2b705; color: #0a1748; opacity: 1; font-weight: 700; }
+  .bol-cartao { margin: 8px; padding: 12px; background: #13225e; border-radius: 12px; }
+  .bol-sub { font-weight: 700; margin-bottom: 8px; }
+  .bol-grelha { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bol-campo span { display: block; font-size: 12px; opacity: .8; margin-bottom: 3px; }
+  .bol-campo input, .bol-cartao select, .bol-ass input { width: 100%; padding: 9px; border-radius: 8px; border: 0; font-size: 15px; }
+  .bol-check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .bol-check input { width: 22px; height: 22px; }
+  .bol-tab { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .bol-tab th { font-size: 12px; font-weight: 600; opacity: .8; padding: 4px; }
+  .bol-tab td { padding: 3px; border-top: 1px solid #24346f; font-size: 13px; }
+  .bol-tab td input { width: 100%; padding: 8px; border-radius: 6px; border: 0; font-size: 14px; }
+  .bol-tab .bol-lic { width: 80px; }
+  .bol-let { width: 40px; font-weight: 700; white-space: nowrap; }
+  .bol-scroll { overflow-x: auto; }
+  .bol-jogos td input { width: 44px; padding: 6px 1px; text-align: center; font-size: 13px; }
+  .bol-jogos td input.vivo::placeholder { color: #0f6b8a; font-weight: 700; }
+  .bol-jogos tr.atual { background: rgba(242,183,5,.18); }
+  .bol-jogos tr.fora { opacity: .4; }
+  .bol-jogos td:nth-child(2) { min-width: 120px; font-size: 12px; }
+  .bol-jogos td, .bol-jogos th { padding: 3px 2px; }
+  .bol-vs { opacity: .6; font-size: 11px; }
+  .bol-venc { font-size: 12px; min-width: 90px; }
+  .bol-par { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .bol-par select { padding: 6px; font-size: 13px; }
+  .bol-par span { grid-column: span 2; text-align: center; font-size: 11px; opacity: .6; }
+  .bol-res { margin-top: 10px; padding: 10px; background: #0b1440; border-radius: 8px; font-size: 16px; }
+  .bol-nav { display: flex; gap: 8px; margin: 8px; }
+  .bol-nav button, .bol-cartao > button.bol-pri { flex: 1; height: 50px; border: 0; border-radius: 10px; font-size: 16px; font-weight: 700; }
+  .bol-cartao > button.bol-pri { width: 100%; margin-top: 10px; }
+  .bol-pri { background: #f2b705; color: #0a1748; }
+  .bol-sec { background: #2a3c86; color: #fff; }
+  .bol-prot { display: flex; align-items: center; gap: 8px; margin: 6px 0 10px; font-size: 14px; }
+  .bol-prot button { border: 0; border-radius: 8px; padding: 8px 14px; background: #2a3c86; color: #fff; }
+  .bol-prot button.sel { background: #f2b705; color: #0a1748; font-weight: 700; }
+  .bol-ass { margin: 8px 0; }
+  .bol-ass-rot { font-size: 13px; opacity: .85; margin-bottom: 4px; }
+  .bol-ass canvas { display: block; width: 100%; aspect-ratio: 600 / 180; background: #fff; border-radius: 8px; margin-top: 6px; touch-action: none; }
+  .bol-limpar { margin-top: 4px; border: 0; border-radius: 8px; padding: 6px 10px; background: #2a3c86; color: #fff; font-size: 12px; }
+  .bol-alerta { margin: 8px; padding: 10px; background: #8a2b2b; border-radius: 8px; opacity: 1; font-size: 13px; }
+
   #pinEcra { position: fixed; inset: 0; background: #0b1440; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 9; }
   #pinEcra input { font-size: 20px; width: 260px; text-align: center; padding: 10px; border-radius: 10px; border: 0; }
   #pinEcra button { font-size: 18px; padding: 12px 30px; border-radius: 10px; border: 0; background: #f2b705; color: #0a1748; font-weight: 700; }
@@ -76,6 +125,8 @@
 
   <header><h1>Marcador</h1><div class="direita"><div id="estado">…</div><button id="btEcra" onclick="ecraInteiro()">⛶ Ecrã inteiro</button></div></header>
 
+  <div id="bolFaixa" onclick="abrirBoletim()"></div>
+
   <div class="equipas">
     <div class="eq" id="eq_a"></div>
     <div class="eq" id="eq_b"></div>
@@ -88,7 +139,10 @@
     <button onclick="enviar('trocar')">⇄ Trocar lados</button>
     <button id="btVis" onclick="enviar('visivel')">Esconder</button>
     <button class="perigo" onclick="if (confirm('Pôr tudo a zero (jogos, sets e pontos)?')) enviar('zerar')">Zerar tudo</button>
+    <button class="bol" onclick="abrirBoletim()">📋 Boletim de jogo</button>
   </div>
+
+  <div id="bolPainel"></div>
 
   <details>
     <summary>Definições</summary>
@@ -116,9 +170,10 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
+  import { instalarBoletim } from "./boletim.js";
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -277,6 +332,7 @@
     const fim = s.fimJogo ? "Fim do jogo — próximo ponto começa jogo novo"
               : s.setFechado ? "Set fechado — próximo ponto começa set novo" : "";
     if (fim) msg(fim, "espera");
+    if (window.boletimMostrar) window.boletimMostrar(s);
   }
 
   /* ---------- Ações ---------- */
@@ -295,6 +351,7 @@
     switch (tipo) {
       case "ponto":
         if (n > 0) {
+          if (window.boletimAntesPonto) window.boletimAntesPonto(s);   // boletim: começa o jogo seguinte
           if (s.fimJogo) { s.saqueInicial = null; s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; s.a.timeout = 0; s.b.timeout = 0; }
           if (s.setFechado) { s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; }
           s[L].pontos++;
@@ -303,6 +360,7 @@
             if (p >= s.pontosSet && p - q >= 2) {
               s[L].sets++; s.setFechado = true;
               if (s[L].sets >= s.setsJogo) { s[L].jogos++; s.fimJogo = true; }
+              if (window.boletimAposSet) window.boletimAposSet(s, L);   // boletim: regista o set
             }
           }
         } else s[L].pontos = Math.max(0, s[L].pontos - 1);
@@ -364,18 +422,22 @@
       '<button onclick="apagar(\'' + c.id + '\')">Apagar</button></div>').join("") ||
       '<div class="aviso">Ainda não há clubes guardados.</div>';
   }
-  window.escolherClube = function (L, sel) {
+  // põe um clube (nome + emblema) num dos lados do marcador; não grava
+  async function aplicarClube(L, v) {
+    estado[L].clubeId = v;
+    if (v === "navais") { estado[L].nome = "C. D. C. NAVAIS"; estado[L].logo = "navais"; return; }
+    const c = clubes[v]; if (!c) return;
+    estado[L].nome = c.nome;
+    if (c.logo) { await set(ref(db, "marcador/logos/" + estado[L].slot), c.logo); estado[L].logo = "slot"; }
+    else estado[L].logo = "";
+  }
+  window.escolherClube = async function (L, sel) {
     const v = sel.value;
     sel.blur();
     if (!v || !estado) return;
     hist.push(JSON.parse(JSON.stringify(estado)));
-    estado[L].clubeId = v;
-    if (v === "navais") { estado[L].nome = "C. D. C. NAVAIS"; estado[L].logo = "navais"; gravar(); mostrar(); return; }
-    const c = clubes[v]; if (!c) return;
-    estado[L].nome = c.nome;
-    if (c.logo) {
-      set(ref(db, "marcador/logos/" + estado[L].slot), c.logo).then(() => { estado[L].logo = "slot"; gravar(); mostrar(); });
-    } else { estado[L].logo = ""; gravar(); mostrar(); }
+    await aplicarClube(L, v);
+    gravar(); mostrar();
   };
 
   // Adicionar / atualizar um clube (nas Definições)
@@ -404,6 +466,26 @@
       document.getElementById("novoPrev").innerHTML = ""; logoNovo = "";
     }).catch(e => msg("Erro: " + e.message, "erro"));
   };
+  /* ---------- Boletim de jogo (boletim.js) ---------- */
+  instalarBoletim({
+    estado: () => estado,
+    mutar: (fn, comHist) => {
+      if (!estado) return;
+      if (comHist) { hist.push(JSON.parse(JSON.stringify(estado))); if (hist.length > MAX_HIST) hist.shift(); }
+      fn(estado); gravar(); mostrar();
+    },
+    mostrar: () => { if (estado) mostrar(); },
+    listaClubes: () => listaOrdenada(),
+    clube: id => clubes[id],
+    lerUltimo: async () => null,
+    lerPlantel: async id => { const v = (await get(ref(db, "marcador/plantel/" + id))).val(); return v ? Object.values(v) : null; },
+    guardarPlantel: (id, atl) => set(ref(db, "marcador/plantel/" + id), atl),
+    aplicarClubes: async (casa, vis) => { await aplicarClube("a", casa); await aplicarClube("b", vis); },
+    lerAssinaturas: async () => (await get(ref(db, "marcador/assinaturas"))).val(),
+    guardarAssinatura: (id, dados) => set(ref(db, "marcador/assinaturas/" + id), dados),
+    apagarAssinaturas: () => remove(ref(db, "marcador/assinaturas"))
+  });
+
   window.apagar = function (id) {
     if (confirm("Apagar este clube da lista?")) remove(ref(db, "marcador/clubes/" + id));
   };
