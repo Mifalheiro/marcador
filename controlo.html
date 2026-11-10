@@ -34,6 +34,8 @@
   .tobt.usado { background: #2a3c86; opacity: .5; }
   select.clube:disabled { opacity: 1; color: #fff; -webkit-text-fill-color: #fff; appearance: none; -webkit-appearance: none; }
   .atl.fixo { background: #e8ebf5; color: #0a1748; font-weight: 600; }
+  .manual { display: grid; gap: 6px; }
+  .manual button { height: 44px; border: 0; border-radius: 10px; background: #f2b705; color: #0a1748; font-weight: 700; font-size: 15px; }
   .atl { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; }
   .sqbt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 14px; font-weight: 700; }
   .sqbt.chama { background: #f2b705; color: #0a1748; animation: chama 1s ease-in-out infinite; }
@@ -171,6 +173,13 @@
     <input id="pontosSet" type="number" min="1" onchange="enviar('pontosSet', null, this.value)">
     <label>Sets para ganhar um jogo (3 = melhor de 5)</label>
     <input id="setsJogo" type="number" min="1" onchange="enviar('setsJogo', null, this.value)">
+    <label>Jogo sem boletim (amigável)</label>
+    <div class="manual">
+      <select id="manA" class="clube"></select><input id="manAtlA" class="atl" placeholder="Atleta(s) do lado de cima">
+      <select id="manB" class="clube"></select><input id="manAtlB" class="atl" placeholder="Atleta(s) do lado de baixo">
+      <button onclick="aplicarManual()">Aplicar ao marcador</button>
+    </div>
+    <div class="aviso">Escolhe os clubes e atletas à mão, sem boletim. Só funciona quando não há boletim de jogo a decorrer.</div>
     <label>Adicionar ou atualizar clube</label>
     <input id="novoNome" placeholder="Nome do clube (ex.: A. R. CANIDELO - B)">
     <div class="logo-linha" style="margin-top:8px"><span id="novoPrev"></span>
@@ -499,6 +508,13 @@
   }
   function mostrarClubes() {
     ["a", "b"].forEach(preencherLista);
+    // listas do jogo sem boletim (Definições)
+    ["manA", "manB"].forEach(id => {
+      const sel = document.getElementById(id), atual = sel.value;
+      sel.innerHTML = '<option value="">— clube —</option><option value="navais">C. D. C. NAVAIS</option>' +
+        listaOrdenada().map(c => '<option value="' + c.id + '">' + esc(c.nome) + "</option>").join("");
+      sel.value = atual;
+    });
     document.getElementById("listaClubes").innerHTML = listaOrdenada().map(c =>
       "<div>" + (c.logo ? '<img src="' + c.logo + '">' : "<img>") + "<span>" + esc(c.nome) + "</span>" +
       '<button onclick="apagar(\'' + c.id + '\')">Apagar</button></div>').join("") ||
@@ -636,6 +652,21 @@
       msg("Erro a importar a lista: " + (e && e.message ? e.message : e), "erro");
       if (String(e && e.message).toLowerCase().includes("permission")) alert("A Firebase recusou guardar a lista. Confirma que juntaste a regra \"fptm\" nas regras da Realtime Database.");
     }
+  };
+
+  // Jogo sem boletim: clubes e atletas escolhidos à mão nas Definições
+  window.aplicarManual = async function () {
+    if (!estado) return;
+    if (doBoletim()) { alert("Há um boletim de jogo a decorrer. Para escolher à mão, faz primeiro Zerar tudo."); return; }
+    const va = document.getElementById("manA").value, vb = document.getElementById("manB").value;
+    if (!va && !vb) { msg("Escolhe pelo menos um clube", "erro"); return; }
+    hist.push(JSON.parse(JSON.stringify(estado)));
+    if (va) await aplicarClube("a", va);
+    if (vb) await aplicarClube("b", vb);
+    estado.a.atleta = document.getElementById("manAtlA").value.trim().slice(0, 40);
+    estado.b.atleta = document.getElementById("manAtlB").value.trim().slice(0, 40);
+    gravar(); mostrar();
+    msg("✓ Clubes aplicados ao marcador", "ok");
   };
 
   window.apagar = function (id) {
