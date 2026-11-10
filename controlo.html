@@ -32,6 +32,8 @@
   .tobt { height: 44px; border: 0; border-radius: 10px; background: #000; color: #fff; font-size: 14px; font-weight: 700; }
   .tobt.ativo { background: #f2b705; color: #0a1748; }
   .tobt.usado { background: #2a3c86; opacity: .5; }
+  select.clube:disabled { opacity: 1; color: #fff; -webkit-text-fill-color: #fff; appearance: none; -webkit-appearance: none; }
+  .atl.fixo { background: #e8ebf5; color: #0a1748; font-weight: 600; }
   .atl { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; }
   .sqbt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 14px; font-weight: 700; }
   .sqbt.chama { background: #f2b705; color: #0a1748; animation: chama 1s ease-in-out infinite; }
@@ -337,6 +339,7 @@
     });
   }
   window.mudarAtleta = function (L, inp) {
+    if (doBoletim()) { mostrar(); return; }
     const v = inp.value.trim();
     acao("atleta", L, v);
     if (v) set(ref(db, "marcador/atletas/" + (estado[L].clubeId || "sem_clube") + "/" + chaveNome(v)), v);
@@ -357,6 +360,13 @@
     // ordem dos cartões segue o lado da mesa (como no ecrã da sala)
     document.getElementById("eq_a").style.order = s.ladosTrocados ? 2 : 1;
     document.getElementById("eq_b").style.order = s.ladosTrocados ? 1 : 2;
+    // com o boletim a decorrer, clubes e atletas vêm do boletim e não se mudam aqui
+    const doBoletim = !!(s.boletim && (s.boletim.passo === "jogos" || s.boletim.passo === "assinar"));
+    ["a", "b"].forEach(L => {
+      document.getElementById("sel_" + L).disabled = doBoletim;
+      const at = document.getElementById("atl_" + L); at.readOnly = doBoletim; at.classList.toggle("fixo", doBoletim);
+      at.title = doBoletim ? "Definido no boletim de jogo" : "";
+    });
     const parado = !!(s.fimJogo || s.setFechado || !s.saqueInicial);
     document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.toggle("bloq", parado));
     document.getElementById("btNovoSet").classList.toggle("chama", !!s.setFechado && !s.fimJogo);
@@ -501,10 +511,11 @@
     if (c.logo) { await set(ref(db, "marcador/logos/" + estado[L].slot), c.logo); estado[L].logo = "slot"; }
     else estado[L].logo = "";
   }
+  const doBoletim = () => !!(estado && estado.boletim && (estado.boletim.passo === "jogos" || estado.boletim.passo === "assinar"));
   window.escolherClube = async function (L, sel) {
     const v = sel.value;
     sel.blur();
-    if (!v || !estado) return;
+    if (!v || !estado || doBoletim()) { mostrar(); return; }
     hist.push(JSON.parse(JSON.stringify(estado)));
     await aplicarClube(L, v);
     gravar(); mostrar();
