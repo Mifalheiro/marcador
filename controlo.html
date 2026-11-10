@@ -40,6 +40,12 @@
   .sqbt.sim { background: #22c55e; color: #05230f; }
   .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
+  .linha-pts { display: grid; grid-template-columns: 1fr 1.1fr 1.7fr; gap: 8px; align-items: center; }
+  .linha-pts .mais { height: 110px; }
+  .linha-pts .menos-pt { height: 110px; font-size: 22px; font-weight: 700; }
+  .teste-so { visibility: hidden; }
+  body.modo-teste .teste-so { visibility: visible; }
+  .barra button:disabled { opacity: .35; }
   .mais.bloq, .menos-pt.bloq { opacity: .35; }
   .barra button.chama { background: #f2b705; color: #0a1748; animation: chama 1s ease-in-out infinite; }
   @keyframes chama { 50% { filter: brightness(1.3); box-shadow: 0 0 0 3px rgba(242,183,5,.45); } }
@@ -153,12 +159,12 @@
   </div>
 
   <div class="barra">
-    <button class="anular" onclick="enviar('anular')">↶ Anular</button>
+    <button class="anular" id="btAnular" onclick="enviar('anular')">↶ Anular</button>
     <button id="btNovoSet" onclick="enviar('novoSet')">Novo set</button>
     <button id="btNovoJogo" onclick="enviar('novoJogo')">Novo jogo</button>
     <button id="btTrocar" onclick="enviar('trocar')">⇄ Trocar lados</button>
     <button id="btVis" onclick="enviar('visivel')">Esconder</button>
-    <button class="perigo" onclick="if (confirm('Pôr tudo a zero (jogos, sets, pontos e boletim de jogo)?')) enviar('zerar')">Zerar tudo</button>
+    <button class="perigo" id="btZerar" onclick="if (confirm('Pôr tudo a zero (jogos, sets, pontos e boletim de jogo)?')) enviar('zerar')">Zerar tudo</button>
     <button class="bol" onclick="abrirBoletim()">📋 Boletim de jogo</button>
   </div>
 
@@ -171,6 +177,7 @@
     <input id="pontosSet" type="number" min="1" onchange="enviar('pontosSet', null, this.value)">
     <label>Sets para ganhar um jogo (3 = melhor de 5)</label>
     <input id="setsJogo" type="number" min="1" onchange="enviar('setsJogo', null, this.value)">
+    <label><input type="checkbox" id="teste" style="width:auto" onchange="enviar('teste')"> Teste (mostra os + e − dos sets e jogos e o Zerar tudo)</label>
     <label><input type="checkbox" id="amigavel" style="width:auto" onchange="enviar('amigavel')"> Jogo amigável (sem boletim)</label>
     <div class="aviso">Ligado: escolhes o clube e escreves os atletas diretamente nos cartões. Desligado: clubes e atletas vêm do boletim de jogo.</div>
     <label>Adicionar ou atualizar clube</label>
@@ -218,7 +225,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=24";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=25";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -300,15 +307,16 @@
       '<select class="clube" id="sel_' + L + '" onchange="escolherClube(\'' + L + '\',this)"></select></div>' +
       '<button class="sqbt" id="sq_' + L + '" onclick="acao(\'saque\',\'' + L + '\')">Serve</button>' +
       '<input class="atl" id="atl_' + L + '" list="dl_' + L + '" placeholder="Atleta(s) a jogar" onchange="mudarAtleta(\'' + L + '\',this)"><datalist id="dl_' + L + '"></datalist>' +
+      '<div class="linha-pts">' +
+      '<button class="menos-pt" onclick="acao(\'ponto\',\'' + L + '\',-1)">−1</button>' +
       '<div class="pts" id="pts_' + L + '">0</div>' +
-      '<button class="mais" onclick="acao(\'ponto\',\'' + L + '\',1)">+1 PONTO</button>' +
-      '<button class="menos-pt" onclick="acao(\'ponto\',\'' + L + '\',-1)">−1 ponto</button>' +
-      '<div class="linha"><button class="peq" onclick="acao(\'sets\',\'' + L + '\',-1)">−</button>' +
+      '<button class="mais" onclick="acao(\'ponto\',\'' + L + '\',1)">+1 PONTO</button></div>' +
+      '<div class="linha"><button class="peq teste-so" onclick="acao(\'sets\',\'' + L + '\',-1)">−</button>' +
       '<div class="rot">Sets<span class="val" id="sets_' + L + '">0</span></div>' +
-      '<button class="peq" onclick="acao(\'sets\',\'' + L + '\',1)">+</button></div>' +
-      '<div class="linha"><button class="peq" onclick="acao(\'jogos\',\'' + L + '\',-1)">−</button>' +
+      '<button class="peq teste-so" onclick="acao(\'sets\',\'' + L + '\',1)">+</button></div>' +
+      '<div class="linha"><button class="peq teste-so" onclick="acao(\'jogos\',\'' + L + '\',-1)">−</button>' +
       '<div class="rot">Jogos<span class="val" id="jogos_' + L + '">0</span></div>' +
-      '<button class="peq" onclick="acao(\'jogos\',\'' + L + '\',1)">+</button></div>' +
+      '<button class="peq teste-so" onclick="acao(\'jogos\',\'' + L + '\',1)">+</button></div>' +
       '<button class="tobt" id="to_' + L + '" onclick="acao(\'timeout\',\'' + L + '\')">Time out</button>';
   }
   document.getElementById("eq_a").innerHTML = cartao("a");
@@ -370,6 +378,16 @@
       at.placeholder = editavel ? "Atleta(s) a jogar" : "";
     });
     document.getElementById("amigavel").checked = !!s.amigavel;
+    // botões que só servem no fim de um set
+    const fimSet = !!(s.setFechado || s.fimJogo);
+    document.getElementById("btAnular").disabled = !(fimSet && hist.length);
+    document.getElementById("btNovoSet").disabled = !(s.setFechado && !s.fimJogo);
+    document.getElementById("btVis").disabled = !(fimSet || s.visivel === false);
+    // modo de teste: + e − dos sets/jogos e Zerar tudo; o Zerar aparece também depois de gerar o PDF
+    document.body.classList.toggle("modo-teste", !!s.teste);
+    document.getElementById("teste").checked = !!s.teste;
+    const pdfFeito = !!(s.boletim && window.boletimBloqueado && window.boletimBloqueado(s.boletim));
+    document.getElementById("btZerar").style.display = s.teste || pdfFeito ? "" : "none";
     const parado = !!(s.fimJogo || s.setFechado || !s.saqueInicial || s.trocarPendente);
     document.getElementById("btTrocar").classList.toggle("chama", !!s.trocarPendente);
     if (s.trocarPendente) msg("Mudança de campo — carrega em Trocar lados", "espera");
@@ -391,9 +409,10 @@
     });
     if (document.activeElement.id !== "pontosSet") document.getElementById("pontosSet").value = s.pontosSet;
     if (document.activeElement.id !== "setsJogo") document.getElementById("setsJogo").value = s.setsJogo;
-    const fim = s.fimJogo ? "Fim do jogo — próximo ponto começa jogo novo"
-              : s.setFechado ? "Set fechado — próximo ponto começa set novo" : "";
+    const fim = s.fimJogo ? "Fim do jogo — carrega em Novo jogo (ou Anular)"
+              : s.setFechado ? "Fim do set — carrega em Novo set (ou Anular)" : "";
     if (fim) msg(fim, "espera");
+    else if (!s.trocarPendente && /terminado|Fim do jogo|Fim do set|Mudança de campo/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
     if (window.boletimMostrar) window.boletimMostrar(s);
   }
 
@@ -457,6 +476,8 @@
       case "novoSet":
         // sem contagem automática, guarda aqui o resultado do set que acabou
         if (!s.setFechado && (s.a.pontos || s.b.pontos)) s.parciais = (s.parciais || []).concat([[s.a.pontos, s.b.pontos]]);
+        // set novo: os jogadores mudam de campo (troca o controlo e o ecrã da sala)
+        if (s.setFechado) s.ladosTrocados = !s.ladosTrocados;
         s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; s.trocarPendente = false; s.trocaFeita = false; break;
       case "novoJogo":
         s.trocarPendente = false; s.trocaFeita = false;
@@ -487,7 +508,8 @@
         s.ladosTrocados = !s.ladosTrocados;
         if (s.trocarPendente) { s.trocarPendente = false; s.trocaFeita = true; }   // mudança de campo do set decisivo feita
         break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
-      case "visivel": s.visivel = s.visivel === false; break;
+      case "visivel": hist.pop(); s.visivel = s.visivel === false; break;   // não entra no Anular
+      case "teste": hist.pop(); s.teste = !s.teste; break;
       case "auto": s.auto = !s.auto; break;
       case "pontosSet": s.pontosSet = Math.max(1, n || 11); break;
       case "setsJogo": s.setsJogo = Math.max(1, n || 3); break;

@@ -397,20 +397,9 @@ function passoClube(b, lado) {
     linhas += "<tr><td class=\"bol-let\">" + (letras[i] ? letras[i] + " -" : "") + "</td><td>" + campoNome + "</td>" +
       '<td><input id="t_l' + i + '" value="' + esc(a.l) + '" placeholder="Licença" inputmode="numeric" class="bol-lic"></td></tr>';
   });
-  // qual clube da lista da FPTM usar (escolhido sozinho; pode-se trocar)
-  let fptmLinha = "";
-  if (c.clubeId && fptm && fptm.clubes) {
-    const ks = Object.keys(fptm.clubes).sort((x, y) => {
-      const px = /porto/i.test(fptm.clubes[x].assoc) ? 0 : 1, py = /porto/i.test(fptm.clubes[y].assoc) ? 0 : 1;
-      return px - py || fptm.clubes[x].nome.localeCompare(fptm.clubes[y].nome, "pt");
-    });
-    fptmLinha = '<label class="bol-fptm"><span>Lista da FPTM</span><select onchange="bolMapa(\'' + lado + '\',this.value)">' +
-      '<option value="__nenhum"' + (kf ? "" : " selected") + ">(não usar — escrever à mão)</option>" +
-      ks.map(k => '<option value="' + k + '"' + (k === kf ? " selected" : "") + ">" + esc(fptm.clubes[k].nome) + " · " + esc(fptm.clubes[k].assoc) + "</option>").join("") +
-      "</select></label>";
-  } else if (c.clubeId && fptm && !fptm.clubes) {
-    fptmLinha = '<div class="aviso">Sem lista da FPTM: importa-a no controlo, em Definições → Importar lista da FPTM.</div>';
-  }
+  // a ligação ao clube da lista da FPTM é feita sozinha (pelo nome do clube)
+  const fptmLinha = c.clubeId && fptm && !fptm.clubes
+    ? '<div class="aviso">Sem lista da FPTM: importa-a no controlo, em Definições → Importar lista da FPTM.</div>' : "";
   const voltar = lado === "casa" ? "cab" : "casa", seguir = lado === "casa" ? "vis" : "jogos";
   return '<div class="bol-cartao"><div class="bol-sub">' + titulo + "</div>" +
     '<select id="t_clube" onchange="bolClube(\'' + lado + '\', this.value)"><option value="">Escolher clube…</option>' + opcoes + "</select>" +
