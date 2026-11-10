@@ -17,7 +17,7 @@ const JOGOS_PARA_GANHAR = 4;
 
 // Posições (em pontos, folha A4 deitada 841.89 × 595.3) de cada campo no modelo da ATMP.
 // [x, y do centro, alinhamento c=centro / l=esquerda]
-const P = {"serie":[257.2,127.2,"c"],"atraso":[601.4,127.2,"c"],"jogoN":[424.5,146.3,"c"],"antecipado":[601.4,146.3,"c"],"epoca":[735.4,88.9,"c"],"data":[735.4,108.1,"c"],"jornada":[257.2,165.5,"c"],"divisao":[670.0,165.5,"c"],"inicio":[754.2,127.2,"c"],"fim":[754.2,146.3,"c"],"local":[735.4,188.2,"c"],"clubeCasa":[181.9,211.0,"l"],"clubeVis":[411.5,211.0,"l"],"casaNome0":[151.9,254.2,"l"],"casaLic0":[328.6,254.2,"c"],"visNome0":[385.1,254.2,"l"],"visLic0":[563.2,254.2,"c"],"casaNome1":[151.9,272.6,"l"],"casaLic1":[328.6,272.6,"c"],"visNome1":[385.1,272.6,"l"],"visLic1":[563.2,272.6,"c"],"casaNome2":[151.9,291.1,"l"],"casaLic2":[328.6,291.1,"c"],"visNome2":[385.1,291.1,"l"],"visLic2":[563.2,291.1,"c"],"casaNome3":[151.9,309.6,"l"],"casaLic3":[328.6,309.6,"c"],"visNome3":[385.1,309.6,"l"],"visLic3":[563.2,309.6,"c"],"protCasaSim":[736.8,309.6,"c"],"protCasaNao":[755.7,309.6,"c"],"casaNome4":[151.9,328.0,"l"],"casaLic4":[328.6,328.0,"c"],"visNome4":[385.1,328.0,"l"],"visLic4":[563.2,328.0,"c"],"visitado":[709.5,272.6,"l"],"delegCasa":[709.5,346.5,"l"],"visitante":[709.5,387.4,"l"],"j0nome":[241.2,387.4,"c"],"j0s0":[369.6,387.4,"c"],"j0s1":[397.4,387.4,"c"],"j0s2":[424.6,387.4,"c"],"j0s3":[452.8,387.4,"c"],"j0s4":[481.4,387.4,"c"],"j0venc":[544.0,387.4,"c"],"j1nome":[241.2,405.8,"c"],"j1s0":[369.6,405.8,"c"],"j1s1":[397.4,405.8,"c"],"j1s2":[424.6,405.8,"c"],"j1s3":[452.8,405.8,"c"],"j1s4":[481.4,405.8,"c"],"j1venc":[544.0,405.8,"c"],"j2nome":[241.2,424.3,"c"],"j2s0":[369.6,424.3,"c"],"j2s1":[397.4,424.3,"c"],"j2s2":[424.6,424.3,"c"],"j2s3":[452.8,424.3,"c"],"j2s4":[481.4,424.3,"c"],"j2venc":[544.0,424.3,"c"],"protVisSim":[736.8,424.3,"c"],"protVisNao":[755.7,424.3,"c"],"j3s0":[369.6,452.0,"c"],"j3s1":[397.4,452.0,"c"],"j3s2":[424.6,452.0,"c"],"j3s3":[452.8,452.0,"c"],"j3venc":[544.0,452.0,"c"],"j3nome":[241.2,442.8,"c"],"j3nome2":[241.2,461.2,"c"],"j3s4":[481.4,452.0,"c"],"j4nome":[241.2,479.7,"c"],"j4s0":[369.6,479.7,"c"],"j4s3":[452.8,479.7,"c"],"j4s4":[481.4,479.7,"c"],"j4venc":[544.0,479.7,"c"],"j5nome":[241.2,498.1,"c"],"j5s0":[369.6,498.1,"c"],"j5s1":[397.4,498.1,"c"],"j5s2":[424.6,498.1,"c"],"j5s3":[452.8,498.1,"c"],"j5s4":[481.4,498.1,"c"],"j5venc":[544.0,498.1,"c"],"j6nome":[241.2,516.6,"c"],"j6s0":[369.6,516.6,"c"],"j6s1":[397.4,516.6,"c"],"j6s2":[424.6,516.6,"c"],"j6s3":[452.8,516.6,"c"],"j6s4":[481.4,516.6,"c"],"j6venc":[544.0,516.6,"c"],"resCasa":[308.7,553.8,"c"],"resVis":[335.2,553.8,"c"],"j4s1":[397.4,479.7,"c"],"j4s2":[424.6,479.7,"c"],"favor":[426,553.8,"l"],"arbitro":[677.5,516.6,"l"],"delegVis":[709.5,461.2,"l"]};
+const P = {"serie":[256.8,127.2,"c"],"atraso":[600.2,127.2,"c"],"jogoN":[423.7,146.3,"c"],"antecipado":[600.2,146.3,"c"],"epoca":[734.0,88.9,"c"],"data":[734.0,108.1,"c"],"jornada":[256.8,165.5,"c"],"divisao":[668.6,165.5,"c"],"inicio":[752.7,127.2,"c"],"fim":[752.7,146.3,"c"],"local":[734.0,188.2,"c"],"clubeCasa":[181.7,211.0,"l"],"clubeVis":[410.7,211.0,"l"],"casaNome0":[151.8,254.2,"l"],"casaLic0":[327.9,254.2,"c"],"visNome0":[384.3,254.2,"l"],"visLic0":[562.0,254.2,"c"],"casaNome1":[151.8,272.6,"l"],"casaLic1":[327.9,272.6,"c"],"visNome1":[384.3,272.6,"l"],"visLic1":[562.0,272.6,"c"],"casaNome2":[151.8,291.1,"l"],"casaLic2":[327.9,291.1,"c"],"visNome2":[384.3,291.1,"l"],"visLic2":[562.0,291.1,"c"],"casaNome3":[151.8,309.6,"l"],"casaLic3":[327.9,309.6,"c"],"visNome3":[384.3,309.6,"l"],"visLic3":[562.0,309.6,"c"],"protCasaSim":[735.4,309.6,"c"],"protCasaNao":[754.2,309.6,"c"],"casaNome4":[151.8,328.0,"l"],"casaLic4":[327.9,328.0,"c"],"visNome4":[384.3,328.0,"l"],"visLic4":[562.0,328.0,"c"],"visitado":[708.1,272.6,"l"],"delegCasa":[708.1,346.5,"l"],"visitante":[708.1,387.4,"l"],"j0nome":[240.8,387.4,"c"],"j0s0":[368.9,387.4,"c"],"j0s1":[396.7,387.4,"c"],"j0s2":[423.8,387.4,"c"],"j0s3":[451.9,387.4,"c"],"j0s4":[480.5,387.4,"c"],"j0venc":[543.0,387.4,"c"],"j1nome":[240.8,405.8,"c"],"j1s0":[368.9,405.8,"c"],"j1s1":[396.7,405.8,"c"],"j1s2":[423.8,405.8,"c"],"j1s3":[451.9,405.8,"c"],"j1s4":[480.5,405.8,"c"],"j1venc":[543.0,405.8,"c"],"j2nome":[240.8,424.3,"c"],"j2s0":[368.9,424.3,"c"],"j2s1":[396.7,424.3,"c"],"j2s2":[423.8,424.3,"c"],"j2s3":[451.9,424.3,"c"],"j2s4":[480.4,424.3,"c"],"j2venc":[543.0,424.3,"c"],"protVisSim":[735.4,424.3,"c"],"protVisNao":[754.2,424.3,"c"],"j3nome":[240.8,445.5,"c"],"j3s0":[368.9,452.0,"c"],"j3s1":[396.7,452.0,"c"],"j3s2":[423.8,452.0,"c"],"j3s3":[451.9,452.0,"c"],"j3s4":[480.4,452.0,"c"],"j3venc":[543.0,452.0,"c"],"j4nome":[240.8,479.7,"c"],"j4s0":[368.9,479.7,"c"],"j4s3":[451.9,479.7,"c"],"j4s4":[480.4,479.7,"c"],"j4venc":[543.0,479.7,"c"],"j5nome":[240.8,498.1,"c"],"j5s0":[368.9,498.1,"c"],"j5s1":[396.6,498.1,"c"],"j5s2":[423.7,498.1,"c"],"j5s3":[451.9,498.1,"c"],"j5s4":[480.4,498.1,"c"],"j5venc":[543.0,498.1,"c"],"j6nome":[240.8,516.6,"c"],"j6s0":[368.9,516.6,"c"],"j6s1":[396.6,516.6,"c"],"j6s2":[423.7,516.6,"c"],"j6s3":[451.9,516.6,"c"],"j6s4":[480.4,516.6,"c"],"j6venc":[543.0,516.6,"c"],"resCasa":[308.2,553.8,"c"],"resVis":[334.6,553.8,"c"],"j4s1":[396.7,479.7,"c"],"j4s2":[423.8,479.7,"c"],"favor":[426,553.8,"l"],"arbitro":[676.1,516.6,"l"],"delegVis":[708.1,461.2,"l"],"j3nome2":[240.8,458.5,"c"]};
 
 let api = null;          // funções do controlo (estado, gravar, clubes…)
 let aberto = false;      // painel do boletim aberto?
@@ -41,7 +41,7 @@ function novo(ant) {
     par: { casa: [-1, -1], vis: [-1, -1] },
     jogos: ORDEM.map(() => ({ sets: [], venc: "" })),
     atual: -1,
-    assin: { protCasa: "", protVis: "", nomeCasa: "", nomeVis: "", nomeArb: "" }
+    assin: { protCasa: "", protVis: "", nomeCasa: "", nomeVis: "", nomeArb: "", subCasa: false, subVis: false, subArb: false }
   };
 }
 
@@ -75,6 +75,9 @@ function vitorias(b) {
   b.jogos.forEach(g => { if (g.venc === "casa") casa++; else if (g.venc === "vis") vis++; });
   return { casa, vis };
 }
+// Depois de uma equipa (ou o árbitro) submeter, o boletim fica fechado: não se pode voltar atrás
+const bloqueado = b => !!(b && b.assin && (b.assin.subCasa || b.assin.subVis || b.assin.subArb));
+window.boletimBloqueado = b => bloqueado(b);
 const decidido = b => { const w = vitorias(b); return w.casa >= JOGOS_PARA_GANHAR || w.vis >= JOGOS_PARA_GANHAR; };
 
 // Próximo jogo a disputar (-1 se o encontro já está decidido ou acabou)
@@ -122,7 +125,7 @@ function iniciarJogo(s, g) {
 
 // Antes de contar um ponto: se não há jogo em curso no boletim, começa o próximo
 window.boletimAntesPonto = function (s) {
-  const b = norm(s.boletim); if (!b || b.passo !== "jogos" && b.passo !== "assinar") return;
+  const b = norm(s.boletim); if (!b || bloqueado(b) || b.passo !== "jogos" && b.passo !== "assinar") return;
   s.boletim = b;
   if (b.atual >= 0 && !s.fimJogo) return;
   const g = proximo(b);
@@ -131,7 +134,7 @@ window.boletimAntesPonto = function (s) {
 
 // Depois de um set fechar (contagem automática): regista-o no boletim
 window.boletimAposSet = function (s, L) {
-  const b = norm(s.boletim); if (!b || b.atual < 0) return;
+  const b = norm(s.boletim); if (!b || bloqueado(b) || b.atual < 0) return;
   s.boletim = b;
   const jogo = b.jogos[b.atual];
   jogo.sets.push([s.a.pontos, s.b.pontos]);   // a = casa, b = visitante
@@ -140,6 +143,14 @@ window.boletimAposSet = function (s, L) {
     b.atual = -1;
     const w = vitorias(b); s.a.jogos = w.casa; s.b.jogos = w.vis;
   }
+};
+
+// "Zerar tudo" no controlo: apaga também o boletim e as assinaturas
+window.boletimZerar = function (s) {
+  s.boletim = null;
+  assinaturas = {};
+  if (api) api.apagarAssinaturas();
+  if (aberto) window.fecharBoletim();
 };
 
 /* ------------------------------------------------------------------ */
@@ -160,11 +171,14 @@ window.abrirBoletim = function () {
   const s = api.estado();
   if (!s.boletim) {
     api.lerUltimo().then(ant => { mudar(b => Object.assign(b, novo(ant))); desenhar(); });
-  } else desenhar();
+  } else {
+    if (bloqueado(norm(s.boletim)) && s.boletim.passo !== "assinar") mudar(b => { b.passo = "assinar"; });
+    desenhar();
+  }
   $("bolPainel").style.display = "block";
 };
 window.fecharBoletim = function () { aberto = false; $("bolPainel").style.display = "none"; api.mostrar(); };
-window.bolPasso = function (p) { guardarCampos(); mudar(b => { b.passo = p; }); desenhar(); window.scrollTo(0, 0); $("bolPainel").scrollTop = 0; };
+window.bolPasso = function (p) { if (bloqueado(bol()) && p !== "assinar") return; guardarCampos(); mudar(b => { b.passo = p; }); desenhar(); window.scrollTo(0, 0); $("bolPainel").scrollTop = 0; };
 
 // Chamado pelo controlo sempre que o estado muda
 window.boletimMostrar = function (s) {
@@ -184,7 +198,8 @@ function faixa(s) {
   if (!b || (b.passo !== "jogos" && b.passo !== "assinar")) { el.style.display = "none"; return; }
   const w = vitorias(b), g = b.atual >= 0 ? b.atual : proximo(b);
   let txt;
-  if (decidido(b)) txt = "Encontro terminado · " + w.casa + " - " + w.vis + " · toca para assinar";
+  if (bloqueado(b)) txt = "Boletim submetido · " + w.casa + " - " + w.vis + " · toca para gerar o PDF";
+  else if (decidido(b)) txt = "Encontro terminado · " + w.casa + " - " + w.vis + " · toca para assinar";
   else if (g >= 0) {
     const n = nomesJogo(b, g);
     txt = (b.atual >= 0 ? "Jogo " : "Próximo: jogo ") + (g + 1) + " · " + ORDEM[g].et + " · " +
@@ -240,8 +255,9 @@ function guardarCampos() {
     const lado = b.passo;
     mudar(b => { b[lado].atl = atl; });
   }
-  if (b.passo === "assinar" && $("a_nomeCasa")) {
-    const a = { nomeCasa: v("a_nomeCasa").trim(), nomeVis: v("a_nomeVis").trim(), nomeArb: v("a_nomeArb").trim() };
+  if (b.passo === "assinar") {
+    const a = {};
+    ["nomeCasa", "nomeVis", "nomeArb"].forEach(k => { if ($("a_" + k)) a[k] = v("a_" + k).trim(); });
     const fim = v("a_fim");
     mudar(b => { Object.assign(b.assin, a); if (fim !== undefined) b.cab.fim = fim; });
   }
@@ -343,6 +359,7 @@ function passoJogos(b) {
 }
 
 window.bolPar = function (lado, i, v) {
+  if (bloqueado(bol())) return;
   mudar((b, s) => {
     b.par[lado][i] = Number(v);
     if (b.atual === 3) { const n = nomesJogo(b, 3); s.a.atleta = juntar(n.casa); s.b.atleta = juntar(n.vis); }
@@ -351,6 +368,7 @@ window.bolPar = function (lado, i, v) {
 };
 
 window.bolComecar = function (g) {
+  if (bloqueado(bol())) return;
   if (ORDEM[g].par) { const b = bol(); if ([...b.par.casa, ...b.par.vis].some(x => x < 0)) { alert("Escolhe primeiro os 2 atletas de cada equipa para o par."); return; } }
   mudar((b, s) => iniciarJogo(s, g), true);
   desenhar();
@@ -358,6 +376,7 @@ window.bolComecar = function (g) {
 
 // Correção manual de um set ("11-9"; vazio apaga)
 window.bolSet = function (g, k, txt) {
+  if (bloqueado(bol())) return;
   const m = String(txt).match(/(\d+)\D+(\d+)/);
   mudar((b, s) => {
     const jogo = b.jogos[g];
@@ -372,27 +391,48 @@ window.bolSet = function (g, k, txt) {
 
 /* ---------- Passo 5: assinaturas ---------- */
 function passoAssinar(b) {
-  const a = b.assin, w = vitorias(b);
-  const prot = (lado, val) => '<div class="bol-prot">Declara protestar o jogo? ' +
-    '<button class="' + (val === "sim" ? "sel" : "") + '" onclick="bolProt(\'' + lado + '\',\'sim\')">Sim</button>' +
-    '<button class="' + (val === "nao" ? "sel" : "") + '" onclick="bolProt(\'' + lado + '\',\'nao\')">Não</button></div>';
-  const pad = (id, rot, nomeId, nome) => '<div class="bol-ass"><div class="bol-ass-rot">' + rot + "</div>" +
-    '<input id="' + nomeId + '" value="' + esc(nome) + '" placeholder="Nome (opcional)">' +
-    '<canvas id="pad_' + id + '" width="600" height="180"></canvas>' +
-    '<button class="bol-limpar" onclick="bolLimpar(\'' + id + '\')">Limpar assinatura</button></div>';
+  const a = b.assin, w = vitorias(b), fechado = bloqueado(b);
+  const prot = (lado, val, sub) => sub
+    ? '<div class="bol-prot">Declara protestar o jogo? <b>' + (val === "sim" ? "Sim" : "Não") + "</b></div>"
+    : '<div class="bol-prot">Declara protestar o jogo? ' +
+      '<button class="' + (val === "sim" ? "sel" : "") + '" onclick="bolProt(\'' + lado + '\',\'sim\')">Sim</button>' +
+      '<button class="' + (val === "nao" ? "sel" : "") + '" onclick="bolProt(\'' + lado + '\',\'nao\')">Não</button></div>';
+  const pad = (id, rot, nomeId, nome, sub, chave) => sub
+    ? '<div class="bol-ass"><div class="bol-ass-rot">' + rot + (nome ? ": <b>" + esc(nome) + "</b>" : "") + "</div>" +
+      (assinaturas[id] ? '<img class="bol-ass-img" src="' + assinaturas[id] + '">' : "") +
+      '<div class="bol-ok">✔ Submetido</div></div>'
+    : '<div class="bol-ass"><div class="bol-ass-rot">' + rot + "</div>" +
+      '<input id="' + nomeId + '" value="' + esc(nome) + '" placeholder="Nome (opcional)">' +
+      '<canvas id="pad_' + id + '" width="600" height="180"></canvas>' +
+      '<button class="bol-limpar" onclick="bolLimpar(\'' + id + '\')">Limpar assinatura</button>' +
+      '<button class="bol-pri bol-submeter" onclick="bolSubmeter(\'' + chave + '\')">Submeter</button></div>';
+  const podePDF = a.subCasa && a.subVis;
   return (decidido(b) ? "" : '<div class="aviso bol-alerta">Atenção: o encontro ainda não está decidido (' + w.casa + " - " + w.vis + ").</div>") +
-    '<div class="bol-cartao"><div class="bol-sub">Clube visitado: ' + esc(b.casa.nome) + "</div>" + prot("Casa", a.protCasa) +
-    pad("casa", "Delegado ou Capitão", "a_nomeCasa", a.nomeCasa) + "</div>" +
-    '<div class="bol-cartao"><div class="bol-sub">Clube visitante: ' + esc(b.vis.nome) + "</div>" + prot("Vis", a.protVis) +
-    pad("vis", "Delegado ou Capitão", "a_nomeVis", a.nomeVis) + "</div>" +
-    '<div class="bol-cartao">' + pad("arb", "Árbitro", "a_nomeArb", a.nomeArb) +
-    campo("a_fim", "Hora de fim", b.cab.fim || horaAgora(), "time") + "</div>" +
-    '<div class="bol-nav"><button class="bol-sec" onclick="bolPasso(\'jogos\')">‹ Jogos</button>' +
-    '<button class="bol-pri" id="bolBtPDF" onclick="bolPDF()">📄 Gerar PDF</button></div>';
+    '<div class="aviso" style="margin:8px">Depois de submeter, essa parte já não pode ser alterada' + (fechado ? "" : " e o boletim (jogos e resultados) fica fechado") + ".</div>" +
+    '<div class="bol-cartao"><div class="bol-sub">Clube visitado: ' + esc(b.casa.nome) + "</div>" + prot("Casa", a.protCasa, a.subCasa) +
+    pad("casa", "Delegado ou Capitão", "a_nomeCasa", a.nomeCasa, a.subCasa, "Casa") + "</div>" +
+    '<div class="bol-cartao"><div class="bol-sub">Clube visitante: ' + esc(b.vis.nome) + "</div>" + prot("Vis", a.protVis, a.subVis) +
+    pad("vis", "Delegado ou Capitão", "a_nomeVis", a.nomeVis, a.subVis, "Vis") + "</div>" +
+    '<div class="bol-cartao">' + pad("arb", "Árbitro", "a_nomeArb", a.nomeArb, a.subArb, "Arb") +
+    (fechado ? '<div class="bol-ass-rot">Hora de fim: <b>' + esc(b.cab.fim) + "</b></div>" : campo("a_fim", "Hora de fim", b.cab.fim || horaAgora(), "time")) + "</div>" +
+    '<div class="bol-nav">' + (fechado ? "" : '<button class="bol-sec" onclick="bolPasso(\'jogos\')">‹ Jogos</button>') +
+    '<button class="bol-pri" id="bolBtPDF" onclick="bolPDF()"' + (podePDF ? "" : " disabled") + ">📄 Gerar PDF</button></div>" +
+    (podePDF ? "" : '<div class="aviso" style="margin:8px">O PDF fica disponível quando os dois clubes tiverem submetido.</div>');
 }
 
-window.bolProt = function (lado, v) { guardarCampos(); mudar(b => { b.assin["prot" + lado] = v; }); desenhar(); };
+window.bolProt = function (lado, v) { if (bol().assin["sub" + lado]) return; guardarCampos(); mudar(b => { b.assin["prot" + lado] = v; }); desenhar(); };
 window.bolLimpar = function (id) { delete assinaturas[id]; api.guardarAssinatura(id, null); const c = $("pad_" + id); c.getContext("2d").clearRect(0, 0, c.width, c.height); };
+
+// Submeter a parte de um clube (Casa / Vis) ou do árbitro (Arb): fica definitivo
+window.bolSubmeter = function (chave) {
+  guardarCampos();
+  const b = bol(), id = { Casa: "casa", Vis: "vis", Arb: "arb" }[chave];
+  if (chave !== "Arb" && !b.assin["prot" + chave]) { alert("Indica se o clube declara protestar o jogo (Sim ou Não)."); return; }
+  if (!assinaturas[id]) { alert("Falta a assinatura."); return; }
+  if (!confirm("Submeter? Depois disto já não é possível alterar esta parte nem os resultados do boletim.")) return;
+  mudar(b => { if (!b.cab.fim) b.cab.fim = horaAgora(); b.assin["sub" + chave] = true; }, false);
+  desenhar();
+};
 
 // Corta o espaço em branco à volta da assinatura (para ficar maior no PDF)
 function recortar(c) {
@@ -411,7 +451,8 @@ function recortar(c) {
 // Quadros para assinar com o dedo
 function prepararAssinaturas() {
   ["casa", "vis", "arb"].forEach(id => {
-    const c = $("pad_" + id), x = c.getContext("2d");
+    const c = $("pad_" + id); if (!c) return;
+    const x = c.getContext("2d");
     x.lineWidth = 3; x.lineCap = "round"; x.lineJoin = "round"; x.strokeStyle = "#111";
     if (assinaturas[id]) { const im = new Image(); im.onload = () => x.drawImage(im, (c.width - im.width) / 2, (c.height - im.height) / 2); im.src = assinaturas[id]; }
     let ativo = false;
@@ -504,19 +545,14 @@ window.bolPDF = async function () {
         if (nome) pg.drawText(limpar(nome), { x, y: H - y - 13, size: 6, font: fN });
       } else if (nome) escrever(k, nome, 8, maxW, 0, false);
     };
-    await assinar("delegCasa", assinaturas.casa, a.nomeCasa, 110);
-    await assinar("delegVis", assinaturas.vis, a.nomeVis, 110);
-    await assinar("arbitro", assinaturas.arb, a.nomeArb, 135);
+    await assinar("delegCasa", assinaturas.casa, a.nomeCasa, 100);
+    await assinar("delegVis", assinaturas.vis, a.nomeVis, 100);
+    await assinar("arbitro", assinaturas.arb, a.nomeArb, 120);
 
     const nomeFicheiro = ("Boletim " + (b.casa.nome || "") + " vs " + (b.vis.nome || "") + " " + (c.data || "")).replace(/[\\/:*?"<>|.]+/g, " ").replace(/\s+/g, "_") + ".pdf";
     const blob = new Blob([await pdf.save()], { type: "application/pdf" });
-    const ficheiro = new File([blob], nomeFicheiro, { type: "application/pdf" });
-    if (navigator.canShare && navigator.canShare({ files: [ficheiro] }) && confirm("PDF pronto. Partilhar (WhatsApp, email…)?\nCancelar = só descarregar.")) {
-      await navigator.share({ files: [ficheiro], title: nomeFicheiro });
-    } else {
-      const l = document.createElement("a"); l.href = URL.createObjectURL(blob); l.download = nomeFicheiro;
-      document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(l.href), 10000);
-    }
+    const l = document.createElement("a"); l.href = URL.createObjectURL(blob); l.download = nomeFicheiro;
+    document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(l.href), 10000);
   } catch (e) {
     alert("Não foi possível gerar o PDF: " + (e && e.message ? e.message : e));
   } finally {

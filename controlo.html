@@ -107,6 +107,10 @@
   .bol-ass-rot { font-size: 13px; opacity: .85; margin-bottom: 4px; }
   .bol-ass canvas { display: block; width: 100%; aspect-ratio: 600 / 180; background: #fff; border-radius: 8px; margin-top: 6px; touch-action: none; }
   .bol-limpar { margin-top: 4px; border: 0; border-radius: 8px; padding: 6px 10px; background: #2a3c86; color: #fff; font-size: 12px; }
+  .bol-submeter { width: 100%; height: 46px; margin-top: 8px; border: 0; border-radius: 10px; font-size: 16px; font-weight: 700; }
+  .bol-ok { margin-top: 6px; color: #7be08a; font-weight: 700; }
+  .bol-ass-img { display: block; max-width: 100%; max-height: 90px; background: #fff; border-radius: 8px; padding: 4px; }
+  .bol-nav button:disabled { opacity: .45; }
   .bol-alerta { margin: 8px; padding: 10px; background: #8a2b2b; border-radius: 8px; opacity: 1; font-size: 13px; }
 
   #pinEcra { position: fixed; inset: 0; background: #0b1440; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 9; }
@@ -138,7 +142,7 @@
     <button onclick="enviar('novoJogo')">Novo jogo</button>
     <button onclick="enviar('trocar')">⇄ Trocar lados</button>
     <button id="btVis" onclick="enviar('visivel')">Esconder</button>
-    <button class="perigo" onclick="if (confirm('Pôr tudo a zero (jogos, sets e pontos)?')) enviar('zerar')">Zerar tudo</button>
+    <button class="perigo" onclick="if (confirm('Pôr tudo a zero (jogos, sets, pontos e boletim de jogo)?')) enviar('zerar')">Zerar tudo</button>
     <button class="bol" onclick="abrirBoletim()">📋 Boletim de jogo</button>
   </div>
 
@@ -342,7 +346,11 @@
     if (navigator.vibrate) navigator.vibrate(25);
     if (tipo === "anular") {
       const ant = hist.pop();
-      if (ant) { estado = ant; gravar(); mostrar(); }
+      if (ant) {
+        // um boletim já submetido não volta atrás com o Anular
+        if (estado.boletim && window.boletimBloqueado && window.boletimBloqueado(estado.boletim)) ant.boletim = estado.boletim;
+        estado = ant; gravar(); mostrar();
+      }
       return;
     }
     hist.push(JSON.parse(JSON.stringify(estado)));
@@ -380,7 +388,7 @@
         break;
       }
       case "atleta": s[L].atleta = String(valor || "").trim().slice(0, 40); break;
-      case "zerar": s.saqueInicial = null; ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; s[k].timeout = 0; }); s.setFechado = false; s.fimJogo = false; break;
+      case "zerar": if (window.boletimZerar) window.boletimZerar(s); s.saqueInicial = null; ["a", "b"].forEach(k => { s[k].pontos = 0; s[k].sets = 0; s[k].jogos = 0; s[k].timeout = 0; }); s.setFechado = false; s.fimJogo = false; break;
       case "trocar": s.ladosTrocados = !s.ladosTrocados; break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "visivel": s.visivel = s.visivel === false; break;
       case "auto": s.auto = !s.auto; break;
