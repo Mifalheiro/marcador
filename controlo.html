@@ -37,6 +37,9 @@
   .sqbt.sim { background: #22c55e; color: #05230f; }
   .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
+  .mais.bloq, .menos-pt.bloq { opacity: .35; }
+  .barra button.chama { background: #f2b705; color: #0a1748; animation: chama 1s ease-in-out infinite; }
+  @keyframes chama { 50% { filter: brightness(1.3); box-shadow: 0 0 0 3px rgba(242,183,5,.45); } }
   .mais:active { transform: scale(.97); filter: brightness(1.15); }
   .linha { display: grid; grid-template-columns: 44px minmax(0,1fr) 44px; align-items: center; gap: 6px; }
   .linha .rot { text-align: center; font-size: 13px; opacity: .8; }
@@ -145,8 +148,8 @@
 
   <div class="barra">
     <button class="anular" onclick="enviar('anular')">↶ Anular</button>
-    <button onclick="enviar('novoSet')">Novo set</button>
-    <button onclick="enviar('novoJogo')">Novo jogo</button>
+    <button id="btNovoSet" onclick="enviar('novoSet')">Novo set</button>
+    <button id="btNovoJogo" onclick="enviar('novoJogo')">Novo jogo</button>
     <button onclick="enviar('trocar')">⇄ Trocar lados</button>
     <button id="btVis" onclick="enviar('visivel')">Esconder</button>
     <button class="perigo" onclick="if (confirm('Pôr tudo a zero (jogos, sets, pontos e boletim de jogo)?')) enviar('zerar')">Zerar tudo</button>
@@ -198,7 +201,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo } from "./boletim.js?v=19";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo } from "./boletim.js?v=20";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -341,6 +344,12 @@
     // ordem dos cartões segue o lado da mesa (como no ecrã da sala)
     document.getElementById("eq_a").style.order = s.ladosTrocados ? 2 : 1;
     document.getElementById("eq_b").style.order = s.ladosTrocados ? 1 : 2;
+    const parado = !!(s.fimJogo || s.setFechado);
+    document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.toggle("bloq", parado));
+    document.getElementById("btNovoSet").classList.toggle("chama", !!s.setFechado && !s.fimJogo);
+    document.getElementById("btNovoJogo").classList.toggle("chama", !!s.fimJogo);
+    const prox = window.boletimProximoTexto ? window.boletimProximoTexto(s) : "";
+    document.getElementById("btNovoJogo").textContent = prox && s.fimJogo ? "▶ " + prox : "Novo jogo";
     const v = s.visivel !== false;
     document.getElementById("btVis").textContent = v ? "Esconder" : "Mostrar";
     document.getElementById("btVis").className = v ? "" : "ativo";
@@ -379,6 +388,13 @@
     const s = estado, L = lado === "b" ? "b" : "a", O = L === "a" ? "b" : "a", n = Number(valor) || 0;
     switch (tipo) {
       case "ponto":
+        // set ou jogo terminado: os pontos ficam bloqueados até carregar em Novo set / Novo jogo
+        if (s.fimJogo || s.setFechado) {
+          hist.pop();
+          msg(s.fimJogo ? "Jogo terminado — carrega em Novo jogo" : "Set terminado — carrega em Novo set", "erro");
+          if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+          return;
+        }
         if (n > 0) {
           if (window.boletimAntesPonto) window.boletimAntesPonto(s);   // boletim: começa o jogo seguinte
           if (s.fimJogo) { s.parciais = []; s.saqueInicial = null; s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; s.a.timeout = 0; s.b.timeout = 0; }
@@ -401,7 +417,10 @@
         // sem contagem automática, guarda aqui o resultado do set que acabou
         if (!s.setFechado && (s.a.pontos || s.b.pontos)) s.parciais = (s.parciais || []).concat([[s.a.pontos, s.b.pontos]]);
         s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; break;
-      case "novoJogo": s.parciais = []; s.saqueInicial = null; s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; s.a.timeout = 0; s.b.timeout = 0; break;
+      case "novoJogo":
+        // com o boletim ativo, começa o jogo seguinte do boletim (nomes dos atletas já atualizados)
+        if (window.boletimNovoJogo && window.boletimNovoJogo(s)) break;
+        s.parciais = []; s.saqueInicial = null; s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; s.a.timeout = 0; s.b.timeout = 0; break;
       case "timeout":   // 1 por jogo: o T fica até ao jogo seguinte; os primeiros 60 s têm contagem
         if (!s[L].timeout) { s[L].timeout = 1; s[L].toInicio = agora(); }
         else if (faltaTO(s[L]) > 0) { s[L].toInicio = 0; }            // parar a contagem antes do fim

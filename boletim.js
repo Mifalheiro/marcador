@@ -132,6 +132,25 @@ window.boletimAntesPonto = function (s) {
   if (g >= 0) iniciarJogo(s, g);
 };
 
+// "Novo jogo" no controlo com o boletim ativo: começa o jogo seguinte do boletim
+window.boletimNovoJogo = function (s) {
+  const b = norm(s.boletim); if (!b || bloqueado(b) || (b.passo !== "jogos" && b.passo !== "assinar")) return false;
+  s.boletim = b;
+  if (b.atual >= 0 && !s.fimJogo) return false;
+  const g = proximo(b);
+  if (g < 0) return false;
+  iniciarJogo(s, g);
+  return true;
+};
+// Texto do botão Novo jogo quando há jogo seguinte no boletim (ex.: "Jogo 2 (B - X)")
+window.boletimProximoTexto = function (s) {
+  if (!s || !s.boletim) return "";
+  const b = norm(JSON.parse(JSON.stringify(s.boletim)));
+  if (bloqueado(b) || (b.passo !== "jogos" && b.passo !== "assinar")) return "";
+  const g = proximo(b);
+  return g >= 0 ? "Jogo " + (g + 1) + " (" + ORDEM[g].et + ")" : "";
+};
+
 // Depois de um set fechar (contagem automática): regista-o no boletim
 window.boletimAposSet = function (s, L) {
   const b = norm(s.boletim); if (!b || bloqueado(b) || b.atual < 0) return;
