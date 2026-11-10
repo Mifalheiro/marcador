@@ -435,10 +435,17 @@ function passoAssinar(b) {
     pad("vis", "Delegado ou Capitão", "a_nomeVis", a.nomeVis, a.subVis, "Vis") + "</div>" +
     '<div class="bol-cartao">' + pad("arb", "Árbitro", "a_nomeArb", a.nomeArb, a.subArb, "Arb") +
     (fechado ? '<div class="bol-ass-rot">Hora de fim: <b>' + esc(b.cab.fim) + "</b></div>" : campo("a_fim", "Hora de fim", b.cab.fim || horaAgora(), "time")) + "</div>" +
-    '<div class="bol-nav">' + (fechado ? "" : '<button class="bol-sec" onclick="bolPasso(\'jogos\')">‹ Jogos</button>') +
+    '<div class="bol-nav">' + (fechado ? '<button class="bol-sec" onclick="bolReabrir()">🔒 ‹ Jogos</button>' : '<button class="bol-sec" onclick="bolPasso(\'jogos\')">‹ Jogos</button>') +
     '<button class="bol-pri" id="bolBtPDF" onclick="bolPDF()"' + (podePDF ? "" : " disabled") + ">📄 Gerar PDF</button></div>" +
     "";
 }
+
+// Boletim já submetido: voltar aos jogos só com o código (reabre o boletim; as assinaturas ficam)
+window.bolReabrir = async function () {
+  if (!(await pedirCodigo())) return;
+  mudar(b => { b.assin.subCasa = false; b.assin.subVis = false; b.assin.subArb = false; b.passo = "jogos"; }, false);
+  desenhar(); $("bolPainel").scrollTop = 0;
+};
 
 window.bolProt = function (lado, v) { if (bloqueado(bol())) return; guardarCampos(); mudar(b => { b.assin["prot" + lado] = v; }); desenhar(); };
 window.bolLimpar = function (id) { delete assinaturas[id]; api.guardarAssinatura(id, null); const c = $("pad_" + id); c.getContext("2d").clearRect(0, 0, c.width, c.height); };
