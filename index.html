@@ -9,12 +9,14 @@
   .fundo-teste { background: #3a7d3a; }
 
   #bug {
-    --h: 6.8vw;                       /* altura de cada linha */
-    width: 100vw;
+    /* altura de cada linha: o marcador cabe na largura da página mesmo com 5 sets
+       (com 1 set ocupa ~80% e as colunas dos sets anteriores crescem para a direita) */
+    --h: calc(100vw / 19.4);
+    width: max-content;
     display: grid;
     /* emblema | jogos | clube | seta | atletas | sets | pontos | time out */
     /* o nome do clube e os atletas repartem o espaço do meio (os atletas ficam com um pouco mais) */
-    grid-template-columns: var(--h) var(--h) minmax(0, 1fr) calc(var(--h) * 1.05) minmax(0, 1.25fr) var(--h) calc(var(--h) * 1.15) calc(var(--h) * .95);
+    grid-template-columns: var(--h) var(--h) calc(var(--h) * 4.2) calc(var(--h) * 1.05) calc(var(--h) * 5) var(--h) calc(var(--h) * 1.15) calc(var(--h) * .95);
     grid-template-rows: var(--h) var(--h);
     background: linear-gradient(180deg, #0f2366 0%, #0a1748 50%, #0c1c58 100%);
     transition: opacity .4s, transform .4s;
@@ -154,8 +156,9 @@
     const n = lista.length;
     ["pa", "pb"].forEach(id => document.getElementById(id).style.gridColumn = 7 + n);
     ["ta", "tb"].forEach(id => document.getElementById(id).style.gridColumn = 8 + n);
-    bug.style.gridTemplateColumns = "var(--h) var(--h) minmax(0, 1fr) calc(var(--h) * 1.05) minmax(0, 1.25fr) var(--h) " +
-      "calc(var(--h) * 1.0) ".repeat(n) + "calc(var(--h) * 1.15) calc(var(--h) * .95)";
+    // as colunas da esquerda têm largura fixa: só se acrescentam colunas à direita
+    bug.style.gridTemplateColumns = "var(--h) var(--h) calc(var(--h) * 4.2) calc(var(--h) * 1.05) calc(var(--h) * 5) var(--h) " +
+      "var(--h) ".repeat(n) + "calc(var(--h) * 1.15) calc(var(--h) * .95)";
   }
   function desenhar(s) {
     if (!s || !s.a || !s.b) return;
