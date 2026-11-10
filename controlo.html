@@ -120,6 +120,9 @@
   .bol-form .bol-tab { margin-top: 4px; }
   .bol-form .bol-tab td { padding: 5px 4px; }
   .bol-form .bol-tab td:last-child, .bol-form .bol-tab th:last-child { text-align: right; width: 70px; }
+  .bol-fptm { display: block; margin: 10px 0 2px; }
+  .bol-fptm span { display: block; font-size: 12px; opacity: .8; margin-bottom: 3px; }
+  .bol-atl { width: 100%; padding: 8px; border-radius: 6px; border: 0; font-size: 14px; background: #fff; color: #111; }
   .bol-alerta { margin: 8px; padding: 10px; background: #8a2b2b; border-radius: 8px; opacity: 1; font-size: 13px; }
 
   #pinEcra { position: fixed; inset: 0; background: #0b1440; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 9; }
@@ -178,6 +181,9 @@
     <div class="aviso">Depois de a equipa da casa confirmar a sua equipa, só se volta atrás no boletim com este código.</div>
     <button class="bol-sec" style="width:100%;height:44px;border:0;border-radius:10px;margin-top:8px" onclick="importarEmblemas()">Importar emblemas dos clubes</button>
     <div class="aviso">Junta os emblemas da ATMP (Canidelense, Canidelo, Valbom, Juvenorte, Mariadeira, Orfeão, S. Cosme, Távola, Valongo). Os clubes já guardados com esse nome ficam com o emblema; os que faltam são criados.</div>
+    <label>Lista de atletas da FPTM</label>
+    <div class="logo-linha"><label>Importar lista da FPTM (.xls)<input type="file" accept=".xls,.xlsx,.csv" style="display:none" onchange="importarFptm(this)"></label></div>
+    <div class="aviso" id="fptmInfo">No boletim, ao escolher o clube, os atletas aparecem numa lista e a licença preenche-se sozinha.</div>
     <label>Clubes guardados</label>
     <div class="lista-clubes" id="listaClubes"></div>
     <label>Link do marcador para o PRISM (widget Web)</label>
@@ -204,7 +210,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo } from "./boletim.js?v=21";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=22";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -542,7 +548,9 @@
     lerAssinaturas: async () => (await get(ref(db, "marcador/assinaturas"))).val(),
     guardarAssinatura: (id, dados) => set(ref(db, "marcador/assinaturas/" + id), dados),
     apagarAssinaturas: () => remove(ref(db, "marcador/assinaturas")),
-    lerCodigo: async () => (await get(ref(db, "marcador/config/codigo"))).val()
+    lerCodigo: async () => (await get(ref(db, "marcador/config/codigo"))).val(),
+    lerFptm: async () => (await get(ref(db, "fptm"))).val(),
+    guardarMapaFptm: (id, k) => set(ref(db, "fptm/mapa/" + id), k)
   });
 
   window.guardarCodigo = async function () {
@@ -569,6 +577,29 @@
       }
       msg("✓ Emblemas: " + atualizados + " atualizados, " + novos + " clubes novos", "ok");
     } catch (e) { msg("Erro a importar: " + e.message, "erro"); }
+  };
+
+  // Importa o ficheiro da FPTM (Excel) para a Firebase (caminho "fptm", só a tua conta o lê)
+  window.importarFptm = async function (input) {
+    const f = input.files && input.files[0]; input.value = "";
+    if (!f) return;
+    try {
+      msg("A ler a lista…", "espera");
+      if (!window.XLSX) await new Promise((ok, falha) => { const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; s.onload = ok; s.onerror = falha; document.head.appendChild(s); });
+      const wb = XLSX.read(await f.arrayBuffer(), { type: "array" });
+      const linhas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: "" });
+      const lista = lerListaFptm(linhas);
+      const nClubes = Object.keys(lista).length, nAtl = Object.values(lista).reduce((t, c) => t + c.atl.length, 0);
+      await set(ref(db, "fptm/clubes"), lista);
+      await set(ref(db, "fptm/atualizado"), { ficheiro: f.name, em: new Date().toISOString() });
+      if (window.boletimFptmRecarregar) window.boletimFptmRecarregar();
+      msg("✓ Lista FPTM: " + nClubes + " clubes, " + nAtl + " jogadores", "ok");
+      document.getElementById("fptmInfo").textContent = "Última importação: " + f.name + " (" + nClubes + " clubes, " + nAtl + " jogadores).";
+    } catch (e) {
+      msg("Erro a importar a lista: " + (e && e.message ? e.message : e), "erro");
+      if (String(e && e.message).toLowerCase().includes("permission")) alert("A Firebase recusou guardar a lista. Confirma que juntaste a regra \"fptm\" nas regras da Realtime Database.");
+    }
   };
 
   window.apagar = function (id) {

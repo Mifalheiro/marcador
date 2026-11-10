@@ -305,21 +305,112 @@ window.novoBoletim = function () {
   desenhar();
 };
 
+/* ---------- Lista da FPTM (nomes e licenças por clube) ---------- */
+// Fica na Firebase em "fptm" (só a conta de quem marca a pode ler).
+let fptm = null, fptmPedido = false;
+function carregarFptm(forcar) {
+  if (fptmPedido && !forcar) return;
+  fptmPedido = true;
+  api.lerFptm().then(d => { fptm = d || {}; if (aberto) desenhar(); }).catch(() => { fptm = {}; if (aberto) desenhar(); });
+}
+window.boletimFptmRecarregar = () => carregarFptm(true);
+
+const normT = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const GENERICAS = new Set(["clube", "club", "ginasio", "associacao", "recreativa", "recreativo", "cultural", "desportivo",
+  "desporto", "centro", "grupo", "tenis", "mesa", "academia", "sport", "futebol", "sociedade", "uniao"]);
+const palavras = t => normT(t).replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(x => x.length >= 4 && !GENERICAS.has(x));
+const compacto = t => normT(t).replace(/\s+[ab]$/, "").replace(/[^a-z0-9]/g, "");
+
+// Clube da lista FPTM que corresponde ao nome do clube (ex.: "Ginásio Clube de Valbom B" → "GC VALBOM")
+function melhorFptm(nome) {
+  const cl = (fptm && fptm.clubes) || {};
+  const cn = compacto(nome), pw = palavras(nome);
+  let melhor = "", pontos = 0;
+  Object.keys(cl).forEach(k => {
+    const f = cl[k];
+    let p = compacto(f.nome) === cn ? 100 : palavras(f.nome).filter(x => pw.includes(x)).length * 10;
+    if (p && /porto/i.test(f.assoc || "")) p += 1;   // em caso de empate, prefere a ATM Porto
+    if (p > pontos) { pontos = p; melhor = k; }
+  });
+  return melhor;
+}
+function chaveFptm(c) {
+  if (!fptm || !fptm.clubes || !c.clubeId) return "";
+  const m = fptm.mapa && fptm.mapa[c.clubeId];
+  if (m === "__nenhum") return "";
+  if (m && fptm.clubes[m]) return m;
+  return melhorFptm(c.nome);
+}
+function listaAtletas(k) {
+  const a = (fptm && fptm.clubes && fptm.clubes[k] && fptm.clubes[k].atl) || [];
+  return (Array.isArray(a) ? a : Object.values(a)).map(x => [String(x[0] || "").toUpperCase(), String(x[1] || "")]);
+}
+
+// Lê as linhas do ficheiro da FPTM (Associação / Clube / atletas por baixo) → { chave: {assoc, nome, atl:[[nome, licença]]} }
+export function lerListaFptm(linhas) {
+  const iCab = linhas.findIndex(l => l.some(x => normT(x) === "licenca") && l.some(x => normT(x) === "nome"));
+  if (iCab < 0) throw new Error("Não encontrei as colunas Licença e Nome no ficheiro");
+  const cab = linhas[iCab].map(normT);
+  const col = n => cab.indexOf(n);
+  const iA = col("associacao"), iC = col("clube"), iL = col("licenca"), iN = col("nome"), iCat = col("categoria");
+  const chave = t => normT(t).replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 80);
+  const clubes = {};
+  let assoc = "", atual = null;
+  linhas.slice(iCab + 1).forEach(l => {
+    const v = i => (i >= 0 && l[i] != null ? String(l[i]).trim() : "");
+    if (v(iA)) { assoc = v(iA); atual = null; return; }
+    if (v(iC)) { const k = chave(assoc + " " + v(iC)); atual = clubes[k] = clubes[k] || { assoc, nome: v(iC), atl: [] }; return; }
+    if (!atual || !v(iL) || !v(iN)) return;
+    if (iCat >= 0 && normT(v(iCat)) !== "jogador") return;          // só jogadores
+    if (atual.atl.some(a => a[1] === v(iL))) return;                // sem repetidos
+    atual.atl.push([v(iN).toUpperCase(), v(iL).replace(/\.0$/, "")]);
+  });
+  Object.keys(clubes).forEach(k => { if (!clubes[k].atl.length) delete clubes[k]; else clubes[k].atl.sort((a, b) => a[0].localeCompare(b[0], "pt")); });
+  return clubes;
+}
+
 /* ---------- Passos 2 e 3: clubes e atletas ---------- */
 function passoClube(b, lado) {
   const c = b[lado], letras = lado === "casa" ? LET_C : LET_V;
   const titulo = lado === "casa" ? "Clube visitado (joga em casa)" : "Clube visitante";
   const opcoes = [{ id: "navais", nome: "C. D. C. NAVAIS" }].concat(api.listaClubes())
     .map(x => '<option value="' + x.id + '"' + (x.id === c.clubeId ? " selected" : "") + ">" + esc(x.nome) + "</option>").join("");
+  carregarFptm();
+  const kf = chaveFptm(c), lista = kf ? listaAtletas(kf) : null;
   let linhas = "";
   c.atl.forEach((a, i) => {
-    linhas += "<tr><td class=\"bol-let\">" + (letras[i] ? letras[i] + " -" : "") + "</td>" +
-      '<td><input id="t_n' + i + '" value="' + esc(a.n) + '" placeholder="Nome do atleta"></td>' +
+    let campoNome;
+    if (lista && lista.length) {
+      // lista de atletas do clube (FPTM); a última opção deixa escrever ou corrigir o nome
+      const j = lista.findIndex(x => x[0] === a.n);
+      campoNome = '<select class="bol-atl" onchange="bolAtleta(\'' + lado + '\',' + i + ',this.value)">' +
+        '<option value=""' + (a.n ? "" : " selected") + ">— escolher atleta —</option>" +
+        (a.n && j < 0 ? '<option value="x" selected>' + esc(a.n) + "</option>" : "") +
+        lista.map((x, k) => '<option value="' + k + '"' + (k === j ? " selected" : "") + ">" + esc(x[0]) + "</option>").join("") +
+        '<option value="__editar">✎ Escrever / corrigir nome…</option></select>' +
+        '<input type="hidden" id="t_n' + i + '" value="' + esc(a.n) + '">';
+    } else campoNome = '<input id="t_n' + i + '" value="' + esc(a.n) + '" placeholder="Nome do atleta">';
+    linhas += "<tr><td class=\"bol-let\">" + (letras[i] ? letras[i] + " -" : "") + "</td><td>" + campoNome + "</td>" +
       '<td><input id="t_l' + i + '" value="' + esc(a.l) + '" placeholder="Licença" inputmode="numeric" class="bol-lic"></td></tr>';
   });
+  // qual clube da lista da FPTM usar (escolhido sozinho; pode-se trocar)
+  let fptmLinha = "";
+  if (c.clubeId && fptm && fptm.clubes) {
+    const ks = Object.keys(fptm.clubes).sort((x, y) => {
+      const px = /porto/i.test(fptm.clubes[x].assoc) ? 0 : 1, py = /porto/i.test(fptm.clubes[y].assoc) ? 0 : 1;
+      return px - py || fptm.clubes[x].nome.localeCompare(fptm.clubes[y].nome, "pt");
+    });
+    fptmLinha = '<label class="bol-fptm"><span>Lista da FPTM</span><select onchange="bolMapa(\'' + lado + '\',this.value)">' +
+      '<option value="__nenhum"' + (kf ? "" : " selected") + ">(não usar — escrever à mão)</option>" +
+      ks.map(k => '<option value="' + k + '"' + (k === kf ? " selected" : "") + ">" + esc(fptm.clubes[k].nome) + " · " + esc(fptm.clubes[k].assoc) + "</option>").join("") +
+      "</select></label>";
+  } else if (c.clubeId && fptm && !fptm.clubes) {
+    fptmLinha = '<div class="aviso">Sem lista da FPTM: importa-a no controlo, em Definições → Importar lista da FPTM.</div>';
+  }
   const voltar = lado === "casa" ? "cab" : "casa", seguir = lado === "casa" ? "vis" : "jogos";
   return '<div class="bol-cartao"><div class="bol-sub">' + titulo + "</div>" +
     '<select id="t_clube" onchange="bolClube(\'' + lado + '\', this.value)"><option value="">Escolher clube…</option>' + opcoes + "</select>" +
+    fptmLinha +
     '<table class="bol-tab"><tr><th></th><th>Atletas</th><th>Licenças</th></tr>' + linhas + "</table>" +
     '<div class="aviso">Os 3 primeiros jogam os individuais (' + letras.slice(0, 3).join(", ") + '). Os outros dois são suplentes e podem jogar os pares.</div></div>' +
     '<div class="bol-nav"><button class="bol-sec" onclick="bolPasso(\'' + voltar + '\')">‹ Voltar</button>' +
@@ -331,6 +422,29 @@ window.bolClube = function (lado, id) {
   guardarCampos();
   const nome = id === "navais" ? "C. D. C. NAVAIS" : (api.clube(id)?.nome || "");
   mudar(b => { b[lado].clubeId = id; b[lado].nome = nome; });
+  desenhar();
+};
+
+// Escolha de um atleta da lista: preenche o nome e a licença (a licença continua editável)
+window.bolAtleta = function (lado, i, v) {
+  guardarCampos();
+  const b = bol(), c = b[lado], lista = listaAtletas(chaveFptm(c));
+  let n = c.atl[i].n, l = c.atl[i].l;
+  if (v === "__editar") {
+    const t = prompt("Nome do atleta:", n);
+    if (t === null) { desenhar(); return; }
+    n = t.trim().toUpperCase();
+  } else if (v === "") { n = ""; l = ""; }
+  else if (lista[Number(v)]) { n = lista[Number(v)][0]; l = lista[Number(v)][1]; }
+  mudar(b => { b[lado].atl[i] = { n, l }; });
+  desenhar();
+};
+// Trocar o clube da lista FPTM que corresponde a este clube (fica guardado)
+window.bolMapa = function (lado, k) {
+  guardarCampos();
+  const id = bol()[lado].clubeId;
+  fptm.mapa = fptm.mapa || {}; fptm.mapa[id] = k;
+  api.guardarMapaFptm(id, k);
   desenhar();
 };
 
