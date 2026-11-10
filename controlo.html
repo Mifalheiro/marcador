@@ -121,9 +121,11 @@
 <body>
   <div id="pinEcra">
     <div style="font-size:20px;font-weight:700">Marcador – Controlo</div>
-    <input id="email" type="email" placeholder="Email" autocomplete="username">
-    <input id="pass" type="password" placeholder="Palavra-passe" autocomplete="current-password">
-    <button onclick="entrar()">Entrar</button>
+    <form id="formEntrar" onsubmit="event.preventDefault(); if (window.entrar) entrar();" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+      <input id="email" type="email" placeholder="Email" autocomplete="username">
+      <input id="pass" type="password" placeholder="Palavra-passe" autocomplete="current-password">
+      <button type="submit">Entrar</button>
+    </form>
     <div id="pinErro" class="erro"></div>
   </div>
 
@@ -176,12 +178,22 @@
     <button style="margin-top:12px;width:100%;height:44px;border:0;border-radius:10px;background:#2a3c86;color:#fff" onclick="sair()">Terminar sessão</button>
   </details>
 
+<script>
+  // Se o código principal não arrancar (ex.: ficheiros antigos em cache), avisa em vez de ficar parado
+  window.addEventListener("error", e => {
+    const el = document.getElementById("pinErro");
+    if (el) el.textContent = "Erro a carregar o controlo. Recarrega a página (ou junta ?v=" + Date.now() % 1000 + " ao link). " + (e.message || "");
+  });
+  setTimeout(() => {
+    if (!window.entrar) { const el = document.getElementById("pinErro"); if (el && !el.textContent) el.textContent = "O controlo não arrancou. Recarrega a página."; }
+  }, 8000);
+</script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo } from "./boletim.js";
+  import { instalarBoletim, resumo } from "./boletim.js?v=13";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
