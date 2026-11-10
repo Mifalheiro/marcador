@@ -353,7 +353,7 @@ function passoJogos(b) {
       const aoVivo = ativo && k === jogo.sets.length ? ' placeholder="' + (s.a.pontos || 0) + "-" + (s.b.pontos || 0) + '" class="vivo"' : "";
       sets += '<td><input value="' + val + '"' + aoVivo + ' onchange="bolSet(' + g + "," + k + ',this.value)" inputmode="numeric"></td>';
     }
-    const venc = jogo.venc ? esc(juntar(n[jogo.venc])) : (ativo ? "<i>a jogar</i>" : "");
+    const venc = jogo.venc ? esc(b[jogo.venc].nome) : (ativo ? "<i>a jogar</i>" : "");   // vencedor = nome do clube
     linhas += '<tr class="' + (ativo ? "atual" : fora ? "fora" : "") + '"><td class="bol-let">' + o.et + "</td><td>" + nomes + "</td>" + sets +
       '<td class="bol-venc">' + venc + "</td></tr>";
   });
@@ -538,11 +538,7 @@ window.bolPDF = async function () {
         // os jogos depois do par só se preenchem se ainda não houver vencedor do encontro
         escrever("j" + g + "nome", n.casa[0] + " - " + n.vis[0], 8, 220);
       jogo.sets.slice(0, 5).forEach((x, k) => escrever("j" + g + "s" + k, x[0] + " - " + x[1], 7.5, 26, 0, false));
-      if (jogo.venc) {
-        const v = n[jogo.venc].filter(Boolean);
-        if (v.length > 1) { escrever("j" + g + "venc", v[0], 7, 95, -5); escrever("j" + g + "venc", v[1], 7, 95, 5); }
-        else escrever("j" + g + "venc", v[0], 7.5, 95);
-      }
+      if (jogo.venc) escrever("j" + g + "venc", b[jogo.venc].nome, 7.5, 95);   // vencedor = nome do clube
     });
 
     if (w.casa || w.vis) {
