@@ -302,20 +302,16 @@ function passoClube(b, lado) {
   return '<div class="bol-cartao"><div class="bol-sub">' + titulo + "</div>" +
     '<select id="t_clube" onchange="bolClube(\'' + lado + '\', this.value)"><option value="">Escolher clube…</option>' + opcoes + "</select>" +
     '<table class="bol-tab"><tr><th></th><th>Atletas</th><th>Licenças</th></tr>' + linhas + "</table>" +
-    '<div class="aviso">Os 3 primeiros jogam os individuais (' + letras.slice(0, 3).join(", ") + '). Os outros dois são suplentes e podem jogar os pares. Os nomes e licenças ficam guardados para a próxima vez.</div></div>' +
+    '<div class="aviso">Os 3 primeiros jogam os individuais (' + letras.slice(0, 3).join(", ") + '). Os outros dois são suplentes e podem jogar os pares.</div></div>' +
     '<div class="bol-nav"><button class="bol-sec" onclick="bolPasso(\'' + voltar + '\')">‹ Voltar</button>' +
     '<button class="bol-pri" onclick="bolConfirmarClube(\'' + lado + '\', \'' + seguir + '\')">Confirmar e avançar ›</button></div>';
 }
 
-// Ao escolher o clube, preenche com o plantel guardado da última vez
-window.bolClube = async function (lado, id) {
+// Ao escolher o clube só fica o nome; os atletas são sempre escritos por cada equipa
+window.bolClube = function (lado, id) {
   guardarCampos();
   const nome = id === "navais" ? "C. D. C. NAVAIS" : (api.clube(id)?.nome || "");
-  const plantel = id ? await api.lerPlantel(id) : null;
-  mudar(b => {
-    b[lado].clubeId = id; b[lado].nome = nome;
-    if (plantel && plantel.length) b[lado].atl = [0, 1, 2, 3, 4].map(i => Object.assign({ n: "", l: "" }, plantel[i] || {}));
-  });
+  mudar(b => { b[lado].clubeId = id; b[lado].nome = nome; });
   desenhar();
 };
 
@@ -324,7 +320,6 @@ window.bolConfirmarClube = function (lado, seguir) {
   const b = bol(), c = b[lado];
   if (!c.clubeId) { alert("Escolhe o clube."); return; }
   if (c.atl.slice(0, 3).some(a => !a.n)) { alert("Preenche pelo menos os 3 primeiros atletas."); return; }
-  api.guardarPlantel(c.clubeId, c.atl);
   mudar(b => { b[lado].ok = true; });   // equipa confirmada (a partir daqui, voltar atrás pede código)
   if (seguir === "jogos") {
     // marcador: a = casa, b = visitante

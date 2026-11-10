@@ -193,7 +193,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo } from "./boletim.js?v=13";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo } from "./boletim.js?v=14";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -502,8 +502,6 @@
     listaClubes: () => listaOrdenada(),
     clube: id => clubes[id],
     lerUltimo: async () => null,
-    lerPlantel: async id => { const v = (await get(ref(db, "marcador/plantel/" + id))).val(); return v ? Object.values(v) : null; },
-    guardarPlantel: (id, atl) => set(ref(db, "marcador/plantel/" + id), atl),
     aplicarClubes: async (casa, vis) => { await aplicarClube("a", casa); await aplicarClube("b", vis); },
     lerAssinaturas: async () => (await get(ref(db, "marcador/assinaturas"))).val(),
     guardarAssinatura: (id, dados) => set(ref(db, "marcador/assinaturas/" + id), dados),
