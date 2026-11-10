@@ -562,9 +562,13 @@
     if (certo) {
       const c = prompt("Código para abrir as Definições:");
       if (c === null) return;
-      if (await resumo(c.trim()) !== certo) { msg("Código errado", "erro"); return; }
+      let ok = false;
+      try { ok = (await resumo(c.trim())) === certo; }
+      catch (err) { alert("Este browser não conseguiu verificar o código: " + err.message); return; }
+      if (!ok) { alert("Código errado."); return; }
     } else msg("Ainda não há código: define-o em Definições → Código", "espera");
     d.open = true;
+    d.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   window.guardarCodigo = async function () {
