@@ -189,6 +189,8 @@ window.abrirBoletim = function () {
   const s = api.estado();
   if (!s.boletim) mudar(b => Object.assign(b, novo()));
   else if (bloqueado(norm(s.boletim)) && s.boletim.passo !== "assinar") mudar(b => { b.passo = "assinar"; });
+  // estava nas assinaturas mas ainda não se pode assinar (ex.: Teste desligado): volta aos jogos
+  else if (s.boletim.passo === "assinar" && !podeAssinar(norm(s.boletim))) mudar(b => { b.passo = "jogos"; });
   desenhar();
   $("bolPainel").style.display = "block";
 };
