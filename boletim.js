@@ -82,6 +82,9 @@ window.boletimBloqueado = b => bloqueado(b);
 const emJogo = b => !!b && (b.passo === "jogos" || b.passo === "assinar");
 const decidido = b => { const w = vitorias(b); return w.casa >= JOGOS_PARA_GANHAR || w.vis >= JOGOS_PARA_GANHAR; };
 
+// Assinar só depois de o encontro estar decidido (uma equipa com 4 vitórias); em Teste, sempre
+const podeAssinar = b => decidido(b) || bloqueado(b) || !!(api && api.estado() && api.estado().teste);
+
 // Próximo jogo a disputar (-1 se o encontro já está decidido ou acabou)
 function proximo(b) {
   if (decidido(b)) return -1;
@@ -203,6 +206,7 @@ async function pedirCodigo() {
 window.bolPasso = async function (p) {
   const b0 = bol();
   if (bloqueado(b0) && p !== "assinar") return;
+  if (p === "assinar" && !podeAssinar(b0)) { alert("Só se assina quando o encontro terminar (uma equipa com " + JOGOS_PARA_GANHAR + " vitórias)."); return; }
   const de = ORDEM_PASSOS.indexOf(b0.passo), para = ORDEM_PASSOS.indexOf(p);
   if (b0.casa.ok && para < de && para <= 2 && !(await pedirCodigo())) return;
   guardarCampos(); mudar(b => { b.passo = p; }); desenhar(); window.scrollTo(0, 0); $("bolPainel").scrollTop = 0; };
@@ -492,7 +496,8 @@ function passoJogos(b) {
     acao + '<div class="aviso">Os sets ficam registados sozinhos (com a contagem automática ligada). Para corrigir, escreve no quadrado, por exemplo 11-9.</div></div>' +
     '<div class="bol-nav"><button class="bol-sec" onclick="bolPasso(\'vis\')">‹ Equipas</button>' +
     '<button class="bol-sec" onclick="fecharBoletim()">Marcador</button>' +
-    '<button class="bol-pri" onclick="bolPasso(\'assinar\')">✍ Assinar ›</button></div>';
+    '<button class="bol-pri" onclick="bolPasso(\'assinar\')"' + (podeAssinar(b) ? "" : " disabled") + '>✍ Assinar ›</button></div>' +
+    (podeAssinar(b) ? "" : '<div class="aviso" style="margin:0 8px">O Assinar fica disponível quando uma equipa chegar às ' + JOGOS_PARA_GANHAR + " vitórias.</div>");
 }
 
 window.bolPar = function (lado, i, v) {
