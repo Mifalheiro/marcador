@@ -547,7 +547,6 @@ function passoAssinar(b) {
       (assinaturas[id] ? '<img class="bol-ass-img" src="' + assinaturas[id] + '">' : "") +
       "</div>"
     : '<div class="bol-ass"><div class="bol-ass-rot">' + rot + "</div>" +
-      '<input id="' + nomeId + '" value="' + esc(nome) + '" placeholder="Nome (opcional)">' +
       '<canvas id="pad_' + id + '" width="600" height="180"></canvas>' +
       '<button class="bol-limpar" onclick="bolLimpar(\'' + id + '\')">Limpar assinatura</button></div>';
   return (decidido(b) ? "" : '<div class="aviso bol-alerta">Atenção: o encontro ainda não está decidido (' + w.casa + " - " + w.vis + ").</div>") +

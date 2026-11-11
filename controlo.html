@@ -143,7 +143,8 @@
   @media (min-width: 640px) {
     .bol-assinaturas { grid-template-columns: 1fr 1fr; }
     .bol-assinaturas .bol-arb { grid-column: span 2; }
-    .bol-assinaturas .bol-arb { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; align-items: start; }   /* árbitro à esquerda, hora de fim à direita */
+    /* árbitro ao centro, com a mesma largura das outras, e a hora de fim por baixo */
+    .bol-assinaturas .bol-arb { justify-self: center; width: calc(50% - 8px); }
   }
   .bol-ass canvas { display: block; width: min(100%, calc(35vh * 600 / 180)); aspect-ratio: 600 / 180; margin: 6px auto 0; background: #fff; border-radius: 8px; touch-action: none; }
   .bol-limpar { margin-top: 4px; border: 0; border-radius: 8px; padding: 6px 10px; background: #2a3c86; color: #fff; font-size: 12px; }
@@ -250,7 +251,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=30";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=31";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
