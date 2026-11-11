@@ -341,6 +341,11 @@
     const idx = total < d ? Math.floor(total / 2) : (P - 1) + (total - d);
     return idx % 2 === 0 ? primeiro : outro(primeiro);
   }
+  // Trocar lados: antes do primeiro ponto de cada jogo, ou quando o set decisivo o pede (5 pontos)
+  function podeTrocar(s) {
+    const pontos = (s.a.pontos || 0) + (s.b.pontos || 0) + (s.a.sets || 0) + (s.b.sets || 0);
+    return !!s.trocarPendente || (!s.fimJogo && pontos === 0);
+  }
   // o jogo já começou: houve pelo menos um ponto (ou set) desde que se escolheu quem serve
   function jogoComecado(s) {
     return !!(s.saqueInicial && !s.fimJogo && ((s.a.pontos || 0) + (s.b.pontos || 0) + (s.a.sets || 0) + (s.b.sets || 0)) > 0);
@@ -402,6 +407,7 @@
     document.getElementById("btZerar").style.display = s.teste || pdfFeito ? "" : "none";
     const parado = !!(s.fimJogo || s.setFechado || !s.saqueInicial || s.trocarPendente);
     document.getElementById("btTrocar").classList.toggle("chama", !!s.trocarPendente);
+    document.getElementById("btTrocar").style.display = podeTrocar(s) ? "" : "none";
     if (s.trocarPendente) msg("Mudança de campo — carrega em Trocar lados", "espera");
     document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.toggle("bloq", parado));
     document.getElementById("btNovoSet").classList.toggle("chama", !!s.setFechado && !s.fimJogo);
@@ -519,6 +525,7 @@
         }
         s.amigavel = !s.amigavel; break;
       case "trocar":
+        if (!podeTrocar(s)) { hist.pop(); return; }   // só no início do jogo ou na mudança de campo do set decisivo
         s.ladosTrocados = !s.ladosTrocados;
         if (s.trocarPendente) { s.trocarPendente = false; s.trocaFeita = true; }   // mudança de campo do set decisivo feita
         break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
