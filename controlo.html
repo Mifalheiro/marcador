@@ -32,6 +32,7 @@
   .tobt { height: 44px; border: 0; border-radius: 10px; background: #000; color: #fff; font-size: 14px; font-weight: 700; }
   .tobt.ativo { background: #f2b705; color: #0a1748; }
   .tobt.usado { background: #2a3c86; opacity: .5; }
+  .tobt:disabled { opacity: .35; }
   select.clube:disabled { opacity: 1; color: #fff; -webkit-text-fill-color: #fff; appearance: none; -webkit-appearance: none; }
   .atl.fixo { background: #e8ebf5; color: #0a1748; font-weight: 600; }
   .atl { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; }
@@ -180,7 +181,7 @@
     <button id="btTrocar" onclick="enviar('trocar')">⇄ Trocar lados</button>
     <button id="btVis" onclick="enviar('visivel')">Esconder</button>
     <button class="perigo" id="btZerar" onclick="if (confirm('Pôr tudo a zero (jogos, sets, pontos e boletim de jogo)?')) enviar('zerar')">Zerar tudo</button>
-    <button class="bol" onclick="abrirBoletim()">📋 Boletim de jogo</button>
+    <button class="bol" id="btBol" onclick="abrirBoletim()">📋 Boletim de jogo</button>
   </div>
 
   <div id="bolPainel"></div>
@@ -364,6 +365,8 @@
       const eq = estado[L], to = document.getElementById("to_" + L), f = faltaTO(eq);
       to.textContent = !eq.timeout ? "Time out" : f > 0 ? "⏱ " + f + " s — parar contagem" : "Time out já usado";
       to.className = "tobt" + (!eq.timeout ? "" : f > 0 ? " ativo" : " usado");
+      // só depois do primeiro ponto do jogo (ou para parar uma contagem a decorrer)
+      to.disabled = esperaBoletim(estado) || !(f > 0 || (jogoComecado(estado) && !eq.timeout));
     });
   }
   // nomes de atletas já usados, por clube (para escolher depressa)
@@ -445,6 +448,16 @@
               : !v ? "Carrega em Mostrar para começar o set" : "";
     if (fim) msg(fim, "espera");
     else if (!s.trocarPendente && /terminado|Fim do jogo|Fim do set|Mudança de campo|Mostrar/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
+    // à espera do boletim: só o Boletim de jogo (a piscar) e as Definições
+    const espera = esperaBoletim(s);
+    document.getElementById("btBol").classList.toggle("chama", espera);
+    document.getElementById("btTrocar").disabled = espera;
+    if (espera) {
+      ["btAnular", "btNovoSet", "btNovoJogo", "btTrocar", "btVis", "sq_a", "sq_b"].forEach(id => { document.getElementById(id).disabled = true; });
+      ["sq_a", "sq_b"].forEach(id => document.getElementById(id).classList.remove("chama"));
+      document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.add("bloq"));
+      msg("Começa pelo Boletim de jogo", "espera");
+    } else if (/Boletim de jogo/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
     if (window.boletimMostrar) window.boletimMostrar(s);
   }
 
@@ -453,6 +466,9 @@
   window.acao = function (tipo, lado, valor) {
     if (!estado) return;
     if (navigator.vibrate) navigator.vibrate(25);
+    if (esperaBoletim(estado) && ["ponto", "saque", "timeout", "trocar", "novoSet", "novoJogo", "visivel", "anular", "sets", "jogos"].includes(tipo)) {
+      msg("Começa pelo Boletim de jogo", "erro"); if (navigator.vibrate) navigator.vibrate([60, 40, 60]); return;
+    }
     if (tipo === "anular") {
       const ant = hist.pop();
       if (ant) {
@@ -512,6 +528,7 @@
         if (window.boletimNovoJogo && window.boletimNovoJogo(s)) break;
         s.parciais = []; s.saqueInicial = null; s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; s.a.timeout = 0; s.b.timeout = 0; break;
       case "timeout":   // 1 por jogo: o T fica até ao jogo seguinte; os primeiros 60 s têm contagem
+        if (!s[L].timeout && !jogoComecado(s)) { recusar("O time out só depois de o jogo começar"); return; }
         if (!s[L].timeout) { s[L].timeout = 1; s[L].toInicio = agora(); }
         else if (faltaTO(s[L]) > 0) { s[L].toInicio = 0; }            // parar a contagem antes do fim
         else { recusar("Time out já usado neste jogo"); return; }
@@ -591,6 +608,8 @@
   // há um boletim nos jogos ou nas assinaturas
   const boletimEmCurso = s => !!(s && s.boletim && (s.boletim.passo === "jogos" || s.boletim.passo === "assinar"));
   // clubes e atletas escrevem-se no controlo só em jogo amigável sem boletim em curso
+  // sem Teste e sem jogo amigável, o encontro começa pelo boletim: até as equipas estarem confirmadas só o boletim (e as Definições) funcionam
+  function esperaBoletim(s) { return !!(s && !s.teste && !s.amigavel && !boletimEmCurso(s)); }
   function podeEditar(s) { return !!(s && s.amigavel && !boletimEmCurso(s)); }
   window.escolherClube = async function (L, sel) {
     const v = sel.value;
