@@ -43,6 +43,13 @@
   .linha-pts { display: grid; grid-template-columns: 1fr 1.1fr 1.7fr; gap: 8px; align-items: center; }
   .linha-pts .mais { height: 260px; }
   .linha-pts .menos-pt { height: 260px; font-size: 22px; font-weight: 800; }
+  /* telemóvel em pé: como antes — pontos em cima, +1 PONTO grande por baixo e −1 PONTO pequeno no fim */
+  @media (orientation: portrait) and (max-width: 700px) {
+    .linha-pts { grid-template-columns: 1fr; gap: 8px; }
+    .linha-pts .pts { order: 1; }
+    .linha-pts .mais { order: 2; height: 96px; }
+    .linha-pts .menos-pt { order: 3; height: 40px; font-size: 15px; font-weight: 400; }
+  }
   .teste-so { visibility: hidden; }
   body.modo-teste .teste-so { visibility: visible; }
   .barra button:disabled { opacity: .35; }
