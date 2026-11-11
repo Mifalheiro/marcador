@@ -217,8 +217,6 @@
     <div class="logo-linha"><input id="codBol" type="password" placeholder="Novo código" style="flex:2">
       <button onclick="guardarCodigo('codBol', 'codigo')">Guardar código</button></div>
     <div class="aviso">Pedido para voltar atrás no boletim depois de a equipa da casa confirmar, e para reabrir um boletim submetido.</div>
-    <button class="bol-sec" style="width:100%;height:44px;border:0;border-radius:10px;margin-top:8px" onclick="importarEmblemas()">Importar emblemas dos clubes</button>
-    <div class="aviso">Junta os emblemas da ATMP (Canidelense, Canidelo, Valbom, Juvenorte, Mariadeira, Orfeão, S. Cosme, Távola, Valongo). Os clubes já guardados com esse nome ficam com o emblema; os que faltam são criados.</div>
     <label>Lista de atletas da FPTM</label>
     <div class="logo-linha"><label>Importar lista da FPTM (.xls)<input type="file" accept=".xls,.xlsx,.csv" style="display:none" onchange="importarFptm(this)"></label></div>
     <div class="aviso" id="fptmInfo">No boletim, ao escolher o clube, os atletas aparecem numa lista e a licença preenche-se sozinha.</div>
@@ -728,24 +726,6 @@
     await set(ref(db, "marcador/config/" + chave), await resumo(c));
     document.getElementById(campo).value = "";
     msg(chave === "codigoDef" ? "✓ Código das Definições guardado" : "✓ Código do boletim guardado", "ok");
-  };
-
-  // Emblemas preparados no ficheiro emblemas.json (no GitHub)
-  window.importarEmblemas = async function () {
-    try {
-      const lista = await fetch("emblemas.json?v=1").then(r => r.json());
-      const norm = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-      let atualizados = 0, novos = 0;
-      for (const e of lista) {
-        const iguais = Object.keys(clubes).filter(id => norm(clubes[id].nome).includes(e.chave));
-        if (iguais.length) {
-          for (const id of iguais) { await set(ref(db, "marcador/clubes/" + id + "/logo"), e.logo); atualizados++; }
-        } else {
-          await set(ref(db, "marcador/clubes/" + idClube(e.nome)), { nome: e.nome, logo: e.logo }); novos++;
-        }
-      }
-      msg("✓ Emblemas: " + atualizados + " atualizados, " + novos + " clubes novos", "ok");
-    } catch (e) { msg("Erro a importar: " + e.message, "erro"); }
   };
 
   // Importa o ficheiro da FPTM (Excel) para a Firebase (caminho "fptm", só a tua conta o lê)
