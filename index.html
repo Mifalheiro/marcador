@@ -203,7 +203,7 @@
     const acabou = s.fimJogo && (ja >= 4 || jb >= 4);
     if (acabou) {
       const chave = ja + "-" + jb + "|" + s.a.nome + "|" + s.b.nome;
-      if (chave !== chaveFinal) { chaveFinal = chave; fimFinal = Date.now() + 30000; }
+      if (chave !== chaveFinal) { chaveFinal = chave; fimFinal = Date.now() + 40000; }
       document.getElementById("finalTxt").innerHTML = "";
       const t = document.getElementById("finalTxt");
       t.append(s.a.nome || ""); const bb = document.createElement("b"); bb.textContent = ja + " - " + jb; t.append(bb); t.append(s.b.nome || "");
