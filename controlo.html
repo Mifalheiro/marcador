@@ -136,7 +136,10 @@
   .bol-prot button.sel { background: #f2b705; color: #0a1748; font-weight: 700; }
   .bol-ass { margin: 8px 0; }
   .bol-ass-rot { font-size: 13px; opacity: .85; margin-bottom: 4px; }
-  .bol-ass canvas { display: block; width: 100%; aspect-ratio: 600 / 180; background: #fff; border-radius: 8px; margin-top: 6px; touch-action: none; }
+  /* as três assinaturas lado a lado quando há largura; cada quadro nunca passa de 35% da altura do ecrã,
+     para sobrar sempre espaço à volta onde se pode deslizar o dedo */
+  .bol-assinaturas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
+  .bol-ass canvas { display: block; width: min(100%, calc(35vh * 600 / 180)); aspect-ratio: 600 / 180; margin: 6px auto 0; background: #fff; border-radius: 8px; touch-action: none; }
   .bol-limpar { margin-top: 4px; border: 0; border-radius: 8px; padding: 6px 10px; background: #2a3c86; color: #fff; font-size: 12px; }
   .bol-ok { margin-top: 6px; color: #7be08a; font-weight: 700; }
   .bol-ass-img { display: block; max-width: 100%; max-height: 90px; background: #fff; border-radius: 8px; padding: 4px; }
@@ -241,7 +244,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=27";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=28";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);

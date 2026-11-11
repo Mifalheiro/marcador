@@ -551,12 +551,12 @@ function passoAssinar(b) {
   return (decidido(b) ? "" : '<div class="aviso bol-alerta">Atenção: o encontro ainda não está decidido (' + w.casa + " - " + w.vis + ").</div>") +
     (fechado ? '<div class="bol-ok" style="margin:8px">✔ Boletim submetido — já não pode ser alterado.</div>'
              : '<div class="aviso" style="margin:8px">Ao carregar em Gerar PDF, o boletim é submetido (equipas, resultados e assinaturas) e já não pode ser alterado.</div>') +
-    '<div class="bol-cartao"><div class="bol-sub">Clube visitado: ' + esc(b.casa.nome) + "</div>" + prot("Casa", a.protCasa) +
+    '<div class="bol-assinaturas"><div class="bol-cartao"><div class="bol-sub">Clube visitado: ' + esc(b.casa.nome) + "</div>" + prot("Casa", a.protCasa) +
     pad("casa", "Delegado ou Capitão", "a_nomeCasa", a.nomeCasa) + "</div>" +
     '<div class="bol-cartao"><div class="bol-sub">Clube visitante: ' + esc(b.vis.nome) + "</div>" + prot("Vis", a.protVis) +
     pad("vis", "Delegado ou Capitão", "a_nomeVis", a.nomeVis) + "</div>" +
     '<div class="bol-cartao">' + pad("arb", "Árbitro", "a_nomeArb", a.nomeArb) +
-    (fechado ? '<div class="bol-ass-rot">Hora de fim: <b>' + esc(b.cab.fim) + "</b></div>" : campo("a_fim", "Hora de fim", b.cab.fim || horaAgora(), "time")) + "</div>" +
+    (fechado ? '<div class="bol-ass-rot">Hora de fim: <b>' + esc(b.cab.fim) + "</b></div>" : campo("a_fim", "Hora de fim", b.cab.fim || horaAgora(), "time")) + "</div></div>" +
     '<div class="bol-nav">' + (fechado ? '<button class="bol-sec" onclick="bolReabrir()">🔒 ‹ Jogos</button>' : '<button class="bol-sec" onclick="bolPasso(\'jogos\')">‹ Jogos</button>') +
     '<button class="bol-pri" id="bolBtPDF" onclick="bolPDF()">📄 Gerar PDF</button></div>';
 }
