@@ -37,6 +37,7 @@
   .atl { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; }
   .sqbt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 14px; font-weight: 700; }
   .sqbt.chama { background: #f2b705; color: #0a1748; animation: chama 1s ease-in-out infinite; }
+  .sqbt:disabled:not(.sim) { opacity: .45; }
   .sqbt.sim { background: #22c55e; color: #05230f; }
   .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
@@ -340,6 +341,10 @@
     const idx = total < d ? Math.floor(total / 2) : (P - 1) + (total - d);
     return idx % 2 === 0 ? primeiro : outro(primeiro);
   }
+  // o jogo já começou: houve pelo menos um ponto (ou set) desde que se escolheu quem serve
+  function jogoComecado(s) {
+    return !!(s.saqueInicial && !s.fimJogo && ((s.a.pontos || 0) + (s.b.pontos || 0) + (s.a.sets || 0) + (s.b.sets || 0)) > 0);
+  }
   function botoesTO() {
     ["a", "b"].forEach(L => {
       const eq = estado[L], to = document.getElementById("to_" + L), f = faltaTO(eq);
@@ -412,6 +417,7 @@
     ["a", "b"].forEach(L => {
       const b = document.getElementById("sq_" + L);
       b.className = "sqbt" + (sv === L ? " sim" : "") + (!s.saqueInicial && !s.fimJogo ? " chama" : "");
+      b.disabled = jogoComecado(s) || !!s.fimJogo;
       b.textContent = sv === L ? "● A servir" : (s.saqueInicial && !s.fimJogo ? "Serve" : "Começa a servir?");
     });
     if (document.activeElement.id !== "pontosSet") document.getElementById("pontosSet").value = s.pontosSet;
@@ -496,7 +502,8 @@
         else if (faltaTO(s[L]) > 0) { s[L].toInicio = 0; }            // parar a contagem antes do fim
         else { hist.pop(); msg("Time out já usado neste jogo", "erro"); return; }
         break;
-      case "saque": {   // escolher quem está a servir agora (corrige também a meio)
+      case "saque": {   // escolher quem começa a servir (só antes do primeiro ponto do jogo)
+        if (jogoComecado(s)) { hist.pop(); msg("O serviço já não se muda depois do primeiro ponto", "erro"); return; }
         s.saqueInicial = "a";
         if (servidor(s) !== L) s.saqueInicial = "b";
         break;
