@@ -140,10 +140,25 @@
     if (el.textContent !== (txt || "")) el.textContent = txt || "";
     caber(el, 0.58, 0.18);
   }
+  // No direto mostra só o primeiro e o último nome ("ANDRE DIOGO SOUSA CAMARINHA" → "ANDRE CAMARINHA").
+  // Apelidos compostos ficam juntos ("LUÍS FILIPE SA VILAS BOAS" → "LUÍS VILAS BOAS").
+  const COMPOSTOS = ["VILAS BOAS", "VILLAS BOAS", "CASTELO BRANCO", "VILA NOVA", "VILA REAL", "VILA VERDE", "MONTE NEGRO",
+    "SANTA RITA", "SÃO JOSÉ", "SAO JOSE", "SÃO PEDRO", "SAO PEDRO", "SÃO JOÃO", "SAO JOAO", "BOA VENTURA", "PAIS DE SOUSA"];
+  function curto(nome) {
+    const p = nome.split(/\s+/).filter(Boolean);
+    if (p.length <= 2) return p.join(" ");
+    const up = p.map(x => x.toUpperCase());
+    let i = p.length - 1;   // início do apelido final
+    for (const c of COMPOSTOS) {
+      const n = c.split(" ").length;
+      if (p.length - n >= 1 && up.slice(-n).join(" ") === c) { i = p.length - n; break; }
+    }
+    return [p[0]].concat(p.slice(i)).join(" ");
+  }
   // atletas: um nome numa linha; num par ("A / B") cada nome na sua linha
   function porAtleta(id, txt) {
     const el = document.getElementById(id);
-    const nomes = String(txt || "").split("/").map(x => x.trim()).filter(Boolean);
+    const nomes = String(txt || "").split("/").map(x => curto(x.trim())).filter(Boolean);
     el.innerHTML = nomes.map(n => "<span></span>").join("");
     el.querySelectorAll("span").forEach((sp, i) => { sp.textContent = nomes[i]; });
     const tam = nomes.length > 1 ? 0.36 : 0.52, min = nomes.length > 1 ? 0.22 : 0.28;
