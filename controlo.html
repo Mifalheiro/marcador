@@ -260,6 +260,8 @@
   const MAX_HIST = 15;
 
   let estado = null, logos = {}, clubes = {}, hist = [], ligado = false, desvio = 0, atletas = {};
+  // o histórico do Anular fica guardado neste aparelho, para não se perder ao recarregar a página
+  try { hist = JSON.parse(localStorage.getItem("marcadorHist") || "[]"); if (!Array.isArray(hist)) hist = []; } catch (e) { hist = []; }
   const DURACAO_TO = 60;
   const agora = () => Date.now() + desvio;
   const faltaTO = eq => (eq.timeout && eq.toInicio) ? Math.ceil(DURACAO_TO - (agora() - eq.toInicio) / 1000) : 0;
@@ -327,6 +329,7 @@
   function recusar(t) { hist.pop(); msg(t, "erro"); if (navigator.vibrate) navigator.vibrate([60, 40, 60]); mostrar(); }
 
   function gravar() {
+    try { localStorage.setItem("marcadorHist", JSON.stringify(hist)); } catch (e) {}
     set(ref(db, "marcador/estado"), estado).catch(e => msg("Erro: " + e.message, "erro"));
   }
 
