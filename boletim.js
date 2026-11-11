@@ -78,6 +78,8 @@ function vitorias(b) {
 // Depois de uma equipa (ou o árbitro) submeter, o boletim fica fechado: não se pode voltar atrás
 const bloqueado = b => !!(b && b.assin && (b.assin.subCasa || b.assin.subVis || b.assin.subArb));
 window.boletimBloqueado = b => bloqueado(b);
+// boletim nos jogos ou nas assinaturas (é aí que o marcador o alimenta)
+const emJogo = b => !!b && (b.passo === "jogos" || b.passo === "assinar");
 const decidido = b => { const w = vitorias(b); return w.casa >= JOGOS_PARA_GANHAR || w.vis >= JOGOS_PARA_GANHAR; };
 
 // Próximo jogo a disputar (-1 se o encontro já está decidido ou acabou)
@@ -123,30 +125,24 @@ function iniciarJogo(s, g) {
   const w = vitorias(b); s.a.jogos = w.casa; s.b.jogos = w.vis;
 }
 
-// Antes de contar um ponto: se não há jogo em curso no boletim, começa o próximo
-window.boletimAntesPonto = function (s) {
-  const b = norm(s.boletim); if (!b || bloqueado(b) || b.passo !== "jogos" && b.passo !== "assinar") return;
-  s.boletim = b;
-  if (b.atual >= 0 && !s.fimJogo) return;
-  const g = proximo(b);
-  if (g >= 0) iniciarJogo(s, g);
-};
-
-// "Novo jogo" no controlo com o boletim ativo: começa o jogo seguinte do boletim
-window.boletimNovoJogo = function (s) {
-  const b = norm(s.boletim); if (!b || bloqueado(b) || (b.passo !== "jogos" && b.passo !== "assinar")) return false;
+// Se não há jogo em curso no boletim, começa o próximo (true se começou)
+function comecarSeguinte(s) {
+  const b = norm(s.boletim); if (bloqueado(b) || !emJogo(b)) return false;
   s.boletim = b;
   if (b.atual >= 0 && !s.fimJogo) return false;
   const g = proximo(b);
   if (g < 0) return false;
   iniciarJogo(s, g);
   return true;
-};
+}
+// antes de contar um ponto, e no "Novo jogo" do controlo
+window.boletimAntesPonto = s => { comecarSeguinte(s); };
+window.boletimNovoJogo = s => comecarSeguinte(s);
 // Texto do botão Novo jogo quando há jogo seguinte no boletim (ex.: "Jogo 2 (B - X)")
 window.boletimProximoTexto = function (s) {
   if (!s || !s.boletim) return "";
   const b = norm(JSON.parse(JSON.stringify(s.boletim)));
-  if (bloqueado(b) || (b.passo !== "jogos" && b.passo !== "assinar")) return "";
+  if (bloqueado(b) || !emJogo(b)) return "";
   const g = proximo(b);
   return g >= 0 ? "Jogo " + (g + 1) + " (" + ORDEM[g].et + ")" : "";
 };
@@ -188,12 +184,9 @@ function mudar(fn, comHist = false) {
 window.abrirBoletim = function () {
   aberto = true;
   const s = api.estado();
-  if (!s.boletim) {
-    api.lerUltimo().then(ant => { mudar(b => Object.assign(b, novo(ant))); desenhar(); });
-  } else {
-    if (bloqueado(norm(s.boletim)) && s.boletim.passo !== "assinar") mudar(b => { b.passo = "assinar"; });
-    desenhar();
-  }
+  if (!s.boletim) mudar(b => Object.assign(b, novo()));
+  else if (bloqueado(norm(s.boletim)) && s.boletim.passo !== "assinar") mudar(b => { b.passo = "assinar"; });
+  desenhar();
   $("bolPainel").style.display = "block";
 };
 window.fecharBoletim = function () { aberto = false; $("bolPainel").style.display = "none"; api.mostrar(); };
@@ -229,7 +222,7 @@ window.boletimMostrar = function (s) {
 function faixa(s) {
   const el = $("bolFaixa"); if (!el) return;
   const b = s && s.boletim ? norm(JSON.parse(JSON.stringify(s.boletim))) : null;
-  if (!b || (b.passo !== "jogos" && b.passo !== "assinar")) { el.style.display = "none"; return; }
+  if (!emJogo(b)) { el.style.display = "none"; return; }
   const w = vitorias(b), g = b.atual >= 0 ? b.atual : proximo(b);
   let txt;
   if (bloqueado(b)) txt = "Boletim submetido · " + w.casa + " - " + w.vis + " · toca para gerar o PDF";
@@ -410,7 +403,7 @@ function passoClube(b, lado) {
     '<button class="bol-pri" onclick="bolConfirmarClube(\'' + lado + '\', \'' + seguir + '\')">Confirmar e avançar ›</button></div>';
 }
 
-// Ao escolher o clube só fica o nome; os atletas são sempre escritos por cada equipa
+// Escolha do clube (os atletas vêm depois, da lista da FPTM ou escritos à mão)
 window.bolClube = function (lado, id) {
   guardarCampos();
   const nome = id === "navais" ? "C. D. C. NAVAIS" : (api.clube(id)?.nome || "");
@@ -431,14 +424,6 @@ window.bolAtleta = function (lado, i, v) {
   else if (lista[Number(v)]) { n = lista[Number(v)][0]; l = lista[Number(v)][1]; }
   if (n && c.atl.some((o, oi) => oi !== i && o.n === n)) { alert("Esse atleta já está escolhido nesta equipa."); desenhar(); return; }
   mudar(b => { b[lado].atl[i] = { n, l }; });
-  desenhar();
-};
-// Trocar o clube da lista FPTM que corresponde a este clube (fica guardado)
-window.bolMapa = function (lado, k) {
-  guardarCampos();
-  const id = bol()[lado].clubeId;
-  fptm.mapa = fptm.mapa || {}; fptm.mapa[id] = k;
-  api.guardarMapaFptm(id, k);
   desenhar();
 };
 
@@ -545,12 +530,12 @@ window.bolSet = function (g, k, txt) {
 /* ---------- Passo 5: assinaturas ---------- */
 function passoAssinar(b) {
   const a = b.assin, w = vitorias(b), fechado = bloqueado(b);
-  const prot = (lado, val, sub) => fechado
+  const prot = (lado, val) => fechado
     ? '<div class="bol-prot">Declara protestar o jogo? <b>' + (val === "sim" ? "Sim" : "Não") + "</b></div>"
     : '<div class="bol-prot">Declara protestar o jogo? ' +
       '<button class="' + (val === "sim" ? "sel" : "") + '" onclick="bolProt(\'' + lado + '\',\'sim\')">Sim</button>' +
       '<button class="' + (val === "nao" ? "sel" : "") + '" onclick="bolProt(\'' + lado + '\',\'nao\')">Não</button></div>';
-  const pad = (id, rot, nomeId, nome, sub, chave) => fechado
+  const pad = (id, rot, nomeId, nome) => fechado
     ? '<div class="bol-ass"><div class="bol-ass-rot">' + rot + (nome ? ": <b>" + esc(nome) + "</b>" : "") + "</div>" +
       (assinaturas[id] ? '<img class="bol-ass-img" src="' + assinaturas[id] + '">' : "") +
       "</div>"
@@ -558,19 +543,17 @@ function passoAssinar(b) {
       '<input id="' + nomeId + '" value="' + esc(nome) + '" placeholder="Nome (opcional)">' +
       '<canvas id="pad_' + id + '" width="600" height="180"></canvas>' +
       '<button class="bol-limpar" onclick="bolLimpar(\'' + id + '\')">Limpar assinatura</button></div>';
-  const podePDF = true;
   return (decidido(b) ? "" : '<div class="aviso bol-alerta">Atenção: o encontro ainda não está decidido (' + w.casa + " - " + w.vis + ").</div>") +
     (fechado ? '<div class="bol-ok" style="margin:8px">✔ Boletim submetido — já não pode ser alterado.</div>'
              : '<div class="aviso" style="margin:8px">Ao carregar em Gerar PDF, o boletim é submetido (equipas, resultados e assinaturas) e já não pode ser alterado.</div>') +
-    '<div class="bol-cartao"><div class="bol-sub">Clube visitado: ' + esc(b.casa.nome) + "</div>" + prot("Casa", a.protCasa, a.subCasa) +
-    pad("casa", "Delegado ou Capitão", "a_nomeCasa", a.nomeCasa, a.subCasa, "Casa") + "</div>" +
-    '<div class="bol-cartao"><div class="bol-sub">Clube visitante: ' + esc(b.vis.nome) + "</div>" + prot("Vis", a.protVis, a.subVis) +
-    pad("vis", "Delegado ou Capitão", "a_nomeVis", a.nomeVis, a.subVis, "Vis") + "</div>" +
-    '<div class="bol-cartao">' + pad("arb", "Árbitro", "a_nomeArb", a.nomeArb, a.subArb, "Arb") +
+    '<div class="bol-cartao"><div class="bol-sub">Clube visitado: ' + esc(b.casa.nome) + "</div>" + prot("Casa", a.protCasa) +
+    pad("casa", "Delegado ou Capitão", "a_nomeCasa", a.nomeCasa) + "</div>" +
+    '<div class="bol-cartao"><div class="bol-sub">Clube visitante: ' + esc(b.vis.nome) + "</div>" + prot("Vis", a.protVis) +
+    pad("vis", "Delegado ou Capitão", "a_nomeVis", a.nomeVis) + "</div>" +
+    '<div class="bol-cartao">' + pad("arb", "Árbitro", "a_nomeArb", a.nomeArb) +
     (fechado ? '<div class="bol-ass-rot">Hora de fim: <b>' + esc(b.cab.fim) + "</b></div>" : campo("a_fim", "Hora de fim", b.cab.fim || horaAgora(), "time")) + "</div>" +
     '<div class="bol-nav">' + (fechado ? '<button class="bol-sec" onclick="bolReabrir()">🔒 ‹ Jogos</button>' : '<button class="bol-sec" onclick="bolPasso(\'jogos\')">‹ Jogos</button>') +
-    '<button class="bol-pri" id="bolBtPDF" onclick="bolPDF()"' + (podePDF ? "" : " disabled") + ">📄 Gerar PDF</button></div>" +
-    "";
+    '<button class="bol-pri" id="bolBtPDF" onclick="bolPDF()">📄 Gerar PDF</button></div>';
 }
 
 // Boletim já submetido: voltar aos jogos só com o código (reabre o boletim; as assinaturas ficam)

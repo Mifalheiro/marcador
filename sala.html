@@ -131,7 +131,8 @@
     ajustarNome(n);
     num("pts" + P, eq.pontos || 0); num("sets" + P, eq.sets || 0); num("jogos" + P, eq.jogos || 0);
     const src = eq.logo === "navais" ? "navais.png" : (eq.logo === "slot" ? logos[eq.slot] : "");
-    document.getElementById("emb" + P).innerHTML = src ? '<img src="' + src + '">' : "";
+    const emb = document.getElementById("emb" + P);
+    if (emb.dataset.src !== (src || "")) { emb.dataset.src = src || ""; emb.innerHTML = src ? '<img src="' + src + '">' : ""; }
     porTimeOut(P, eq);
   }
   const DURACAO_TO = 60; let desvio = 0;
@@ -163,7 +164,8 @@
   }
   onValue(ref(db, ".info/serverTimeOffset"), snap => { desvio = snap.val() || 0; });
   onValue(ref(db, "marcador/estado"), snap => desenhar(snap.val()));
-  setInterval(() => { if (ultimo) desenhar(ultimo); }, 250);
+  // contagem do time out (o resto só muda quando o estado muda)
+  setInterval(() => { if (ultimo) { porTimeOut("E", ultimo.ladosTrocados ? ultimo.b : ultimo.a); porTimeOut("D", ultimo.ladosTrocados ? ultimo.a : ultimo.b); } }, 250);
   onValue(ref(db, "marcador/logos"), snap => { logos = snap.val() || {}; if (ultimo) desenhar(ultimo); });
 
   // Toque: ecrã inteiro + não deixar o ecrã apagar

@@ -127,7 +127,6 @@
   .bol-ass-rot { font-size: 13px; opacity: .85; margin-bottom: 4px; }
   .bol-ass canvas { display: block; width: 100%; aspect-ratio: 600 / 180; background: #fff; border-radius: 8px; margin-top: 6px; touch-action: none; }
   .bol-limpar { margin-top: 4px; border: 0; border-radius: 8px; padding: 6px 10px; background: #2a3c86; color: #fff; font-size: 12px; }
-  .bol-submeter { width: 100%; height: 46px; margin-top: 8px; border: 0; border-radius: 10px; font-size: 16px; font-weight: 700; }
   .bol-ok { margin-top: 6px; color: #7be08a; font-weight: 700; }
   .bol-ass-img { display: block; max-width: 100%; max-height: 90px; background: #fff; border-radius: 8px; padding: 4px; }
   .bol-nav button:disabled { opacity: .45; }
@@ -136,8 +135,6 @@
   .bol-form .bol-tab { margin-top: 4px; }
   .bol-form .bol-tab td { padding: 5px 4px; }
   .bol-form .bol-tab td:last-child, .bol-form .bol-tab th:last-child { text-align: right; width: 70px; }
-  .bol-fptm { display: block; margin: 10px 0 2px; }
-  .bol-fptm span { display: block; font-size: 12px; opacity: .8; margin-bottom: 3px; }
   .bol-atl { width: 100%; padding: 8px; border-radius: 6px; border: 0; font-size: 14px; background: #fff; color: #111; }
   .bol-alerta { margin: 8px; padding: 10px; background: #8a2b2b; border-radius: 8px; opacity: 1; font-size: 13px; }
 
@@ -233,7 +230,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=25";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=26";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -304,6 +301,8 @@
   }
 
   function msg(t, c) { const e = document.getElementById("estado"); e.textContent = t; e.className = c || ""; }
+  // ação recusada: tira do Anular, avisa e vibra
+  function recusar(t) { hist.pop(); msg(t, "erro"); if (navigator.vibrate) navigator.vibrate([60, 40, 60]); mostrar(); }
 
   function gravar() {
     set(ref(db, "marcador/estado"), estado).catch(e => msg("Erro: " + e.message, "erro"));
@@ -458,32 +457,19 @@
     const s = estado, L = lado === "b" ? "b" : "a", O = L === "a" ? "b" : "a", n = Number(valor) || 0;
     switch (tipo) {
       case "ponto":
-        // set ou jogo terminado: os pontos ficam bloqueados até carregar em Novo set / Novo jogo
+        // set ou jogo terminado: os pontos ficam bloqueados (Esconder → Novo set / Novo jogo)
         if (s.fimJogo || s.setFechado) {
-          hist.pop();
-          msg(s.fimJogo ? "Jogo terminado — carrega em Novo jogo" : "Set terminado — carrega em Novo set", "erro");
-          if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
-          return;
+          const prox = s.visivel === false ? (s.fimJogo ? "Novo jogo" : "Novo set") : "Esconder";
+          recusar((s.fimJogo ? "Jogo" : "Set") + " terminado — carrega em " + prox); return;
         }
-        if (s.visivel === false) {   // depois do Novo set, os pontos só contam depois de Mostrar
-          hist.pop(); msg("Carrega primeiro em Mostrar", "erro");
-          if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
-          return;
-        }
+        // depois do Novo set, os pontos só contam depois de Mostrar
+        if (s.visivel === false) { recusar("Carrega primeiro em Mostrar"); return; }
         if (n > 0) {
           if (window.boletimAntesPonto) window.boletimAntesPonto(s);   // boletim: começa o jogo seguinte
-          if (s.trocarPendente) {   // set decisivo: aos 5 pontos é obrigatório mudar de campo
-            hist.pop(); msg("Mudança de campo — carrega em Trocar lados", "erro");
-            if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
-            return;
-          }
-          if (!s.saqueInicial) {   // cada jogo só começa depois de escolher quem serve
-            hist.pop(); msg("Escolhe primeiro quem começa a servir", "erro");
-            if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
-            mostrar(); return;
-          }
-          if (s.fimJogo) { s.trocarPendente = false; s.trocaFeita = false; s.parciais = []; s.saqueInicial = null; s.a.sets = 0; s.b.sets = 0; s.fimJogo = false; s.setFechado = false; s.a.pontos = 0; s.b.pontos = 0; s.a.timeout = 0; s.b.timeout = 0; }
-          if (s.setFechado) { s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; s.trocarPendente = false; s.trocaFeita = false; }
+          // set decisivo: aos 5 pontos é obrigatório mudar de campo
+          if (s.trocarPendente) { recusar("Mudança de campo — carrega em Trocar lados"); return; }
+          // cada jogo só começa depois de escolher quem serve
+          if (!s.saqueInicial) { recusar("Escolhe primeiro quem começa a servir"); return; }
           s[L].pontos++;
           // set decisivo (ex.: 2-2 em sets): quando alguém chega aos 5 pontos, muda-se de campo
           const decisivo = (s.a.sets || 0) === (s.setsJogo || 3) - 1 && (s.b.sets || 0) === (s.setsJogo || 3) - 1;
@@ -518,10 +504,10 @@
       case "timeout":   // 1 por jogo: o T fica até ao jogo seguinte; os primeiros 60 s têm contagem
         if (!s[L].timeout) { s[L].timeout = 1; s[L].toInicio = agora(); }
         else if (faltaTO(s[L]) > 0) { s[L].toInicio = 0; }            // parar a contagem antes do fim
-        else { hist.pop(); msg("Time out já usado neste jogo", "erro"); return; }
+        else { recusar("Time out já usado neste jogo"); return; }
         break;
       case "saque": {   // escolher quem começa a servir (só antes do primeiro ponto do jogo)
-        if (jogoComecado(s)) { hist.pop(); msg("O serviço já não se muda depois do primeiro ponto", "erro"); return; }
+        if (jogoComecado(s)) { recusar("O serviço já não se muda depois do primeiro ponto"); return; }
         s.saqueInicial = "a";
         if (servidor(s) !== L) s.saqueInicial = "b";
         break;
@@ -532,7 +518,7 @@
         ["a", "b"].forEach(k => { s[k] = { nome: "", clubeId: "", logo: "", slot: s[k].slot || (k === "a" ? "1" : "2"), atleta: "", pontos: 0, sets: 0, jogos: 0, timeout: 0 }; });
         s.ladosTrocados = false; s.setFechado = false; s.fimJogo = false; s.trocarPendente = false; s.trocaFeita = false; break;
       case "amigavel":
-        if (!s.amigavel && s.boletim && (s.boletim.passo === "jogos" || s.boletim.passo === "assinar")) {
+        if (!s.amigavel && boletimEmCurso(s)) {
           hist.pop(); alert("Há um boletim de jogo a decorrer. Para um jogo amigável, faz primeiro Zerar tudo."); mostrar(); return;
         }
         s.amigavel = !s.amigavel; break;
@@ -592,8 +578,10 @@
     if (c.logo) { await set(ref(db, "marcador/logos/" + estado[L].slot), c.logo); estado[L].logo = "slot"; }
     else estado[L].logo = "";
   }
-  const doBoletim = () => !!(estado && estado.boletim && (estado.boletim.passo === "jogos" || estado.boletim.passo === "assinar"));
-  function podeEditar(s) { return !!(s && s.amigavel && !(s.boletim && (s.boletim.passo === "jogos" || s.boletim.passo === "assinar"))); }
+  // há um boletim nos jogos ou nas assinaturas
+  const boletimEmCurso = s => !!(s && s.boletim && (s.boletim.passo === "jogos" || s.boletim.passo === "assinar"));
+  // clubes e atletas escrevem-se no controlo só em jogo amigável sem boletim em curso
+  function podeEditar(s) { return !!(s && s.amigavel && !boletimEmCurso(s)); }
   window.escolherClube = async function (L, sel) {
     const v = sel.value;
     sel.blur();
@@ -640,14 +628,12 @@
     mostrar: () => { if (estado) mostrar(); },
     listaClubes: () => listaOrdenada(),
     clube: id => clubes[id],
-    lerUltimo: async () => null,
     aplicarClubes: async (casa, vis) => { await aplicarClube("a", casa); await aplicarClube("b", vis); },
     lerAssinaturas: async () => (await get(ref(db, "marcador/assinaturas"))).val(),
     guardarAssinatura: (id, dados) => set(ref(db, "marcador/assinaturas/" + id), dados),
     apagarAssinaturas: () => remove(ref(db, "marcador/assinaturas")),
     lerCodigo: async () => (await get(ref(db, "marcador/config/codigo"))).val(),
-    lerFptm: async () => (await get(ref(db, "fptm"))).val(),
-    guardarMapaFptm: (id, k) => set(ref(db, "fptm/mapa/" + id), k)
+    lerFptm: async () => (await get(ref(db, "fptm"))).val()
   });
 
   // Definições só abrem com o código (se ainda não houver código, abrem para o poderes definir)
