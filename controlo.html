@@ -199,12 +199,8 @@
 
   <details id="defs">
     <summary onclick="abrirDefinicoes(event)">🔒 Definições</summary>
-    <label><input type="checkbox" id="auto" style="width:auto" onchange="enviar('auto')"> Contagem automática (fecha o set e o jogo sozinho)</label>
-    <label>Pontos para ganhar um set</label>
-    <input id="pontosSet" type="number" min="1" onchange="enviar('pontosSet', null, this.value)">
-    <label>Sets para ganhar um jogo (3 = melhor de 5)</label>
-    <input id="setsJogo" type="number" min="1" onchange="enviar('setsJogo', null, this.value)">
-    <label><input type="checkbox" id="teste" style="width:auto" onchange="enviar('teste')"> Teste (mostra os + e − dos sets e jogos e o Zerar tudo)</label>
+    <label><input type="checkbox" id="teste" style="width:auto" onchange="enviar('teste')"> Teste</label>
+    <div class="aviso">Para experimentar sem um encontro a sério: não espera pelo boletim, mostra os + e − dos sets e jogos e o Zerar tudo, e deixa o Anular, o Novo jogo e o Assinar sempre disponíveis.</div>
     <label><input type="checkbox" id="amigavel" style="width:auto" onchange="enviar('amigavel')"> Jogo amigável (sem boletim)</label>
     <div class="aviso">Ligado: escolhes o clube e escreves os atletas diretamente nos cartões. Desligado: clubes e atletas vêm do boletim de jogo.</div>
     <label>Adicionar ou atualizar clube</label>
@@ -259,6 +255,8 @@
   const LOGO_NAVAIS = "navais.png";
   const MAX_HIST = 15;
 
+  // regras fixas do campeonato: sets a 11 pontos, jogos à melhor de 5 (3 sets)
+  const PONTOS_SET = 11, SETS_JOGO = 3;
   let estado = null, logos = {}, clubes = {}, hist = [], ligado = false, desvio = 0, atletas = {};
   // o histórico do Anular fica guardado neste aparelho, para não se perder ao recarregar a página
   try { hist = JSON.parse(localStorage.getItem("marcadorHist") || "[]"); if (!Array.isArray(hist)) hist = []; } catch (e) { hist = []; }
@@ -330,6 +328,7 @@
 
   function gravar() {
     try { localStorage.setItem("marcadorHist", JSON.stringify(hist)); } catch (e) {}
+    Object.assign(estado, { auto: true, pontosSet: PONTOS_SET, setsJogo: SETS_JOGO });   // a sala e o boletim leem daqui
     set(ref(db, "marcador/estado"), estado).catch(e => msg("Erro: " + e.message, "erro"));
   }
 
@@ -358,7 +357,7 @@
   // em cada set novo começa quem recebeu primeiro no set anterior.
   function servidor(s) {
     if (!s || !s.saqueInicial || s.fimJogo) return null;
-    const P = s.pontosSet || 11, outro = x => (x === "a" ? "b" : "a");
+    const P = PONTOS_SET, outro = x => (x === "a" ? "b" : "a");
     const k = (s.a.sets || 0) + (s.b.sets || 0);
     const primeiro = k % 2 === 0 ? s.saqueInicial : outro(s.saqueInicial);
     const total = s.setFechado ? 0 : (s.a.pontos || 0) + (s.b.pontos || 0), d = 2 * (P - 1);
@@ -455,7 +454,6 @@
     const v = s.visivel !== false;
     document.getElementById("btVis").textContent = v ? "Esconder" : "Mostrar";
     document.getElementById("btVis").className = (v ? "" : "ativo") + ((fimSet ? v : !v) ? " chama" : "");
-    document.getElementById("auto").checked = !!s.auto;
     botoesTO(); listasAtletas();
     const sv = servidor(s);
     ["a", "b"].forEach(L => {
@@ -464,8 +462,6 @@
       b.disabled = jogoComecado(s) || !!s.fimJogo;
       b.textContent = sv === L ? "● A servir" : (s.saqueInicial && !s.fimJogo ? "Serve" : "Começa a servir?");
     });
-    if (document.activeElement.id !== "pontosSet") document.getElementById("pontosSet").value = s.pontosSet;
-    if (document.activeElement.id !== "setsJogo") document.getElementById("setsJogo").value = s.setsJogo;
     const fim = s.fimJogo ? (v ? "Fim do jogo — carrega em Esconder (ou Anular)" : "Fim do jogo — carrega em Novo jogo")
               : s.setFechado ? (v ? "Fim do set — carrega em Esconder (ou Anular)" : "Fim do set — carrega em Novo set")
               : !v ? "Carrega em Mostrar para começar o set" : "";
@@ -532,16 +528,15 @@
           if (!s.saqueInicial) { recusar("Escolhe primeiro quem começa a servir"); return; }
           s[L].pontos++;
           // set decisivo (ex.: 2-2 em sets): quando alguém chega aos 5 pontos, muda-se de campo
-          const decisivo = (s.a.sets || 0) === (s.setsJogo || 3) - 1 && (s.b.sets || 0) === (s.setsJogo || 3) - 1;
+          const decisivo = (s.a.sets || 0) === SETS_JOGO - 1 && (s.b.sets || 0) === SETS_JOGO - 1;
           if (decisivo && !s.trocaFeita && s[L].pontos === 5) s.trocarPendente = true;
-          if (s.auto) {
-            const p = s[L].pontos, q = s[O].pontos;
-            if (p >= s.pontosSet && p - q >= 2) {
-              s[L].sets++; s.setFechado = true;
-              s.parciais = (s.parciais || []).concat([[s.a.pontos, s.b.pontos]]);   // resultado do set, para o direto
-              if (s[L].sets >= s.setsJogo) { s[L].jogos++; s.fimJogo = true; }
-              if (window.boletimAposSet) window.boletimAposSet(s, L);   // boletim: regista o set
-            }
+          // contagem automática: 11 pontos com 2 de diferença fecha o set; 3 sets fecham o jogo
+          const p = s[L].pontos, q = s[O].pontos;
+          if (p >= PONTOS_SET && p - q >= 2) {
+            s[L].sets++; s.setFechado = true;
+            s.parciais = (s.parciais || []).concat([[s.a.pontos, s.b.pontos]]);   // resultado do set, para o direto
+            if (s[L].sets >= SETS_JOGO) { s[L].jogos++; s.fimJogo = true; }
+            if (window.boletimAposSet) window.boletimAposSet(s, L);   // boletim: regista o set
           }
         } else s[L].pontos = Math.max(0, s[L].pontos - 1);
         break;
@@ -549,8 +544,6 @@
       case "jogos": s[L].jogos = Math.max(0, s[L].jogos + n); break;
       case "novoSet":
         if (!(s.setFechado && s.visivel === false) && !s.teste) { hist.pop(); return; }
-        // sem contagem automática, guarda aqui o resultado do set que acabou
-        if (!s.setFechado && (s.a.pontos || s.b.pontos)) s.parciais = (s.parciais || []).concat([[s.a.pontos, s.b.pontos]]);
         // set novo: os jogadores mudam de campo (troca o controlo e o ecrã da sala)
         if (s.setFechado) s.ladosTrocados = !s.ladosTrocados;
         s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; s.trocarPendente = false; s.trocaFeita = false; break;
@@ -595,12 +588,9 @@
         if (encontroTerminado(s) && !s.teste) { msg("Encontro terminado — o direto mostra o resultado final sozinho", "erro"); return; }
         s.visivel = s.visivel === false; break;
       case "teste": hist.pop(); s.teste = !s.teste; break;
-      case "auto": s.auto = !s.auto; break;
-      case "pontosSet": s.pontosSet = Math.max(1, n || 11); break;
-      case "setsJogo": s.setsJogo = Math.max(1, n || 3); break;
       default: hist.pop(); return;
     }
-    if (tipo !== "auto" && tipo !== "visivel") msg("✓ Ligado", "ok");
+    if (tipo !== "visivel") msg("✓ Ligado", "ok");
     gravar(); mostrar();
   };
 
