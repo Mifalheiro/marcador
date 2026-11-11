@@ -141,6 +141,14 @@ function comecarSeguinte(s) {
 // antes de contar um ponto, e no "Novo jogo" do controlo
 window.boletimAntesPonto = s => { comecarSeguinte(s); };
 window.boletimNovoJogo = s => comecarSeguinte(s);
+// Jogo de pares em curso (ou a seguir) sem os 4 atletas escolhidos: o controlo espera pelo boletim
+window.boletimFaltaPar = function (s) {
+  if (!s || !s.boletim) return false;
+  const b = norm(JSON.parse(JSON.stringify(s.boletim)));
+  if (s.fimJogo || bloqueado(b) || !emJogo(b) || decidido(b)) return false;   // no fim do jogo anterior deixa Esconder / Novo jogo
+  const g = b.atual;
+  return g >= 0 && !!ORDEM[g].par && [...b.par.casa, ...b.par.vis].some(x => x < 0);
+};
 // Texto do botão Novo jogo quando há jogo seguinte no boletim (ex.: "Jogo 2 (B - X)")
 window.boletimProximoTexto = function (s) {
   if (!s || !s.boletim) return "";
