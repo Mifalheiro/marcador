@@ -469,11 +469,17 @@
     const fim = s.fimJogo ? (v ? "Fim do jogo — carrega em Esconder (ou Anular)" : "Fim do jogo — carrega em Novo jogo")
               : s.setFechado ? (v ? "Fim do set — carrega em Esconder (ou Anular)" : "Fim do set — carrega em Novo set")
               : !v ? "Carrega em Mostrar para começar o set" : "";
-    if (fim) msg(fim, "espera");
-    else if (!s.trocarPendente && /terminado|Fim do jogo|Fim do set|Mudança de campo|Mostrar/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
+    // encontro terminado (uma equipa com 4 jogos): sem Esconder nem Novo jogo; segue-se o boletim para assinar
+    const encontroFim = !s.teste && encontroTerminado(s);
+    if (encontroFim) {
+      document.getElementById("btVis").disabled = true; document.getElementById("btVis").classList.remove("chama");
+      document.getElementById("btNovoJogo").disabled = true; document.getElementById("btNovoJogo").classList.remove("chama");
+      msg(s.boletim ? "Encontro terminado — abre o Boletim de jogo para assinar" : "Encontro terminado", "espera");
+    } else if (fim) msg(fim, "espera");
+    else if (!s.trocarPendente && /Encontro terminado|terminado|Fim do jogo|Fim do set|Mudança de campo|Mostrar/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
     // à espera do boletim: só o Boletim de jogo (a piscar) e as Definições
     const espera = esperaBoletim(s);
-    document.getElementById("btBol").classList.toggle("chama", espera);
+    document.getElementById("btBol").classList.toggle("chama", espera || (!s.teste && encontroTerminado(s) && !!s.boletim && !(window.boletimBloqueado && window.boletimBloqueado(s.boletim))));
     document.getElementById("btTrocar").disabled = espera;
     if (espera) {
       // à espera do par o Anular continua a funcionar (como no fim de qualquer jogo)
@@ -483,7 +489,7 @@
       ["sq_a", "sq_b"].forEach(id => document.getElementById(id).classList.remove("chama"));
       paradoBase = true; bloquearPontos();
       msg(motivoEspera(s), "espera");
-    } else if (/Boletim de jogo/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
+    } else if (/Começa pelo|atletas do par/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
     if (window.boletimMostrar) window.boletimMostrar(s);
   }
 
@@ -550,6 +556,7 @@
         s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; s.trocarPendente = false; s.trocaFeita = false; break;
       case "novoJogo":
         // só depois de terminar e esconder (exceto em Teste)
+        if (encontroTerminado(s) && !s.teste) { recusar("Encontro terminado — abre o Boletim de jogo para assinar"); return; }
         if (!(s.fimJogo && s.visivel === false) && !s.teste) { recusar(s.fimJogo ? "Primeiro carrega em Esconder" : "O jogo ainda não terminou"); return; }
         s.visivel = true;   // jogo novo: o marcador volta a aparecer no direto
         s.trocarPendente = false; s.trocaFeita = false;
@@ -583,7 +590,10 @@
         s.ladosTrocados = !s.ladosTrocados;
         if (s.trocarPendente) { s.trocarPendente = false; s.trocaFeita = true; }   // mudança de campo do set decisivo feita
         break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
-      case "visivel": hist.pop(); s.visivel = s.visivel === false; break;   // não entra no Anular
+      case "visivel":   // não entra no Anular
+        hist.pop();
+        if (encontroTerminado(s) && !s.teste) { msg("Encontro terminado — o direto mostra o resultado final sozinho", "erro"); return; }
+        s.visivel = s.visivel === false; break;
       case "teste": hist.pop(); s.teste = !s.teste; break;
       case "auto": s.auto = !s.auto; break;
       case "pontosSet": s.pontosSet = Math.max(1, n || 11); break;
@@ -639,6 +649,7 @@
   // clubes e atletas escrevem-se no controlo só em jogo amigável sem boletim em curso
   // sem Teste e sem jogo amigável, o encontro começa pelo boletim: até as equipas estarem confirmadas só o boletim (e as Definições) funcionam
   // e no jogo de pares, os atletas do par escolhem-se no boletim antes de escolher quem serve
+  function encontroTerminado(s) { return !!(s && s.fimJogo && ((s.a.jogos || 0) >= 4 || (s.b.jogos || 0) >= 4)); }
   function esperaBoletim(s) { return !!motivoEspera(s); }
   function esperaPar(s) { return /par/.test(motivoEspera(s)); }
   function motivoEspera(s) {
