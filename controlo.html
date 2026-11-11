@@ -252,7 +252,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=32";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=33";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -476,7 +476,10 @@
     document.getElementById("btBol").classList.toggle("chama", espera);
     document.getElementById("btTrocar").disabled = espera;
     if (espera) {
-      ["btAnular", "btNovoSet", "btNovoJogo", "btTrocar", "btVis", "sq_a", "sq_b"].forEach(id => { document.getElementById(id).disabled = true; });
+      // à espera do par o Anular continua a funcionar (como no fim de qualquer jogo)
+      if (!esperaPar(s)) document.getElementById("btAnular").disabled = true;
+      document.getElementById("btNovoJogo").classList.remove("chama");
+      ["btNovoSet", "btNovoJogo", "btTrocar", "btVis", "sq_a", "sq_b"].forEach(id => { document.getElementById(id).disabled = true; });
       ["sq_a", "sq_b"].forEach(id => document.getElementById(id).classList.remove("chama"));
       paradoBase = true; bloquearPontos();
       msg(motivoEspera(s), "espera");
@@ -489,7 +492,7 @@
   window.acao = function (tipo, lado, valor) {
     if (!estado) return;
     if (navigator.vibrate) navigator.vibrate(25);
-    if (esperaBoletim(estado) && ["ponto", "saque", "timeout", "trocar", "novoSet", "novoJogo", "visivel", "anular", "sets", "jogos"].includes(tipo)) {
+    if (esperaBoletim(estado) && !(tipo === "anular" && esperaPar(estado)) && ["ponto", "saque", "timeout", "trocar", "novoSet", "novoJogo", "visivel", "anular", "sets", "jogos"].includes(tipo)) {
       msg(motivoEspera(estado), "erro"); if (navigator.vibrate) navigator.vibrate([60, 40, 60]); return;
     }
     if (tipo === "anular") {
@@ -636,6 +639,7 @@
   // sem Teste e sem jogo amigável, o encontro começa pelo boletim: até as equipas estarem confirmadas só o boletim (e as Definições) funcionam
   // e no jogo de pares, os atletas do par escolhem-se no boletim antes de escolher quem serve
   function esperaBoletim(s) { return !!motivoEspera(s); }
+  function esperaPar(s) { return /par/.test(motivoEspera(s)); }
   function motivoEspera(s) {
     if (!s || s.teste || s.amigavel) return "";
     if (!boletimEmCurso(s)) return "Começa pelo Boletim de jogo";

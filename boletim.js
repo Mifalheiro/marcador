@@ -145,8 +145,10 @@ window.boletimNovoJogo = s => comecarSeguinte(s);
 window.boletimFaltaPar = function (s) {
   if (!s || !s.boletim) return false;
   const b = norm(JSON.parse(JSON.stringify(s.boletim)));
-  if (s.fimJogo || bloqueado(b) || !emJogo(b) || decidido(b)) return false;   // no fim do jogo anterior deixa Esconder / Novo jogo
-  const g = b.atual;
+  if (bloqueado(b) || !emJogo(b) || decidido(b)) return false;
+  // fim do jogo anterior: primeiro Esconder; depois de esconder, o Novo jogo só fica ativo com o par escolhido
+  if (s.fimJogo && s.visivel !== false) return false;
+  const g = s.fimJogo ? proximo(b) : b.atual;
   return g >= 0 && !!ORDEM[g].par && [...b.par.casa, ...b.par.vis].some(x => x < 0);
 };
 // Texto do botão Novo jogo quando há jogo seguinte no boletim (ex.: "Jogo 2 (B - X)")
