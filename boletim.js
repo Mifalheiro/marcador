@@ -101,6 +101,21 @@ function vencedorSets(sets, setsJogo) {
 function nomeAtl(b, lado, i) { return i >= 0 ? (b[lado].atl[i]?.n || "").trim() : ""; }
 
 // Nomes de quem joga o jogo g
+// Nome curto (primeiro + último nome; apelidos compostos juntos) — o mesmo do direto
+const COMPOSTOS = ["VILAS BOAS", "VILLAS BOAS", "CASTELO BRANCO", "VILA NOVA", "VILA REAL", "VILA VERDE", "MONTE NEGRO",
+  "SANTA RITA", "SÃO JOSÉ", "SAO JOSE", "SÃO PEDRO", "SAO PEDRO", "SÃO JOÃO", "SAO JOAO", "BOA VENTURA", "PAIS DE SOUSA"];
+function curto(nome) {
+  const p = String(nome || "").split(/\s+/).filter(Boolean);
+  if (p.length <= 2) return p.join(" ");
+  const up = p.map(x => x.toUpperCase());
+  let i = p.length - 1;
+  for (const c of COMPOSTOS) {
+    const n = c.split(" ").length;
+    if (p.length - n >= 1 && up.slice(-n).join(" ") === c) { i = p.length - n; break; }
+  }
+  return [p[0]].concat(p.slice(i)).join(" ");
+}
+
 function nomesJogo(b, g) {
   const o = ORDEM[g];
   if (o.par) {
@@ -671,7 +686,8 @@ window.bolPDF = async function () {
     b.vis.atl.forEach((a, i) => { escrever("visNome" + i, a.n, 8, 150); escrever("visLic" + i, a.l, 8, 52, 0, false); });
 
     ORDEM.forEach((o, g) => {
-      const jogo = b.jogos[g], n = nomesJogo(b, g);
+      const jogo = b.jogos[g], n0 = nomesJogo(b, g);
+      const n = { casa: n0.casa.map(curto), vis: n0.vis.map(curto) };   // na grelha dos jogos só primeiro e último nome
       if (o.par) {
         escrever("j3nome", [n.casa[0], n.vis[0]].filter(Boolean).join(" - "), 8, 220);
         escrever("j3nome2", [n.casa[1], n.vis[1]].filter(Boolean).join(" - "), 8, 220);
