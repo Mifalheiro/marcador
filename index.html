@@ -58,7 +58,7 @@
     background: #f2b705; color: #0a1748; border-radius: 3px; font-size: calc(var(--h) * .5); font-family: Arial, sans-serif; font-weight: 800; }
   .to.contar .seg { display: flex; }
 
-  /* Fim do encontro (uma equipa chegou aos 4 jogos): faixa por cima do marcador durante 10 min; depois esconde tudo */
+  /* Fim do encontro (uma equipa chegou aos 4 jogos): 30 s com o resultado do último jogo, depois esta faixa durante 5 min; depois esconde tudo */
   #final { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
     background: linear-gradient(180deg, #0f2366, #0a1748); color: #fff; opacity: 0; pointer-events: none; transition: opacity .6s; }
   #final.ver { opacity: 1; }
@@ -195,17 +195,17 @@
     bug.style.gridTemplateColumns = "var(--h) var(--h) calc(var(--h) * 4.2) calc(var(--h) * 1.05) calc(var(--h) * 5) var(--h) " +
       "var(--h) ".repeat(n) + "calc(var(--h) * 1.15) calc(var(--h) * .95)";
   }
-  // Faixa de resultado final: 10 minutos depois de uma equipa chegar aos 4 jogos (mesmo que se carregue em Esconder);
-  // passado esse tempo, esconde a faixa e o marcador
-  const DURACAO_FINAL = 10 * 60 * 1000;
-  let chaveFinal = "", fimFinal = 0;
+  // Fim do encontro (uma equipa chegou aos 4 jogos), mesmo que se carregue em Esconder:
+  //   1) 30 s com o marcador e o resultado do último jogo;  2) 5 min com a faixa RESULTADO FINAL;  3) esconde tudo
+  const ULTIMO_JOGO = 30 * 1000, DURACAO_FINAL = 5 * 60 * 1000;
+  let chaveFinal = "", inicioFinal = 0;
   function porFinal(s) {
     const el = document.getElementById("final"), bug = document.getElementById("bug");
     const ja = s.a.jogos || 0, jb = s.b.jogos || 0;
     const acabou = s.fimJogo && (ja >= 4 || jb >= 4);
     if (acabou) {
       const chave = ja + "-" + jb + "|" + s.a.nome + "|" + s.b.nome;
-      if (chave !== chaveFinal) { chaveFinal = chave; fimFinal = Date.now() + DURACAO_FINAL; }
+      if (chave !== chaveFinal) { chaveFinal = chave; inicioFinal = Date.now(); }
       document.getElementById("finalTxt").innerHTML = "";
       const t = document.getElementById("finalTxt");
       t.append(s.a.nome || ""); const bb = document.createElement("b"); bb.textContent = ja + " - " + jb; t.append(bb); t.append(s.b.nome || "");
@@ -216,9 +216,9 @@
     el.querySelector(".t1").style.fontSize = (h * .42) + "px";
     const t2 = el.querySelector(".t2"); let f = h * .62; t2.style.fontSize = f + "px";
     while (t2.scrollWidth > r.width * .96 && f > 8) { f -= 1; t2.style.fontSize = f + "px"; }   // nomes compridos encolhem
-    const aMostrar = acabou && Date.now() < fimFinal;
-    el.classList.toggle("ver", aMostrar);
-    if (acabou && !aMostrar) bug.className = "escondido";   // acabaram os 10 minutos: esconde tudo
+    const t = Date.now() - inicioFinal;
+    el.classList.toggle("ver", acabou && t >= ULTIMO_JOGO && t < ULTIMO_JOGO + DURACAO_FINAL);
+    if (acabou) bug.className = t < ULTIMO_JOGO ? "" : "escondido";   // marcador só nos primeiros 30 s
   }
   function desenhar(s) {
     if (!s || !s.a || !s.b) return;
