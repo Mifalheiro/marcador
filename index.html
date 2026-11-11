@@ -103,7 +103,7 @@
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { firebaseConfig } from "./firebase-config.js";
 
-  const LOGO_NAVAIS = "navais.png", DURACAO_TO = 60;
+  const DURACAO_TO = 60;
   if (location.search.indexOf("teste") >= 0) document.body.className = "fundo-teste";
 
   const db = getDatabase(initializeApp(firebaseConfig));
@@ -118,7 +118,7 @@
   }
   function porLogo(id, eq) {
     const el = document.getElementById(id);
-    const src = eq.logo === "navais" ? LOGO_NAVAIS : (eq.logo === "slot" ? logos[eq.slot] : "");
+    const src = eq.logo === "slot" ? logos[eq.slot] : "";
     if (src) { el.className = "logo"; el.innerHTML = '<img src="' + src + '">'; }
     else { el.className = "logo vazio"; el.innerHTML = ""; }
   }

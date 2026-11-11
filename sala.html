@@ -130,7 +130,7 @@
     if (n.textContent !== (eq.nome || "")) { n.textContent = eq.nome || ""; }
     ajustarNome(n);
     num("pts" + P, eq.pontos || 0); num("sets" + P, eq.sets || 0); num("jogos" + P, eq.jogos || 0);
-    const src = eq.logo === "navais" ? "navais.png" : (eq.logo === "slot" ? logos[eq.slot] : "");
+    const src = eq.logo === "slot" ? logos[eq.slot] : "";
     const emb = document.getElementById("emb" + P);
     if (emb.dataset.src !== (src || "")) { emb.dataset.src = src || ""; emb.innerHTML = src ? '<img src="' + src + '">' : ""; }
     porTimeOut(P, eq);

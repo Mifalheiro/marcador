@@ -24,6 +24,8 @@
   .lista-clubes img { width: 32px; height: 32px; object-fit: contain; background: #fff; border-radius: 4px; }
   .lista-clubes span { flex: 1; }
   .lista-clubes button { border: 0; border-radius: 8px; background: #8a2b2b; color: #fff; padding: 6px 10px; }
+  .lista-clubes small { opacity: .75; }
+  .lista-clubes a { color: #ff9c9c; font-size: 12px; margin-left: 6px; }
   .clube-linha { display: flex; gap: 8px; align-items: center; }
   .clube-linha img { width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; }
   .clube-linha .sem { width: 44px; height: 44px; border-radius: 6px; background: #e8ebf5; flex: none; }
@@ -203,12 +205,13 @@
     <div class="aviso">Para experimentar sem um encontro a sério: não espera pelo boletim, mostra os + e − dos sets e jogos e o Zerar tudo, e deixa o Anular, o Novo jogo e o Assinar sempre disponíveis.</div>
     <label><input type="checkbox" id="amigavel" style="width:auto" onchange="enviar('amigavel')"> Jogo amigável (sem boletim)</label>
     <div class="aviso">Ligado: escolhes o clube e escreves os atletas diretamente nos cartões. Desligado: clubes e atletas vêm do boletim de jogo.</div>
-    <label>Adicionar ou atualizar clube</label>
-    <input id="novoNome" placeholder="Nome do clube (ex.: A. R. CANIDELO - B)">
+    <label>Adicionar ou atualizar clube / equipa</label>
+    <input id="novoNome" list="dlClubes" placeholder="Clube (ex.: AR Canidelo)"><datalist id="dlClubes"></datalist>
+    <input id="novaEquipa" placeholder="Equipa (opcional, ex.: AR Canidelo B)" style="margin-top:6px">
     <div class="logo-linha" style="margin-top:8px"><span id="novoPrev"></span>
       <label>Escolher emblema<input id="novoLogo" type="file" accept="image/*" style="display:none" onchange="lerLogoNovo(this)"></label>
-      <button onclick="guardarClube()">Guardar clube</button></div>
-    <div class="aviso">Para mudar o emblema de um clube, escreve o mesmo nome e escolhe a imagem nova.</div>
+      <button onclick="guardarClube()">Guardar</button></div>
+    <div class="aviso">O emblema e os atletas são do clube; as equipas (A, B…) são os nomes que aparecem no boletim e no direto. Para mudar o emblema, escreve o mesmo clube e escolhe a imagem nova.</div>
     <label>Código das Definições</label>
     <div class="logo-linha"><input id="codDef" type="password" placeholder="Novo código" style="flex:2">
       <button onclick="guardarCodigo('codDef', 'codigoDef')">Guardar código</button></div>
@@ -219,7 +222,7 @@
     <div class="aviso">Pedido para voltar atrás no boletim depois de a equipa da casa confirmar, e para reabrir um boletim submetido.</div>
     <label>Lista de atletas da FPTM</label>
     <div class="logo-linha"><label>Importar lista da FPTM (.xls)<input type="file" accept=".xls,.xlsx,.csv" style="display:none" onchange="importarFptm(this)"></label></div>
-    <div class="aviso" id="fptmInfo">No boletim, ao escolher o clube, os atletas aparecem numa lista e a licença preenche-se sozinha.</div>
+    <div class="aviso" id="fptmInfo">Atualiza os atletas e licenças dos clubes guardados (os outros clubes do ficheiro são ignorados).</div>
     <label>Clubes guardados</label>
     <div class="lista-clubes" id="listaClubes"></div>
     <label>Link do marcador para o PRISM (widget Web)</label>
@@ -246,16 +249,15 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=35";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm, ligarFptm } from "./boletim.js?v=36";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
-  const LOGO_NAVAIS = "navais.png";
   const MAX_HIST = 15;
 
   // regras fixas do campeonato: sets a 11 pontos, jogos à melhor de 5 (3 sets)
   const PONTOS_SET = 11, SETS_JOGO = 3;
-  let estado = null, logos = {}, clubes = {}, hist = [], ligado = false, desvio = 0, atletas = {};
+  let estado = null, logos = {}, clubes = {}, hist = [], ligado = false, desvio = 0;
   // o histórico do Anular fica guardado neste aparelho, para não se perder ao recarregar a página
   try { hist = JSON.parse(localStorage.getItem("marcadorHist") || "[]"); if (!Array.isArray(hist)) hist = []; } catch (e) { hist = []; }
   const DURACAO_TO = 60;
@@ -268,8 +270,8 @@
 
   function inicial() {
     return { visivel: true, auto: true, pontosSet: 11, setsJogo: 3, setFechado: false, fimJogo: false,
-      a: { nome: "C. D. C. NAVAIS", jogos: 0, sets: 0, pontos: 0, logo: "navais", slot: "1" },
-      b: { nome: "VISITANTE", jogos: 0, sets: 0, pontos: 0, logo: "", slot: "2" } };
+      a: { nome: "", jogos: 0, sets: 0, pontos: 0, logo: "", slot: "1" },
+      b: { nome: "", jogos: 0, sets: 0, pontos: 0, logo: "", slot: "2" } };
   }
 
   /* ---------- Ecrã inteiro + não deixar o ecrã apagar ---------- */
@@ -315,9 +317,9 @@
       mostrar();
     });
     onValue(ref(db, "marcador/logos"), snap => { logos = snap.val() || {}; if (estado) mostrar(); });
-    onValue(ref(db, "marcador/clubes"), snap => { clubes = snap.val() || {}; mostrarClubes(); });
+    // lista única de clubes (emblema, atletas da FPTM e equipas), só para a conta de quem marca
+    onValue(ref(db, "clubes"), snap => { clubes = snap.val() || {}; mostrarClubes(); if (estado) listasAtletas(); });
     onValue(ref(db, ".info/serverTimeOffset"), snap => { desvio = snap.val() || 0; });
-    onValue(ref(db, "marcador/atletas"), snap => { atletas = snap.val() || {}; if (estado) listasAtletas(); });
   }
 
   function msg(t, c) { const e = document.getElementById("estado"); e.textContent = t; e.className = c || ""; }
@@ -389,19 +391,16 @@
       to.disabled = esperaBoletim(estado) || !(f > 0 || (setADecorrer(estado) && !eq.timeout));
     });
   }
-  // nomes de atletas já usados, por clube (para escolher depressa)
-  function chaveNome(t) { return String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 60); }
+  // sugestões de atletas (jogo amigável): os atletas do clube da equipa escolhida
   function listasAtletas() {
     ["a", "b"].forEach(L => {
-      const lista = atletas[estado[L].clubeId || "sem_clube"] || {};
-      document.getElementById("dl_" + L).innerHTML = Object.values(lista).sort().map(n => '<option value="' + esc(n) + '">').join("");
+      document.getElementById("dl_" + L).innerHTML = atletasEquipa(estado[L].clubeId).map(x => '<option value="' + esc(x[0]) + '">').join("");
     });
   }
   window.mudarAtleta = function (L, inp) {
     if (!podeEditar(estado)) { mostrar(); return; }
     const v = inp.value.trim();
     acao("atleta", L, v);
-    if (v) set(ref(db, "marcador/atletas/" + (estado[L].clubeId || "sem_clube") + "/" + chaveNome(v)), v);
   };
   function mostrar() {
     const s = estado;
@@ -413,7 +412,7 @@
       document.getElementById("jogos_" + L).textContent = eq.jogos || 0;
       const inpA = document.getElementById("atl_" + L);
       if (document.activeElement !== inpA) inpA.value = eq.atleta || "";
-      const src = eq.logo === "navais" ? LOGO_NAVAIS : (eq.logo === "slot" ? logos[eq.slot] : "");
+      const src = eq.logo === "slot" ? logos[eq.slot] : "";
       document.getElementById("logo_" + L).innerHTML = src ? '<img src="' + src + '">' : '<div class="sem"></div>';
     });
     // ordem dos cartões segue o lado da mesa (como no ecrã da sala)
@@ -598,15 +597,28 @@
       .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 60) || "clube";
   }
   function esc(t) { return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
-  function listaOrdenada() {
-    return Object.keys(clubes).map(id => ({ id, ...clubes[id] })).sort((x, y) => x.nome.localeCompare(y.nome, "pt"));
+  // cada clube pode ter várias equipas (A, B…); as listas de escolha mostram as equipas (Navais primeiro)
+  function todasEquipas() {
+    const r = [];
+    Object.keys(clubes).forEach(cid => {
+      const c = clubes[cid] || {}, eqs = c.equipas || {};
+      Object.keys(eqs).forEach(id => r.push({ id, nome: eqs[id], clubeId: cid, logo: c.logo || "" }));
+    });
+    return r;
+  }
+  const casa = e => /navais/i.test(e.clubeId) ? 0 : 1;
+  function listaOrdenada() { return todasEquipas().sort((x, y) => casa(x) - casa(y) || x.nome.localeCompare(y.nome, "pt")); }
+  function equipa(id) { return todasEquipas().find(e => e.id === id); }
+  function atletasEquipa(id) {
+    const e = id && equipa(id), a = e && clubes[e.clubeId] && clubes[e.clubeId].atl;
+    return a ? (Array.isArray(a) ? a : Object.values(a)).map(x => [String(x[0] || "").toUpperCase(), String(x[1] || "")]) : [];
   }
   function preencherLista(L) {
     if (!estado) return;
     const sel = document.getElementById("sel_" + L), eq = estado[L];
     if (document.activeElement === sel) return;
     let op = "", achou = false;
-    const opcoes = [{ id: "navais", nome: "C. D. C. NAVAIS" }].concat(listaOrdenada());
+    const opcoes = listaOrdenada();
     opcoes.forEach(c => {
       const escolhido = c.id === eq.clubeId || (!eq.clubeId && c.nome === eq.nome);
       if (escolhido) achou = true;
@@ -618,16 +630,20 @@
   function mostrarClubes() {
     ["a", "b"].forEach(preencherLista);
 
-    document.getElementById("listaClubes").innerHTML = listaOrdenada().map(c =>
-      "<div>" + (c.logo ? '<img src="' + c.logo + '">' : "<img>") + "<span>" + esc(c.nome) + "</span>" +
-      '<button onclick="apagar(\'' + c.id + '\')">Apagar</button></div>').join("") ||
-      '<div class="aviso">Ainda não há clubes guardados.</div>';
+    const ids = Object.keys(clubes).sort((x, y) => (clubes[x].nome || "").localeCompare(clubes[y].nome || "", "pt"));
+    document.getElementById("dlClubes").innerHTML = ids.map(id => '<option value="' + esc(clubes[id].nome || "") + '">').join("");
+    document.getElementById("listaClubes").innerHTML = ids.map(id => {
+      const c = clubes[id], eqs = c.equipas || {}, nAtl = c.atl ? Object.keys(c.atl).length : 0;
+      return "<div>" + (c.logo ? '<img src="' + c.logo + '">' : "<img>") +
+        "<span><b>" + esc(c.nome || id) + "</b><br><small>" + (nAtl ? nAtl + " atletas" + (c.nomeFptm ? " (FPTM: " + esc(c.nomeFptm) + ")" : "") : "sem atletas da FPTM") + "</small>" +
+        Object.keys(eqs).map(e => '<br>· ' + esc(eqs[e]) + ' <a href="#" onclick="apagarEquipa(\'' + id + "','" + e + '\');return false">apagar equipa</a>').join("") + "</span>" +
+        '<button onclick="apagar(\'' + id + '\')">Apagar</button></div>';
+    }).join("") || '<div class="aviso">Ainda não há clubes guardados.</div>';
   }
   // põe um clube (nome + emblema) num dos lados do marcador; não grava
   async function aplicarClube(L, v) {
     estado[L].clubeId = v;
-    if (v === "navais") { estado[L].nome = "C. D. C. NAVAIS"; estado[L].logo = "navais"; return; }
-    const c = clubes[v]; if (!c) return;
+    const c = equipa(v); if (!c) return;
     estado[L].nome = c.nome;
     if (c.logo) { await set(ref(db, "marcador/logos/" + estado[L].slot), c.logo); estado[L].logo = "slot"; }
     else estado[L].logo = "";
@@ -671,16 +687,23 @@
     };
     img.src = URL.createObjectURL(f);
   };
-  window.guardarClube = function () {
-    const nome = document.getElementById("novoNome").value.trim();
+  window.guardarClube = async function () {
+    const nome = document.getElementById("novoNome").value.trim(), eqNome = document.getElementById("novaEquipa").value.trim();
     if (!nome) { msg("Escreve o nome do clube", "erro"); return; }
-    const id = idClube(nome), antigo = clubes[id];
-    const logo = logoNovo || (antigo && antigo.logo) || "";
-    set(ref(db, "marcador/clubes/" + id), { nome, logo }).then(() => {
-      msg('✓ "' + nome + '" guardado', "ok");
-      document.getElementById("novoNome").value = ""; document.getElementById("novoLogo").value = "";
+    // clube já guardado com o mesmo nome (sem contar maiúsculas e acentos)? atualiza esse
+    const id = Object.keys(clubes).find(k => idClube(clubes[k].nome || "") === idClube(nome)) || idClube(nome);
+    const antigo = clubes[id] || {};
+    try {
+      if (!clubes[id]) await set(ref(db, "clubes/" + id), { nome, logo: logoNovo || "", equipas: { [idClube(eqNome || nome)]: eqNome || nome } });
+      else {
+        if (logoNovo) await set(ref(db, "clubes/" + id + "/logo"), logoNovo);
+        if (eqNome) await set(ref(db, "clubes/" + id + "/equipas/" + idClube(eqNome)), eqNome);
+        else if (!antigo.equipas) await set(ref(db, "clubes/" + id + "/equipas/" + idClube(nome)), antigo.nome || nome);
+      }
+      msg('✓ "' + (eqNome || nome) + '" guardado', "ok");
+      ["novoNome", "novaEquipa", "novoLogo"].forEach(k => { document.getElementById(k).value = ""; });
       document.getElementById("novoPrev").innerHTML = ""; logoNovo = "";
-    }).catch(e => msg("Erro: " + e.message, "erro"));
+    } catch (e) { msg("Erro: " + e.message, "erro"); }
   };
   /* ---------- Boletim de jogo (boletim.js) ---------- */
   instalarBoletim({
@@ -692,13 +715,13 @@
     },
     mostrar: () => { if (estado) mostrar(); },
     listaClubes: () => listaOrdenada(),
-    clube: id => clubes[id],
+    clube: id => equipa(id),
+    atletas: id => atletasEquipa(id),
     aplicarClubes: async (casa, vis) => { await aplicarClube("a", casa); await aplicarClube("b", vis); },
     lerAssinaturas: async () => (await get(ref(db, "marcador/assinaturas"))).val(),
     guardarAssinatura: (id, dados) => set(ref(db, "marcador/assinaturas/" + id), dados),
     apagarAssinaturas: () => remove(ref(db, "marcador/assinaturas")),
-    lerCodigo: async () => (await get(ref(db, "marcador/config/codigo"))).val(),
-    lerFptm: async () => (await get(ref(db, "fptm"))).val()
+    lerCodigo: async () => (await get(ref(db, "marcador/config/codigo"))).val()
   });
 
   // Definições só abrem com o código (se ainda não houver código, abrem para o poderes definir)
@@ -728,7 +751,7 @@
     msg(chave === "codigoDef" ? "✓ Código das Definições guardado" : "✓ Código do boletim guardado", "ok");
   };
 
-  // Importa o ficheiro da FPTM (Excel) para a Firebase (caminho "fptm", só a tua conta o lê)
+  // Importa o ficheiro da FPTM (Excel): atualiza os atletas dos clubes guardados (caminho "clubes", só a tua conta o lê)
   window.importarFptm = async function (input) {
     const f = input.files && input.files[0]; input.value = "";
     if (!f) return;
@@ -739,20 +762,32 @@
       const wb = XLSX.read(await f.arrayBuffer(), { type: "array" });
       const linhas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: "" });
       const lista = lerListaFptm(linhas);
-      const nClubes = Object.keys(lista).length, nAtl = Object.values(lista).reduce((t, c) => t + c.atl.length, 0);
-      await set(ref(db, "fptm/clubes"), lista);
-      await set(ref(db, "fptm/atualizado"), { ficheiro: f.name, em: new Date().toISOString() });
-      if (window.boletimFptmRecarregar) window.boletimFptmRecarregar();
-      msg("✓ Lista FPTM: " + nClubes + " clubes, " + nAtl + " jogadores", "ok");
-      document.getElementById("fptmInfo").textContent = "Última importação: " + f.name + " (" + nClubes + " clubes, " + nAtl + " jogadores).";
+      // cada clube guardado fica com os atletas do clube correspondente do ficheiro; os outros clubes são ignorados
+      const lig = ligarFptm(clubes, lista), falta = [];
+      let nAtl = 0, nCl = 0;
+      for (const id of Object.keys(clubes)) {
+        const k = lig[id];
+        if (!k) { falta.push(clubes[id].nome || id); continue; }
+        const f2 = lista[k];
+        await set(ref(db, "clubes/" + id + "/atl"), f2.atl);
+        await set(ref(db, "clubes/" + id + "/nomeFptm"), f2.nome);
+        await set(ref(db, "clubes/" + id + "/assoc"), f2.assoc);
+        nCl++; nAtl += f2.atl.length;
+      }
+      await set(ref(db, "marcador/config/fptm"), { ficheiro: f.name, em: new Date().toISOString() });
+      msg("✓ FPTM: " + nCl + " clubes atualizados (" + nAtl + " jogadores)" + (falta.length ? " · sem correspondência: " + falta.join(", ") : ""), falta.length ? "espera" : "ok");
+      document.getElementById("fptmInfo").textContent = "Última importação: " + f.name + " — " + nCl + " clubes atualizados" + (falta.length ? "; sem correspondência no ficheiro: " + falta.join(", ") : "") + ".";
     } catch (e) {
       msg("Erro a importar a lista: " + (e && e.message ? e.message : e), "erro");
-      if (String(e && e.message).toLowerCase().includes("permission")) alert("A Firebase recusou guardar a lista. Confirma que juntaste a regra \"fptm\" nas regras da Realtime Database.");
+      if (String(e && e.message).toLowerCase().includes("permission")) alert("A Firebase recusou guardar. Confirma que as regras da Realtime Database têm a regra \"clubes\".");
     }
   };
 
   window.apagar = function (id) {
-    if (confirm("Apagar este clube da lista?")) remove(ref(db, "marcador/clubes/" + id));
+    if (confirm("Apagar este clube (emblema, atletas e equipas)?")) remove(ref(db, "clubes/" + id));
+  };
+  window.apagarEquipa = function (id, e) {
+    if (confirm("Apagar esta equipa?")) remove(ref(db, "clubes/" + id + "/equipas/" + e));
   };
 </script>
 </body>

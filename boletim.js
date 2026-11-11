@@ -329,45 +329,36 @@ window.novoBoletim = function () {
   desenhar();
 };
 
-/* ---------- Lista da FPTM (nomes e licenças por clube) ---------- */
-// Fica na Firebase em "fptm" (só a conta de quem marca a pode ler).
-let fptm = null, fptmPedido = false;
-function carregarFptm(forcar) {
-  if (fptmPedido && !forcar) return;
-  fptmPedido = true;
-  api.lerFptm().then(d => { fptm = d || {}; if (aberto) desenhar(); }).catch(() => { fptm = {}; if (aberto) desenhar(); });
-}
-window.boletimFptmRecarregar = () => carregarFptm(true);
-
+/* ---------- Lista da FPTM: ligação dos clubes guardados aos clubes do ficheiro ---------- */
 const normT = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const GENERICAS = new Set(["clube", "club", "ginasio", "associacao", "recreativa", "recreativo", "cultural", "desportivo",
   "desporto", "centro", "grupo", "tenis", "mesa", "academia", "sport", "futebol", "sociedade", "uniao"]);
 const palavras = t => normT(t).replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(x => x.length >= 4 && !GENERICAS.has(x));
 const compacto = t => normT(t).replace(/\s+[ab]$/, "").replace(/[^a-z0-9]/g, "");
 
-// Clube da lista FPTM que corresponde ao nome do clube (ex.: "Ginásio Clube de Valbom B" → "GC VALBOM")
-function melhorFptm(nome) {
-  const cl = (fptm && fptm.clubes) || {};
-  const cn = compacto(nome), pw = palavras(nome);
-  let melhor = "", pontos = 0;
-  Object.keys(cl).forEach(k => {
-    const f = cl[k];
-    let p = compacto(f.nome) === cn ? 100 : palavras(f.nome).filter(x => pw.includes(x)).length * 10;
-    if (p && /porto/i.test(f.assoc || "")) p += 1;   // em caso de empate, prefere a ATM Porto
-    if (p > pontos) { pontos = p; melhor = k; }
+// Para cada clube guardado, o clube do ficheiro da FPTM que lhe corresponde → { clubeId: chave do ficheiro }
+// (primeiro o mesmo clube da importação anterior; senão pelo nome do clube e das equipas, preferindo a ATM Porto)
+export function ligarFptm(clubes, lista) {
+  const r = {};
+  Object.keys(clubes || {}).forEach(id => {
+    const c = clubes[id] || {};
+    const igual = Object.keys(lista).find(k => c.nomeFptm && compacto(lista[k].nome) === compacto(c.nomeFptm) && (!c.assoc || lista[k].assoc === c.assoc));
+    if (igual) { r[id] = igual; return; }
+    const nomes = [c.nome].concat(Object.values(c.equipas || {})).filter(Boolean);
+    let melhor = "", pontos = 0;
+    Object.keys(lista).forEach(k => {
+      const f = lista[k];
+      let p = 0;
+      nomes.forEach(n => {
+        const q = compacto(f.nome) === compacto(n) ? 100 : palavras(f.nome).filter(x => palavras(n).includes(x)).length * 10;
+        if (q > p) p = q;
+      });
+      if (p && /porto/i.test(f.assoc || "")) p += 1;
+      if (p > pontos) { pontos = p; melhor = k; }
+    });
+    if (melhor) r[id] = melhor;
   });
-  return melhor;
-}
-function chaveFptm(c) {
-  if (!fptm || !fptm.clubes || !c.clubeId) return "";
-  const m = fptm.mapa && fptm.mapa[c.clubeId];
-  if (m === "__nenhum") return "";
-  if (m && fptm.clubes[m]) return m;
-  return melhorFptm(c.nome);
-}
-function listaAtletas(k) {
-  const a = (fptm && fptm.clubes && fptm.clubes[k] && fptm.clubes[k].atl) || [];
-  return (Array.isArray(a) ? a : Object.values(a)).map(x => [String(x[0] || "").toUpperCase(), String(x[1] || "")]);
+  return r;
 }
 
 // Lê as linhas do ficheiro da FPTM (Associação / Clube / atletas por baixo) → { chave: {assoc, nome, atl:[[nome, licença]]} }
@@ -397,10 +388,9 @@ export function lerListaFptm(linhas) {
 function passoClube(b, lado) {
   const c = b[lado], letras = lado === "casa" ? LET_C : LET_V;
   const titulo = lado === "casa" ? "Clube visitado (joga em casa)" : "Clube visitante";
-  const opcoes = [{ id: "navais", nome: "C. D. C. NAVAIS" }].concat(api.listaClubes())
+  const opcoes = api.listaClubes()
     .map(x => '<option value="' + x.id + '"' + (x.id === c.clubeId ? " selected" : "") + ">" + esc(x.nome) + "</option>").join("");
-  carregarFptm();
-  const kf = chaveFptm(c), lista = kf ? listaAtletas(kf) : null;
+  const lista = c.clubeId ? api.atletas(c.clubeId) : null;   // atletas do clube (da lista da FPTM)
   let linhas = "";
   c.atl.forEach((a, i) => {
     let campoNome;
@@ -421,9 +411,8 @@ function passoClube(b, lado) {
     linhas += "<tr><td class=\"bol-let\">" + (letras[i] ? letras[i] + " -" : "") + "</td><td>" + campoNome + "</td>" +
       '<td><input id="t_l' + i + '" value="' + esc(a.l) + '" placeholder="Licença" inputmode="numeric" class="bol-lic"></td></tr>';
   });
-  // a ligação ao clube da lista da FPTM é feita sozinha (pelo nome do clube)
-  const fptmLinha = c.clubeId && fptm && !fptm.clubes
-    ? '<div class="aviso">Sem lista da FPTM: importa-a no controlo, em Definições → Importar lista da FPTM.</div>' : "";
+  const fptmLinha = c.clubeId && !(lista && lista.length)
+    ? '<div class="aviso">Este clube ainda não tem atletas: importa a lista da FPTM no controlo (Definições), ou escreve os nomes.</div>' : "";
   const voltar = lado === "casa" ? "cab" : "casa", seguir = lado === "casa" ? "vis" : "jogos";
   return '<div class="bol-cartao"><div class="bol-sub">' + titulo + "</div>" +
     '<select id="t_clube" onchange="bolClube(\'' + lado + '\', this.value)"><option value="">Escolher clube…</option>' + opcoes + "</select>" +
@@ -437,7 +426,7 @@ function passoClube(b, lado) {
 // Escolha do clube (os atletas vêm depois, da lista da FPTM ou escritos à mão)
 window.bolClube = function (lado, id) {
   guardarCampos();
-  const nome = id === "navais" ? "C. D. C. NAVAIS" : (api.clube(id)?.nome || "");
+  const nome = api.clube(id)?.nome || "";
   mudar(b => { b[lado].clubeId = id; b[lado].nome = nome; });
   desenhar();
 };
@@ -445,7 +434,7 @@ window.bolClube = function (lado, id) {
 // Escolha de um atleta da lista: preenche o nome e a licença (a licença continua editável)
 window.bolAtleta = function (lado, i, v) {
   guardarCampos();
-  const b = bol(), c = b[lado], lista = listaAtletas(chaveFptm(c));
+  const b = bol(), c = b[lado], lista = api.atletas(c.clubeId);
   let n = c.atl[i].n, l = c.atl[i].l;
   if (v === "__editar") {
     const t = prompt("Nome do atleta:", n);
