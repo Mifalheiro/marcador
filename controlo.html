@@ -429,7 +429,7 @@
     document.getElementById("amigavel").checked = !!s.amigavel;
     // botões que só servem no fim de um set
     const fimSet = !!(s.setFechado || s.fimJogo);
-    document.getElementById("btAnular").disabled = !(fimSet && hist.length);
+    document.getElementById("btAnular").disabled = !((fimSet || s.teste) && hist.length);   // em Teste, a qualquer altura
     const oculto = s.visivel === false;
     // fluxo guiado: fim do set → Esconder → Novo set / Novo jogo → (novo set) Mostrar → pontos
     document.getElementById("btNovoSet").disabled = !(s.setFechado && !s.fimJogo && oculto);
@@ -494,6 +494,7 @@
       if (ant) {
         // um boletim já submetido não volta atrás com o Anular
         if (estado.boletim && window.boletimBloqueado && window.boletimBloqueado(estado.boletim)) ant.boletim = estado.boletim;
+        ant.teste = estado.teste;   // o Anular não liga nem desliga o modo Teste
         estado = ant; gravar(); mostrar();
       }
       return;
