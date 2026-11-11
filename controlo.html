@@ -42,7 +42,8 @@
   .sqbt.sim { background: #22c55e; color: #05230f; }
   .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
-  .linha-pts { display: grid; grid-template-columns: 1fr 1.1fr 1.7fr; gap: 8px; align-items: center; }
+  .linha-pts { display: grid; grid-template-columns: 1fr 0.8fr 1fr; gap: 8px; align-items: center; }
+  .linha-pts button { line-height: 1.15; }
   /* PC / tablet / telemóvel deitado: o controlo ocupa o ecrã todo e os botões dos pontos
      crescem para preencher o espaço livre; as Definições ficam no fundo */
   @media not ((orientation: portrait) and (max-width: 700px)) {
@@ -52,8 +53,7 @@
     .linha-pts { flex: 1 0 auto; min-height: 150px; align-items: stretch; }
     .linha-pts .mais, .linha-pts .menos-pt { height: auto; }
     .linha-pts .pts { align-self: center; font-size: clamp(64px, 14vh, 180px); }
-    .linha-pts .mais { font-size: clamp(24px, 3vw, 44px); }
-    .linha-pts .menos-pt { font-size: clamp(18px, 2.2vw, 32px); font-weight: 800; }
+    .linha-pts .mais, .linha-pts .menos-pt { font-size: clamp(24px, 3vw, 44px); font-weight: 800; }
   }
   /* telemóvel em pé: como antes — pontos em cima, +1 PONTO grande por baixo e −1 PONTO pequeno no fim */
   @media (orientation: portrait) and (max-width: 700px) {
@@ -61,6 +61,7 @@
     .linha-pts .pts { order: 1; }
     .linha-pts .mais { order: 2; height: 96px; }
     .linha-pts .menos-pt { order: 3; height: 40px; font-size: 15px; font-weight: 400; }
+    .linha-pts .q { display: none; }   /* em pé: "+1 PONTO" numa linha só */
   }
   .teste-so { visibility: hidden; }
   body.modo-teste .teste-so { visibility: visible; }
@@ -262,7 +263,7 @@
   const DURACAO_TO = 60;
   const agora = () => Date.now() + desvio;
   const faltaTO = eq => (eq.timeout && eq.toInicio) ? Math.ceil(DURACAO_TO - (agora() - eq.toInicio) / 1000) : 0;
-  setInterval(() => { if (estado) botoesTO(); }, 500);
+  setInterval(() => { if (estado) { botoesTO(); bloquearPontos(); } }, 500);
 
   document.getElementById("urlOverlay").textContent = new URL("./", location.href).href;
   document.getElementById("urlSala").textContent = new URL("sala.html", location.href).href;
@@ -336,9 +337,9 @@
       '<button class="sqbt" id="sq_' + L + '" onclick="acao(\'saque\',\'' + L + '\')">Serve</button>' +
       '<input class="atl" id="atl_' + L + '" list="dl_' + L + '" placeholder="Atleta(s) a jogar" onchange="mudarAtleta(\'' + L + '\',this)"><datalist id="dl_' + L + '"></datalist>' +
       '<div class="linha-pts">' +
-      '<button class="menos-pt" onclick="acao(\'ponto\',\'' + L + '\',-1)">−1 PONTO</button>' +
+      '<button class="menos-pt" onclick="acao(\'ponto\',\'' + L + '\',-1)">−1 <br class="q">PONTO</button>' +
       '<div class="pts" id="pts_' + L + '">0</div>' +
-      '<button class="mais" onclick="acao(\'ponto\',\'' + L + '\',1)">+1 PONTO</button></div>' +
+      '<button class="mais" onclick="acao(\'ponto\',\'' + L + '\',1)">+1 <br class="q">PONTO</button></div>' +
       '<div class="linha"><button class="peq teste-so" onclick="acao(\'sets\',\'' + L + '\',-1)">−</button>' +
       '<div class="rot">Sets<span class="val" id="sets_' + L + '">0</span></div>' +
       '<button class="peq teste-so" onclick="acao(\'sets\',\'' + L + '\',1)">+</button></div>' +
@@ -372,6 +373,13 @@
   }
   // há um set a decorrer: já tem pontos e ainda não fechou
   function setADecorrer(s) { return !!(s.saqueInicial && !s.setFechado && !s.fimJogo && ((s.a.pontos || 0) + (s.b.pontos || 0)) > 0); }
+  // time out a contar (em qualquer das equipas): os pontos ficam parados
+  const toAContar = s => !!s && (faltaTO(s.a) > 0 || faltaTO(s.b) > 0);
+  let paradoBase = false;
+  function bloquearPontos() {
+    const b = paradoBase || toAContar(estado);
+    document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.toggle("bloq", b));
+  }
   function botoesTO() {
     ["a", "b"].forEach(L => {
       const eq = estado[L], to = document.getElementById("to_" + L), f = faltaTO(eq);
@@ -436,7 +444,7 @@
     document.getElementById("btTrocar").classList.toggle("chama", !!s.trocarPendente);
     document.getElementById("btTrocar").style.display = podeTrocar(s) ? "" : "none";
     if (s.trocarPendente) msg("Mudança de campo — carrega em Trocar lados", "espera");
-    document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.toggle("bloq", parado));
+    paradoBase = parado; bloquearPontos();
     document.getElementById("btNovoSet").classList.toggle("chama", !!s.setFechado && !s.fimJogo && oculto);
     document.getElementById("btNovoJogo").classList.toggle("chama", !!s.fimJogo && oculto);
     const prox = window.boletimProximoTexto ? window.boletimProximoTexto(s) : "";
@@ -467,7 +475,7 @@
     if (espera) {
       ["btAnular", "btNovoSet", "btNovoJogo", "btTrocar", "btVis", "sq_a", "sq_b"].forEach(id => { document.getElementById(id).disabled = true; });
       ["sq_a", "sq_b"].forEach(id => document.getElementById(id).classList.remove("chama"));
-      document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.add("bloq"));
+      paradoBase = true; bloquearPontos();
       msg("Começa pelo Boletim de jogo", "espera");
     } else if (/Boletim de jogo/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
     if (window.boletimMostrar) window.boletimMostrar(s);
@@ -500,6 +508,7 @@
           const prox = s.visivel === false ? (s.fimJogo ? "Novo jogo" : "Novo set") : "Esconder";
           recusar((s.fimJogo ? "Jogo" : "Set") + " terminado — carrega em " + prox); return;
         }
+        if (toAContar(s)) { recusar("Time out a decorrer — para a contagem ou espera que acabe"); return; }
         // depois do Novo set, os pontos só contam depois de Mostrar
         if (s.visivel === false) { recusar("Carrega primeiro em Mostrar"); return; }
         if (n > 0) {
