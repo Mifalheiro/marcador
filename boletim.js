@@ -557,7 +557,7 @@ function passoAssinar(b) {
     pad("casa", "Delegado ou Capitão", "a_nomeCasa", a.nomeCasa) + "</div>" +
     '<div class="bol-cartao"><div class="bol-sub">Clube visitante: ' + esc(b.vis.nome) + "</div>" + prot("Vis", a.protVis) +
     pad("vis", "Delegado ou Capitão", "a_nomeVis", a.nomeVis) + "</div>" +
-    '<div class="bol-cartao">' + pad("arb", "Árbitro", "a_nomeArb", a.nomeArb) +
+    '<div class="bol-cartao bol-arb">' + pad("arb", "Árbitro", "a_nomeArb", a.nomeArb) +
     (fechado ? '<div class="bol-ass-rot">Hora de fim: <b>' + esc(b.cab.fim) + "</b></div>" : campo("a_fim", "Hora de fim", b.cab.fim || horaAgora(), "time")) + "</div></div>" +
     '<div class="bol-nav">' + (fechado ? '<button class="bol-sec" onclick="bolReabrir()">🔒 ‹ Jogos</button>' : '<button class="bol-sec" onclick="bolPasso(\'jogos\')">‹ Jogos</button>') +
     '<button class="bol-pri" id="bolBtPDF" onclick="bolPDF()">📄 Gerar PDF</button></div>';
