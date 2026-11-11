@@ -370,13 +370,15 @@
   function jogoComecado(s) {
     return !!(s.saqueInicial && !s.fimJogo && ((s.a.pontos || 0) + (s.b.pontos || 0) + (s.a.sets || 0) + (s.b.sets || 0)) > 0);
   }
+  // há um set a decorrer: já tem pontos e ainda não fechou
+  function setADecorrer(s) { return !!(s.saqueInicial && !s.setFechado && !s.fimJogo && ((s.a.pontos || 0) + (s.b.pontos || 0)) > 0); }
   function botoesTO() {
     ["a", "b"].forEach(L => {
       const eq = estado[L], to = document.getElementById("to_" + L), f = faltaTO(eq);
       to.textContent = !eq.timeout ? "Time out" : f > 0 ? "⏱ " + f + " s — parar contagem" : "Time out já usado";
       to.className = "tobt" + (!eq.timeout ? "" : f > 0 ? " ativo" : " usado");
-      // só depois do primeiro ponto do jogo (ou para parar uma contagem a decorrer)
-      to.disabled = esperaBoletim(estado) || !(f > 0 || (jogoComecado(estado) && !eq.timeout));
+      // só com um set a decorrer, depois do seu primeiro ponto (ou para parar uma contagem a decorrer)
+      to.disabled = esperaBoletim(estado) || !(f > 0 || (setADecorrer(estado) && !eq.timeout));
     });
   }
   // nomes de atletas já usados, por clube (para escolher depressa)
@@ -538,7 +540,7 @@
         if (window.boletimNovoJogo && window.boletimNovoJogo(s)) break;
         s.parciais = []; s.saqueInicial = null; s.a.pontos = 0; s.b.pontos = 0; s.a.sets = 0; s.b.sets = 0; s.setFechado = false; s.fimJogo = false; s.a.timeout = 0; s.b.timeout = 0; break;
       case "timeout":   // 1 por jogo: o T fica até ao jogo seguinte; os primeiros 60 s têm contagem
-        if (!s[L].timeout && !jogoComecado(s)) { recusar("O time out só depois de o jogo começar"); return; }
+        if (!s[L].timeout && !setADecorrer(s)) { recusar("O time out só depois do primeiro ponto do set"); return; }
         if (!s[L].timeout) { s[L].timeout = 1; s[L].toInicio = agora(); }
         else if (faltaTO(s[L]) > 0) { s[L].toInicio = 0; }            // parar a contagem antes do fim
         else { recusar("Time out já usado neste jogo"); return; }
