@@ -525,8 +525,11 @@ window.bolPar = function (lado, i, v) {
 window.bolComecar = function (g) {
   if (bloqueado(bol())) return;
   if (ORDEM[g].par) { const b = bol(); if ([...b.par.casa, ...b.par.vis].some(x => x < 0)) { alert("Escolhe primeiro os 2 atletas de cada equipa para o par."); return; } }
+  const s = api.estado();
+  window.fecharBoletim();   // volta ao marcador
+  // no fim de um jogo faz o mesmo que o "Novo jogo" do marcador (pede Esconder primeiro, se faltar)
+  if (s.fimJogo) { window.acao("novoJogo"); return; }
   mudar((b, s) => iniciarJogo(s, g), true);
-  desenhar();
 };
 
 // Correção manual de um set ("11-9"; vazio apaga)

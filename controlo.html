@@ -252,7 +252,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=33";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm } from "./boletim.js?v=34";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -549,7 +549,8 @@
         if (s.setFechado) s.ladosTrocados = !s.ladosTrocados;
         s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; s.trocarPendente = false; s.trocaFeita = false; break;
       case "novoJogo":
-        if (!(s.fimJogo && s.visivel === false) && !s.teste) { hist.pop(); return; }   // só depois de terminar e esconder (exceto em Teste)
+        // só depois de terminar e esconder (exceto em Teste)
+        if (!(s.fimJogo && s.visivel === false) && !s.teste) { recusar(s.fimJogo ? "Primeiro carrega em Esconder" : "O jogo ainda não terminou"); return; }
         s.visivel = true;   // jogo novo: o marcador volta a aparecer no direto
         s.trocarPendente = false; s.trocaFeita = false;
         // com o boletim ativo, começa o jogo seguinte do boletim (nomes dos atletas já atualizados)
