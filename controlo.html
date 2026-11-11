@@ -42,8 +42,18 @@
   .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
   .linha-pts { display: grid; grid-template-columns: 1fr 1.1fr 1.7fr; gap: 8px; align-items: center; }
-  .linha-pts .mais { height: 260px; }
-  .linha-pts .menos-pt { height: 260px; font-size: 22px; font-weight: 800; }
+  /* PC / tablet / telemóvel deitado: o controlo ocupa o ecrã todo e os botões dos pontos
+     crescem para preencher o espaço livre; as Definições ficam no fundo */
+  @media not ((orientation: portrait) and (max-width: 700px)) {
+    body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+    .equipas { flex: 1 0 auto; }
+    .eq { height: 100%; }
+    .linha-pts { flex: 1 0 auto; min-height: 150px; align-items: stretch; }
+    .linha-pts .mais, .linha-pts .menos-pt { height: auto; }
+    .linha-pts .pts { align-self: center; font-size: clamp(64px, 14vh, 180px); }
+    .linha-pts .mais { font-size: clamp(24px, 3vw, 44px); }
+    .linha-pts .menos-pt { font-size: clamp(18px, 2.2vw, 32px); font-weight: 800; }
+  }
   /* telemóvel em pé: como antes — pontos em cima, +1 PONTO grande por baixo e −1 PONTO pequeno no fim */
   @media (orientation: portrait) and (max-width: 700px) {
     .linha-pts { grid-template-columns: 1fr; gap: 8px; }
