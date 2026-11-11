@@ -398,26 +398,28 @@
     // botões que só servem no fim de um set
     const fimSet = !!(s.setFechado || s.fimJogo);
     document.getElementById("btAnular").disabled = !(fimSet && hist.length);
-    document.getElementById("btNovoSet").disabled = !(s.setFechado && !s.fimJogo);
-    document.getElementById("btNovoJogo").disabled = !(s.fimJogo || s.teste);
+    const oculto = s.visivel === false;
+    // fluxo guiado: fim do set → Esconder → Novo set / Novo jogo → (novo set) Mostrar → pontos
+    document.getElementById("btNovoSet").disabled = !(s.setFechado && !s.fimJogo && oculto);
+    document.getElementById("btNovoJogo").disabled = !((s.fimJogo && oculto) || s.teste);
     document.getElementById("btVis").disabled = !(fimSet || s.visivel === false);
     // modo de teste: + e − dos sets/jogos e Zerar tudo; o Zerar aparece também depois de gerar o PDF
     document.body.classList.toggle("modo-teste", !!s.teste);
     document.getElementById("teste").checked = !!s.teste;
     const pdfFeito = !!(s.boletim && window.boletimBloqueado && window.boletimBloqueado(s.boletim));
     document.getElementById("btZerar").style.display = s.teste || pdfFeito ? "" : "none";
-    const parado = !!(s.fimJogo || s.setFechado || !s.saqueInicial || s.trocarPendente);
+    const parado = !!(s.fimJogo || s.setFechado || !s.saqueInicial || s.trocarPendente || oculto);
     document.getElementById("btTrocar").classList.toggle("chama", !!s.trocarPendente);
     document.getElementById("btTrocar").style.display = podeTrocar(s) ? "" : "none";
     if (s.trocarPendente) msg("Mudança de campo — carrega em Trocar lados", "espera");
     document.querySelectorAll(".mais, .menos-pt").forEach(bt => bt.classList.toggle("bloq", parado));
-    document.getElementById("btNovoSet").classList.toggle("chama", !!s.setFechado && !s.fimJogo);
-    document.getElementById("btNovoJogo").classList.toggle("chama", !!s.fimJogo);
+    document.getElementById("btNovoSet").classList.toggle("chama", !!s.setFechado && !s.fimJogo && oculto);
+    document.getElementById("btNovoJogo").classList.toggle("chama", !!s.fimJogo && oculto);
     const prox = window.boletimProximoTexto ? window.boletimProximoTexto(s) : "";
     document.getElementById("btNovoJogo").textContent = prox && s.fimJogo ? "▶ " + prox : "Novo jogo";
     const v = s.visivel !== false;
     document.getElementById("btVis").textContent = v ? "Esconder" : "Mostrar";
-    document.getElementById("btVis").className = v ? "" : "ativo";
+    document.getElementById("btVis").className = (v ? "" : "ativo") + ((fimSet ? v : !v) ? " chama" : "");
     document.getElementById("auto").checked = !!s.auto;
     botoesTO(); listasAtletas();
     const sv = servidor(s);
@@ -429,10 +431,11 @@
     });
     if (document.activeElement.id !== "pontosSet") document.getElementById("pontosSet").value = s.pontosSet;
     if (document.activeElement.id !== "setsJogo") document.getElementById("setsJogo").value = s.setsJogo;
-    const fim = s.fimJogo ? "Fim do jogo — carrega em Novo jogo (ou Anular)"
-              : s.setFechado ? "Fim do set — carrega em Novo set (ou Anular)" : "";
+    const fim = s.fimJogo ? (v ? "Fim do jogo — carrega em Esconder (ou Anular)" : "Fim do jogo — carrega em Novo jogo")
+              : s.setFechado ? (v ? "Fim do set — carrega em Esconder (ou Anular)" : "Fim do set — carrega em Novo set")
+              : !v ? "Carrega em Mostrar para começar o set" : "";
     if (fim) msg(fim, "espera");
-    else if (!s.trocarPendente && /terminado|Fim do jogo|Fim do set|Mudança de campo/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
+    else if (!s.trocarPendente && /terminado|Fim do jogo|Fim do set|Mudança de campo|Mostrar/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
     if (window.boletimMostrar) window.boletimMostrar(s);
   }
 
@@ -459,6 +462,11 @@
         if (s.fimJogo || s.setFechado) {
           hist.pop();
           msg(s.fimJogo ? "Jogo terminado — carrega em Novo jogo" : "Set terminado — carrega em Novo set", "erro");
+          if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+          return;
+        }
+        if (s.visivel === false) {   // depois do Novo set, os pontos só contam depois de Mostrar
+          hist.pop(); msg("Carrega primeiro em Mostrar", "erro");
           if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
           return;
         }
@@ -494,13 +502,15 @@
       case "sets": s[L].sets = Math.max(0, s[L].sets + n); break;
       case "jogos": s[L].jogos = Math.max(0, s[L].jogos + n); break;
       case "novoSet":
+        if (!(s.setFechado && s.visivel === false) && !s.teste) { hist.pop(); return; }
         // sem contagem automática, guarda aqui o resultado do set que acabou
         if (!s.setFechado && (s.a.pontos || s.b.pontos)) s.parciais = (s.parciais || []).concat([[s.a.pontos, s.b.pontos]]);
         // set novo: os jogadores mudam de campo (troca o controlo e o ecrã da sala)
         if (s.setFechado) s.ladosTrocados = !s.ladosTrocados;
         s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; s.trocarPendente = false; s.trocaFeita = false; break;
       case "novoJogo":
-        if (!s.fimJogo && !s.teste) { hist.pop(); return; }   // só depois de um jogo terminar (exceto em Teste)
+        if (!(s.fimJogo && s.visivel === false) && !s.teste) { hist.pop(); return; }   // só depois de terminar e esconder (exceto em Teste)
+        s.visivel = true;   // jogo novo: o marcador volta a aparecer no direto
         s.trocarPendente = false; s.trocaFeita = false;
         // com o boletim ativo, começa o jogo seguinte do boletim (nomes dos atletas já atualizados)
         if (window.boletimNovoJogo && window.boletimNovoJogo(s)) break;
