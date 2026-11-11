@@ -399,6 +399,7 @@
     const fimSet = !!(s.setFechado || s.fimJogo);
     document.getElementById("btAnular").disabled = !(fimSet && hist.length);
     document.getElementById("btNovoSet").disabled = !(s.setFechado && !s.fimJogo);
+    document.getElementById("btNovoJogo").disabled = !s.fimJogo;
     document.getElementById("btVis").disabled = !(fimSet || s.visivel === false);
     // modo de teste: + e − dos sets/jogos e Zerar tudo; o Zerar aparece também depois de gerar o PDF
     document.body.classList.toggle("modo-teste", !!s.teste);
@@ -499,6 +500,7 @@
         if (s.setFechado) s.ladosTrocados = !s.ladosTrocados;
         s.a.pontos = 0; s.b.pontos = 0; s.setFechado = false; s.trocarPendente = false; s.trocaFeita = false; break;
       case "novoJogo":
+        if (!s.fimJogo) { hist.pop(); return; }   // só depois de um jogo terminar
         s.trocarPendente = false; s.trocaFeita = false;
         // com o boletim ativo, começa o jogo seguinte do boletim (nomes dos atletas já atualizados)
         if (window.boletimNovoJogo && window.boletimNovoJogo(s)) break;
