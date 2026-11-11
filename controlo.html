@@ -41,8 +41,8 @@
   .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
   .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
   .linha-pts { display: grid; grid-template-columns: 1fr 1.1fr 1.7fr; gap: 8px; align-items: center; }
-  .linha-pts .mais { height: 110px; }
-  .linha-pts .menos-pt { height: 110px; font-size: 22px; font-weight: 700; }
+  .linha-pts .mais { height: 160px; }
+  .linha-pts .menos-pt { height: 160px; font-size: 22px; font-weight: 800; }
   .teste-so { visibility: hidden; }
   body.modo-teste .teste-so { visibility: visible; }
   .barra button:disabled { opacity: .35; }
@@ -308,7 +308,7 @@
       '<button class="sqbt" id="sq_' + L + '" onclick="acao(\'saque\',\'' + L + '\')">Serve</button>' +
       '<input class="atl" id="atl_' + L + '" list="dl_' + L + '" placeholder="Atleta(s) a jogar" onchange="mudarAtleta(\'' + L + '\',this)"><datalist id="dl_' + L + '"></datalist>' +
       '<div class="linha-pts">' +
-      '<button class="menos-pt" onclick="acao(\'ponto\',\'' + L + '\',-1)">−1</button>' +
+      '<button class="menos-pt" onclick="acao(\'ponto\',\'' + L + '\',-1)">−1 PONTO</button>' +
       '<div class="pts" id="pts_' + L + '">0</div>' +
       '<button class="mais" onclick="acao(\'ponto\',\'' + L + '\',1)">+1 PONTO</button></div>' +
       '<div class="linha"><button class="peq teste-so" onclick="acao(\'sets\',\'' + L + '\',-1)">−</button>' +
