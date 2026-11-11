@@ -25,6 +25,8 @@
   .lista-clubes span { flex: 1; }
   .lista-clubes button { border: 0; border-radius: 8px; background: #8a2b2b; color: #fff; padding: 6px 10px; }
   .lista-clubes small { opacity: .75; }
+  .clubes-guardados { margin: 12px 0 0; padding: 0; background: none; }
+  .clubes-guardados > summary { cursor: pointer; padding: 10px 12px; background: #1d2c66; border-radius: 10px; font-size: 14px; }
   .lista-clubes a { color: #ff9c9c; font-size: 12px; margin-left: 6px; }
   .clube-linha { display: flex; gap: 8px; align-items: center; }
   .clube-linha img { width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; }
@@ -223,8 +225,8 @@
     <label>Lista de atletas da FPTM</label>
     <div class="logo-linha"><label>Importar lista da FPTM (.xls)<input type="file" accept=".xls,.xlsx,.csv" style="display:none" onchange="importarFptm(this)"></label></div>
     <div class="aviso" id="fptmInfo">Atualiza os atletas e licenças dos clubes guardados (os outros clubes do ficheiro são ignorados).</div>
-    <label>Clubes guardados</label>
-    <div class="lista-clubes" id="listaClubes"></div>
+    <details class="clubes-guardados"><summary id="tituloClubes">Clubes guardados</summary>
+      <div class="lista-clubes" id="listaClubes"></div></details>
     <label>Link do marcador para o PRISM (widget Web)</label>
     <div class="url" id="urlOverlay"></div>
     <div class="aviso">Para ver o marcador num browser com fundo verde, junta <b>?teste</b> ao fim do link.</div>
@@ -631,6 +633,8 @@
     ["a", "b"].forEach(preencherLista);
 
     const ids = Object.keys(clubes).sort((x, y) => (clubes[x].nome || "").localeCompare(clubes[y].nome || "", "pt"));
+    const nEq = ids.reduce((t, id) => t + Object.keys(clubes[id].equipas || {}).length, 0);
+    document.getElementById("tituloClubes").textContent = "Clubes guardados (" + ids.length + " clubes, " + nEq + " equipas)";
     document.getElementById("dlClubes").innerHTML = ids.map(id => '<option value="' + esc(clubes[id].nome || "") + '">').join("");
     document.getElementById("listaClubes").innerHTML = ids.map(id => {
       const c = clubes[id], eqs = c.equipas || {}, nAtl = c.atl ? Object.keys(c.atl).length : 0;
