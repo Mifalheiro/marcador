@@ -509,7 +509,7 @@ function passoJogos(b) {
   return '<div class="bol-cartao"><div class="bol-formacoes">' + formacao("casa", "Clube visitado") + formacao("vis", "Clube visitante") + "</div></div>" +
     '<div class="bol-cartao"><div class="bol-sub">' + esc(b.casa.nome) + " " + w.casa + " - " + w.vis + " " + esc(b.vis.nome) + "</div>" +
     '<div class="bol-scroll"><table class="bol-tab bol-jogos"><tr><th></th><th>Jogos</th><th>1º</th><th>2º</th><th>3º</th><th>4º</th><th>5º</th><th>Vencedores</th></tr>' + linhas + "</table></div>" +
-    acao + '<div class="aviso">Os sets ficam registados sozinhos (com a contagem automática ligada). Para corrigir, escreve no quadrado, por exemplo 11-9.</div></div>' +
+    acao + '<div class="aviso">Os sets ficam registados sozinhos. Para corrigir, escreve no quadrado, por exemplo 11-9.</div></div>' +
     '<div class="bol-nav"><button class="bol-sec" onclick="bolPasso(\'vis\')">‹ Equipas</button>' +
     '<button class="bol-sec" onclick="fecharBoletim()">Marcador</button>' +
     '<button class="bol-pri" onclick="bolPasso(\'assinar\')"' + (podeAssinar(b) ? "" : " disabled") + '>✍ Assinar ›</button></div>' +
@@ -733,4 +733,3 @@ export function instalarBoletim(funcoes) {
   api = funcoes;
   api.lerAssinaturas().then(a => { assinaturas = a || {}; });
 }
-export const _testes = { novo, norm, vitorias, proximo, vencedorSets, nomesJogo, iniciarJogo };

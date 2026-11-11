@@ -251,7 +251,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo, lerListaFptm, ligarFptm } from "./boletim.js?v=36";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm, ligarFptm } from "./boletim.js?v=37";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);
@@ -271,7 +271,7 @@
   document.getElementById("urlSala").textContent = new URL("sala.html", location.href).href;
 
   function inicial() {
-    return { visivel: true, auto: true, pontosSet: 11, setsJogo: 3, setFechado: false, fimJogo: false,
+    return { visivel: true, pontosSet: PONTOS_SET, setsJogo: SETS_JOGO, setFechado: false, fimJogo: false,
       a: { nome: "", jogos: 0, sets: 0, pontos: 0, logo: "", slot: "1" },
       b: { nome: "", jogos: 0, sets: 0, pontos: 0, logo: "", slot: "2" } };
   }
@@ -330,7 +330,8 @@
 
   function gravar() {
     try { localStorage.setItem("marcadorHist", JSON.stringify(hist)); } catch (e) {}
-    Object.assign(estado, { auto: true, pontosSet: PONTOS_SET, setsJogo: SETS_JOGO });   // a sala e o boletim leem daqui
+    Object.assign(estado, { pontosSet: PONTOS_SET, setsJogo: SETS_JOGO });   // a sala e o boletim leem daqui
+    delete estado.auto;   // já não se usa (contagem sempre automática)
     set(ref(db, "marcador/estado"), estado).catch(e => msg("Erro: " + e.message, "erro"));
   }
 

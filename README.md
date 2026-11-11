@@ -1,6 +1,12 @@
 # Marcador — diretos de ténis de mesa (C. D. C. Navais)
 
-Dados em tempo real na Firebase (projeto `marcador-ded9b`, Realtime Database, caminho `marcador/`).
+Dados na Firebase (projeto `marcador-ded9b`, Realtime Database):
+
+- `marcador/estado` e `marcador/logos` — marcador em tempo real (leitura pública: direto e sala)
+- `marcador/config`, `marcador/assinaturas` — códigos, assinaturas do boletim (só a conta de quem marca)
+- `clubes/<id>` — lista única de clubes: nome, emblema, atletas da FPTM (nome + licença) e equipas (A, B…) (só a conta de quem marca)
+
+A lista de atletas da FPTM tem dados pessoais: nunca vai para este repositório.
 
 | Ficheiro | Para quê |
 |---|---|
