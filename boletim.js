@@ -219,17 +219,28 @@ window.abrirBoletim = function () {
   desenhar();
   $("bolPainel").style.display = "block";
 };
-window.fecharBoletim = function () { aberto = false; $("bolPainel").style.display = "none"; api.mostrar(); };
+window.fecharBoletim = function () { aberto = false; edicaoLivre = false; $("bolPainel").style.display = "none"; api.mostrar(); };
 // Voltar atrás depois de a equipa da casa confirmar a sua equipa precisa do código do boletim
 const ORDEM_PASSOS = ["cab", "casa", "vis", "jogos", "assinar"];
-async function pedirCodigo() {
+async function pedirCodigo(pergunta) {
   const certo = await api.lerCodigo();
-  if (!certo) { alert("Para voltar atrás é preciso um código. Define-o no controlo, em Definições → Código do boletim."); return false; }
-  const c = prompt("Código para voltar atrás:");
+  if (!certo) { alert("É preciso um código. Define-o no controlo, em Definições → Código do boletim."); return false; }
+  const c = prompt(pergunta || "Código para voltar atrás:");
   if (c === null) return false;
   if (await resumo(c.trim()) !== certo) { alert("Código errado."); return false; }
   return true;
 }
+// Edição manual dos sets e dos pares (depois de o par começar) só com o código do boletim;
+// fica aberta até fechar o boletim ou carregar em "Terminar edição". Em Teste não pede código.
+let edicaoLivre = false;
+const podeEditar = () => edicaoLivre || !!(api.estado() && api.estado().teste);
+// o par já começou (tem sets ou pontos): a partir daí os atletas do par só mudam com o código
+const parComecado = (b, s) => { const j = b.jogos[3]; return !!(j.sets.length || j.venc || (b.atual === 3 && s && ((s.a.pontos || 0) + (s.b.pontos || 0)) > 0)); };
+window.bolEditar = async function () {
+  if (edicaoLivre) { edicaoLivre = false; desenhar(); return; }
+  if (!(await pedirCodigo("Código do boletim para editar os resultados:"))) return;
+  edicaoLivre = true; desenhar();
+};
 window.bolPasso = async function (p) {
   const b0 = bol();
   if (bloqueado(b0) && p !== "assinar") return;
@@ -478,18 +489,19 @@ function passoJogos(b) {
     const ativo = b.atual === g, fora = !jogo.venc && !ativo && (decidido(b) || g !== prox);
     let nomes;
     if (o.par) {
+      const trancado = parComecado(b, s) && !podeEditar() ? " disabled" : "";
       // casa à esquerda (um por baixo do outro), visitante à direita
-      nomes = '<div class="bol-par"><select class="c0" onchange="bolPar(\'casa\',0,this.value)">' + opc("casa", b.par.casa[0], b.par.casa[1]) + "</select>" +
-        '<select class="c1" onchange="bolPar(\'casa\',1,this.value)">' + opc("casa", b.par.casa[1], b.par.casa[0]) + "</select>" +
-        '<span>vs</span><select class="v0" onchange="bolPar(\'vis\',0,this.value)">' + opc("vis", b.par.vis[0], b.par.vis[1]) + "</select>" +
-        '<select class="v1" onchange="bolPar(\'vis\',1,this.value)">' + opc("vis", b.par.vis[1], b.par.vis[0]) + "</select></div>";
+      nomes = '<div class="bol-par"><select class="c0"' + trancado + ' onchange="bolPar(\'casa\',0,this.value)">' + opc("casa", b.par.casa[0], b.par.casa[1]) + "</select>" +
+        '<select class="c1"' + trancado + ' onchange="bolPar(\'casa\',1,this.value)">' + opc("casa", b.par.casa[1], b.par.casa[0]) + "</select>" +
+        '<span>vs</span><select class="v0"' + trancado + ' onchange="bolPar(\'vis\',0,this.value)">' + opc("vis", b.par.vis[0], b.par.vis[1]) + "</select>" +
+        '<select class="v1"' + trancado + ' onchange="bolPar(\'vis\',1,this.value)">' + opc("vis", b.par.vis[1], b.par.vis[0]) + "</select></div>";
     } else nomes = esc(juntar(n.casa)) + " <span class=\"bol-vs\">vs</span> " + esc(juntar(n.vis));
     let sets = "";
     for (let k = 0; k < 5; k++) {
       const x = jogo.sets[k];
       const val = x ? x[0] + "-" + x[1] : "";
       const aoVivo = ativo && k === jogo.sets.length ? ' placeholder="' + (s.a.pontos || 0) + "-" + (s.b.pontos || 0) + '" class="vivo"' : "";
-      sets += '<td><input value="' + val + '"' + aoVivo + ' onchange="bolSet(' + g + "," + k + ',this.value)" inputmode="numeric"></td>';
+      sets += '<td><input value="' + val + '"' + aoVivo + (podeEditar() ? "" : " readonly") + ' onchange="bolSet(' + g + "," + k + ',this.value)" inputmode="numeric"></td>';
     }
     const venc = jogo.venc ? esc(b[jogo.venc].nome) : (ativo ? "<i>a jogar</i>" : "");   // vencedor = nome do clube
     linhas += '<tr class="' + (ativo ? "atual" : fora ? "fora" : "") + '"><td class="bol-let">' + o.et + "</td><td>" + nomes + "</td>" + sets +
@@ -510,7 +522,11 @@ function passoJogos(b) {
   return '<div class="bol-cartao"><div class="bol-formacoes">' + formacao("casa", "Clube visitado") + formacao("vis", "Clube visitante") + "</div></div>" +
     '<div class="bol-cartao"><div class="bol-sub">' + esc(b.casa.nome) + " " + w.casa + " - " + w.vis + " " + esc(b.vis.nome) + "</div>" +
     '<div class="bol-scroll"><table class="bol-tab bol-jogos"><tr><th></th><th>Jogos</th><th>1º</th><th>2º</th><th>3º</th><th>4º</th><th>5º</th><th>Vencedores</th></tr>' + linhas + "</table></div>" +
-    acao + '<div class="aviso">Os sets ficam registados sozinhos. Para corrigir, escreve no quadrado, por exemplo 11-9.</div></div>' +
+    acao + '<div class="bol-editar">' + (podeEditar()
+      ? (edicaoLivre ? '<button class="bol-sec" onclick="bolEditar()">🔓 Terminar edição</button>' : "") +
+        '<span class="aviso">Edição aberta: escreve no quadrado o resultado do set (ex.: 11-9) ou muda os atletas do par.</span>'
+      : '<button class="bol-sec" onclick="bolEditar()">🔒 Editar resultados</button><span class="aviso">Os sets ficam registados sozinhos. Para corrigir é preciso o código do boletim.</span>') +
+    "</div></div>" +
     '<div class="bol-nav"><button class="bol-sec" onclick="bolPasso(\'vis\')">‹ Equipas</button>' +
     '<button class="bol-sec" onclick="fecharBoletim()">Marcador</button>' +
     '<button class="bol-pri" onclick="bolPasso(\'assinar\')"' + (podeAssinar(b) ? "" : " disabled") + '>✍ Assinar ›</button></div>' +
@@ -518,7 +534,7 @@ function passoJogos(b) {
 }
 
 window.bolPar = function (lado, i, v) {
-  if (bloqueado(bol())) return;
+  if (bloqueado(bol()) || (parComecado(bol(), api.estado()) && !podeEditar())) { desenhar(); return; }
   if (Number(v) >= 0 && bol().par[lado][1 - i] === Number(v)) { alert("Esse atleta já está no par."); desenhar(); return; }
   mudar((b, s) => {
     b.par[lado][i] = Number(v);
@@ -539,7 +555,7 @@ window.bolComecar = function (g) {
 
 // Correção manual de um set ("11-9"; vazio apaga)
 window.bolSet = function (g, k, txt) {
-  if (bloqueado(bol())) return;
+  if (bloqueado(bol()) || !podeEditar()) { desenhar(); return; }
   const m = String(txt).match(/(\d+)\D+(\d+)/);
   mudar((b, s) => {
     const jogo = b.jogos[g];
