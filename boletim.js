@@ -223,6 +223,7 @@ window.fecharBoletim = function () { aberto = false; edicaoLivre = false; $("bol
 // Voltar atrás depois de a equipa da casa confirmar a sua equipa precisa do código do boletim
 const ORDEM_PASSOS = ["cab", "casa", "vis", "jogos", "assinar"];
 async function pedirCodigo(pergunta) {
+  if (api.estado() && api.estado().teste) return true;   // em Teste não pede código
   const certo = await api.lerCodigo();
   if (!certo) { alert("É preciso um código. Define-o no controlo, em Definições → Código do boletim."); return false; }
   const c = prompt(pergunta || "Código para voltar atrás:");
