@@ -44,18 +44,6 @@
 <svg id="stage" viewBox="0 0 680 380" preserveAspectRatio="xMidYMid meet" aria-label="Duelo entre os dois clubes">
   <defs>
     <clipPath id="card"><rect x="0" y="0" width="680" height="380" rx="16"/></clipPath>
-    <clipPath id="escudo"><path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z"/></clipPath>
-    <!-- relevo: aro metálico com bisel, brilho de vidro, sombra por baixo -->
-    <linearGradient id="ouro" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fff6c4"/><stop offset=".3" stop-color="#f2c230"/><stop offset=".55" stop-color="#a87405"/>
-      <stop offset=".8" stop-color="#f7d76a"/><stop offset="1" stop-color="#8a5e00"/></linearGradient>
-    <linearGradient id="prata" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="#d5dae2"/><stop offset=".55" stop-color="#7d8592"/>
-      <stop offset=".8" stop-color="#eef1f5"/><stop offset="1" stop-color="#5f6772"/></linearGradient>
-    <linearGradient id="brilho" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff" stop-opacity=".65"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-    <radialGradient id="vinheta" cx=".5" cy=".42" r=".62">
-      <stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".38"/></radialGradient>
     <filter id="bisel" x="-25%" y="-25%" width="150%" height="150%">
       <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" result="b"/>
       <feSpecularLighting in="b" surfaceScale="5" specularConstant="1" specularExponent="22" lighting-color="#ffffff" result="s">
@@ -63,29 +51,28 @@
       <feComposite in="s" in2="corte" operator="in" result="s2"/>
       <feComposite in="SourceGraphic" in2="s2" operator="arithmetic" k1="0" k2="1" k3=".9" k4="0"/>
     </filter>
-    <filter id="sombra" x="-30%" y="-30%" width="160%" height="170%">
-      <feDropShadow dx="0" dy="9" stdDeviation="7" flood-color="#000" flood-opacity=".6"/></filter>
     <filter id="sombraTxt" x="-20%" y="-50%" width="140%" height="200%">
       <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#000" flood-opacity=".7"/></filter>
     <!-- relevo do próprio emblema: a luminosidade da imagem serve de "altura" (linhas e cores ganham volume),
          iluminado de cima à esquerda, com reflexos e uma sombra que o levanta da face do escudo -->
-    <filter id="relevoEmb" x="-15%" y="-15%" width="130%" height="135%" color-interpolation-filters="sRGB">
-      <!-- o fundo branco da imagem fica transparente, para o relevo e a sombra seguirem a forma do emblema -->
-      <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -2.2 -2.2 -2.2 0 6.4" result="semFundo"/>
-      <feComposite in="semFundo" in2="SourceAlpha" operator="in" result="corte"/>
-      <feColorMatrix in="corte" type="luminanceToAlpha" result="lum0"/>
-      <feComposite in="lum0" in2="corte" operator="in" result="lum"/>
-      <feComponentTransfer in="lum" result="alt"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
-      <feGaussianBlur in="alt" stdDeviation="1.1" result="h"/>
-      <feDiffuseLighting in="h" surfaceScale="4" diffuseConstant="1.25" lighting-color="#ffffff" result="d">
-        <feDistantLight azimuth="225" elevation="48"/></feDiffuseLighting>
-      <feComposite in="corte" in2="d" operator="arithmetic" k1="1.12" k2="0" k3="0" k4="0" result="luz"/>
-      <feSpecularLighting in="h" surfaceScale="3" specularConstant=".55" specularExponent="24" lighting-color="#ffffff" result="s">
-        <feDistantLight azimuth="225" elevation="42"/></feSpecularLighting>
-      <feComposite in="s" in2="corte" operator="in" result="s2"/>
-      <feComposite in="luz" in2="s2" operator="arithmetic" k1="0" k2="1" k3=".55" k4="0" result="emb"/>
-      <feComposite in="emb" in2="corte" operator="in" result="emb2"/>
-      <feDropShadow in="emb2" dx="1.5" dy="3" stdDeviation="2" flood-color="#000" flood-opacity=".45"/>
+    <!-- relevo 3D do emblema (o fundo branco já vem recortado): as cores e linhas ganham volume,
+         as bordas do emblema ficam boleadas como uma peça grossa, luz de cima à esquerda, reflexos e sombra -->
+    <filter id="relevoEmb" x="-20%" y="-20%" width="140%" height="145%" color-interpolation-filters="sRGB">
+      <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="lum0"/>
+      <feComponentTransfer in="lum0" result="lum"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feComposite in="lum" in2="SourceAlpha" operator="in" result="lum2"/>
+      <feGaussianBlur in="lum2" stdDeviation="1" result="hCor"/>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" result="hBorda"/>
+      <feComposite in="hCor" in2="hBorda" operator="arithmetic" k1="0" k2=".45" k3=".7" k4="0" result="h"/>
+      <feDiffuseLighting in="h" surfaceScale="6" diffuseConstant="1.2" lighting-color="#ffffff" result="d">
+        <feDistantLight azimuth="225" elevation="45"/></feDiffuseLighting>
+      <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="1.15" k2="0" k3="0" k4="0" result="luz"/>
+      <feSpecularLighting in="h" surfaceScale="6" specularConstant=".7" specularExponent="26" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="225" elevation="40"/></feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+      <feComposite in="luz" in2="s2" operator="arithmetic" k1="0" k2="1" k3=".6" k4="0" result="emb"/>
+      <feComposite in="emb" in2="SourceAlpha" operator="in" result="emb2"/>
+      <feDropShadow in="emb2" dx="3" dy="7" stdDeviation="5" flood-color="#000" flood-opacity=".65"/>
     </filter>
     <!-- reflexo que passa por cima do emblema -->
     <linearGradient id="reflexo" x1="0" y1="0" x2="1" y2="0">
@@ -97,31 +84,23 @@
     <polygon points="390,-20 402,-20 302,400 290,400" fill="#f2c230"/>
 
     <!-- clube da casa (lado a do marcador) -->
-    <g transform="translate(165,165) scale(1.4)"><g class="el">
-      <g filter="url(#sombra)">
-        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" transform="scale(1.13)" fill="url(#ouro)" filter="url(#bisel)"/>
-        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="#fff"/>
-        <g clip-path="url(#escudo)"><image id="imA" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" filter="url(#relevoEmb)"/></g>
-        <text id="inA" x="0" y="16" text-anchor="middle" font-size="34" fill="#0a1a4a"></text>
-        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="url(#vinheta)"/>
-        <path d="M-50,-62 H50 V-14 C20,-4 -20,-24 -50,-8 Z" fill="url(#brilho)" clip-path="url(#escudo)"/>
-        <g clip-path="url(#escudo)"><rect class="reflexo" x="-140" y="-80" width="60" height="170" fill="url(#reflexo)" transform="skewX(-18)"/></g>
-      </g>
-      <text id="nmA" x="0" y="108" text-anchor="middle" font-size="15" fill="#fff" filter="url(#sombraTxt)"></text>
+    <g transform="translate(165,160) scale(1.4)"><g class="el">
+      <!-- emblema sem escudo, com relevo; o reflexo passa só por cima do desenho (máscara pelo próprio emblema) -->
+      <mask id="mkA" style="mask-type:alpha"><image id="mkImA" x="-64" y="-72" width="128" height="146" preserveAspectRatio="xMidYMid meet"/></mask>
+      <image id="imA" x="-64" y="-72" width="128" height="146" preserveAspectRatio="xMidYMid meet" filter="url(#relevoEmb)"/>
+      <g mask="url(#mkA)"><rect class="reflexo" x="-150" y="-80" width="60" height="170" fill="url(#reflexo)" transform="skewX(-18)"/></g>
+      <text id="inA" x="0" y="18" text-anchor="middle" font-size="58" fill="#f2c230" stroke="#000" stroke-opacity=".25" filter="url(#bisel)"></text>
+      <text id="nmA" x="0" y="106" text-anchor="middle" font-size="15" fill="#fff" filter="url(#sombraTxt)"></text>
     </g></g>
 
     <!-- clube visitante (lado b do marcador) -->
-    <g transform="translate(515,165) scale(1.4)"><g class="er">
-      <g filter="url(#sombra)">
-        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" transform="scale(1.13)" fill="url(#prata)" filter="url(#bisel)"/>
-        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="#fff"/>
-        <g clip-path="url(#escudo)"><image id="imB" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" filter="url(#relevoEmb)"/></g>
-        <text id="inB" x="0" y="16" text-anchor="middle" font-size="34" fill="#6e1414"></text>
-        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="url(#vinheta)"/>
-        <path d="M-50,-62 H50 V-14 C20,-4 -20,-24 -50,-8 Z" fill="url(#brilho)" clip-path="url(#escudo)"/>
-        <g clip-path="url(#escudo)"><rect class="reflexo" x="-140" y="-80" width="60" height="170" fill="url(#reflexo)" transform="skewX(-18)"/></g>
-      </g>
-      <text id="nmB" x="0" y="108" text-anchor="middle" font-size="15" fill="#fff" filter="url(#sombraTxt)"></text>
+    <g transform="translate(515,160) scale(1.4)"><g class="er">
+      <!-- emblema sem escudo, com relevo; o reflexo passa só por cima do desenho (máscara pelo próprio emblema) -->
+      <mask id="mkB" style="mask-type:alpha"><image id="mkImB" x="-64" y="-72" width="128" height="146" preserveAspectRatio="xMidYMid meet"/></mask>
+      <image id="imB" x="-64" y="-72" width="128" height="146" preserveAspectRatio="xMidYMid meet" filter="url(#relevoEmb)"/>
+      <g mask="url(#mkB)"><rect class="reflexo" x="-150" y="-80" width="60" height="170" fill="url(#reflexo)" transform="skewX(-18)"/></g>
+      <text id="inB" x="0" y="18" text-anchor="middle" font-size="58" fill="#ffffff" stroke="#000" stroke-opacity=".25" filter="url(#bisel)"></text>
+      <text id="nmB" x="0" y="106" text-anchor="middle" font-size="15" fill="#fff" filter="url(#sombraTxt)"></text>
     </g></g>
 
     <g transform="translate(340,318)"><g class="pads">
@@ -131,7 +110,7 @@
     </g></g>
 
     <g transform="translate(340,150)"><g class="vs">
-      <g class="star" filter="url(#bisel)"><polygon points="72,0 48.3,12.9 62.4,36 35.4,35.4 36,62.4 12.9,48.3 0,72 -12.9,48.3 -36,62.4 -35.4,35.4 -62.4,36 -48.3,12.9 -72,0 -48.3,-12.9 -62.4,-36 -35.4,-35.4 -36,-62.4 -12.9,-48.3 0,-72 12.9,-48.3 36,-62.4 35.4,-35.4 62.4,-36 48.3,-12.9" fill="#f2c230" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></g>
+      <g class="star"><polygon points="72,0 48.3,12.9 62.4,36 35.4,35.4 36,62.4 12.9,48.3 0,72 -12.9,48.3 -36,62.4 -35.4,35.4 -62.4,36 -48.3,12.9 -72,0 -48.3,-12.9 -62.4,-36 -35.4,-35.4 -36,-62.4 -12.9,-48.3 0,-72 12.9,-48.3 36,-62.4 35.4,-35.4 62.4,-36 48.3,-12.9" fill="#f2c230" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></g>
       <text x="0" y="22" text-anchor="middle" font-size="64" font-style="italic" fill="#0a1a4a" stroke="#fff6c4" stroke-width="1.5" filter="url(#sombraTxt)">VS</text>
     </g></g>
 
@@ -156,17 +135,47 @@
 
   // iniciais quando o clube não tem emblema ("AR Canidelo B" → "AC")
   const iniciais = n => String(n || "").split(/[\s.]+/).filter(w => w.length > 1 && !/^(de|da|do|dos|das)$/i.test(w)).slice(0, 3).map(w => w[0]).join("").toUpperCase();
-  function lado(L, K) {
-    const eq = (estado && estado[L]) || {}, src = eq.logo === "slot" ? logos[eq.slot] : "";
-    const im = $("im" + K);
-    if (src) im.setAttribute("href", src); else im.removeAttribute("href");
+  // Tira o fundo branco do emblema (só a parte branca ligada às bordas; o branco dentro do desenho fica)
+  const recortes = {};
+  function recortar(src) {
+    if (!src) return Promise.resolve("");
+    if (recortes[src]) return recortes[src];
+    return recortes[src] = new Promise(ok => {
+      const img = new Image();
+      img.onload = () => {
+        const esc = Math.min(1, 420 / Math.max(img.width, img.height));
+        const w = Math.round(img.width * esc), h = Math.round(img.height * esc);
+        const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+        const cx = cv.getContext("2d"); cx.drawImage(img, 0, 0, w, h);
+        const dados = cx.getImageData(0, 0, w, h), d = dados.data, visto = new Uint8Array(w * h), fila = [];
+        const fundo = i => { const p = i * 4; return d[p + 3] < 30 || (d[p] > 222 && d[p + 1] > 222 && d[p + 2] > 222); };
+        for (let x = 0; x < w; x++) fila.push(x, (h - 1) * w + x);
+        for (let y = 0; y < h; y++) fila.push(y * w, y * w + w - 1);
+        while (fila.length) {
+          const i = fila.pop();
+          if (visto[i] || !fundo(i)) continue;
+          visto[i] = 1; d[i * 4 + 3] = 0;
+          const x = i % w;
+          if (x > 0) fila.push(i - 1); if (x < w - 1) fila.push(i + 1);
+          if (i >= w) fila.push(i - w); if (i < w * (h - 1)) fila.push(i + w);
+        }
+        cx.putImageData(dados, 0, 0);
+        try { ok(cv.toDataURL("image/png")); } catch (e) { ok(src); }
+      };
+      img.onerror = () => ok("");
+      img.src = src;
+    });
+  }
+  async function lado(L, K) {
+    const eq = (estado && estado[L]) || {}, src = await recortar(eq.logo === "slot" ? logos[eq.slot] : "");
+    for (const id of ["im" + K, "mkIm" + K]) { const im = $(id); if (src) im.setAttribute("href", src); else im.removeAttribute("href"); }
     $("in" + K).textContent = src ? "" : iniciais(eq.nome);
     const nome = eq.nome || (L === "a" ? "Casa" : "Visitante");
     const t = $("nm" + K); t.textContent = nome;
     t.setAttribute("font-size", nome.length > 22 ? 11 : nome.length > 16 ? 13 : 15);
   }
-  function mostrar() {
-    lado("a", "A"); lado("b", "B");
+  async function mostrar() {
+    await Promise.all([lado("a", "A"), lado("b", "B")]);
     stage.classList.remove("play"); void stage.getBoundingClientRect(); stage.classList.add("play");
     stage.classList.add("ver");
     clearTimeout(tEsconder);
@@ -174,7 +183,7 @@
   }
 
   onValue(ref(db, ".info/serverTimeOffset"), s => { desvio = s.val() || 0; });
-  onValue(ref(db, "marcador/logos"), s => { logos = s.val() || {}; });
+  onValue(ref(db, "marcador/logos"), s => { logos = s.val() || {}; Object.values(logos).forEach(recortar); });   // prepara já os recortes
   onValue(ref(db, "marcador/estado"), s => {
     estado = s.val() || {};
     const d = estado.duelo || 0;
