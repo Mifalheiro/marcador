@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duelo — Navais</title>
+<style>
+  /* Widget do direto: apresentação "duelo" dos dois clubes antes do jogo.
+     Fundo transparente; só aparece quando se carrega em "⚔ Duelo" no controlo. */
+  html, body { margin: 0; background: transparent; overflow: hidden; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body.fundo-teste { background: #00b140; }
+  #stage { width: 100vw; height: 100vh; display: block; opacity: 0; transition: opacity .6s; }
+  #stage.ver { opacity: 1; }
+  #dica { position: fixed; left: 8px; bottom: 8px; color: #fff; font-size: 13px; display: none; }
+  body.fundo-teste #dica { display: block; }
+
+  @keyframes inL { 0% { transform: translateX(-520px) } 55% { transform: translateX(34px) } 75% { transform: translateX(-8px) } 100% { transform: translateX(0) } }
+  @keyframes inR { 0% { transform: translateX(520px) } 55% { transform: translateX(-34px) } 75% { transform: translateX(8px) } 100% { transform: translateX(0) } }
+  @keyframes pop { 0% { transform: scale(0) rotate(-30deg) } 60% { transform: scale(1.35) rotate(6deg) } 100% { transform: scale(1) rotate(0) } }
+  @keyframes spin { from { transform: rotate(0) } to { transform: rotate(360deg) } }
+  @keyframes pad { 0% { transform: translateY(140px) } 100% { transform: translateY(0) } }
+  @keyframes bounce { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-34px) } }
+  @keyframes shake { 0%, 100% { transform: translate(0,0) } 20% { transform: translate(-7px,3px) } 45% { transform: translate(7px,-3px) } 70% { transform: translate(-3px,2px) } }
+  @keyframes flash { 0% { opacity: 0 } 20% { opacity: .75 } 100% { opacity: 0 } }
+  .el { transform: translateX(-520px); }
+  .er { transform: translateX(520px); }
+  .vs { transform: scale(0); }
+  .pads { transform: translateY(140px); }
+  .fl { opacity: 0; }
+  .play .el { animation: inL 1.5s ease-out both; }
+  .play .er { animation: inR 1.5s ease-out both; }
+  .play .all { animation: shake .45s linear .8s; }
+  .play .fl { animation: flash .5s linear .8s; }
+  .play .vs { animation: pop .6s ease-out .85s both; }
+  .play .pads { animation: pad .4s ease-out 1.35s both; }
+  .star { animation: spin 14s linear infinite; }
+  .ball { animation: bounce .7s ease-in-out infinite; }
+  svg text { font-family: inherit; font-weight: 800; }
+</style>
+</head>
+<body>
+<svg id="stage" viewBox="0 0 680 380" preserveAspectRatio="xMidYMid meet" aria-label="Duelo entre os dois clubes">
+  <defs>
+    <clipPath id="card"><rect x="0" y="0" width="680" height="380" rx="16"/></clipPath>
+    <clipPath id="escudo"><path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z"/></clipPath>
+  </defs>
+  <g clip-path="url(#card)"><g class="all">
+    <polygon points="-20,-20 390,-20 290,400 -20,400" fill="#0a1a4a"/>
+    <polygon points="390,-20 700,-20 700,400 290,400" fill="#6e1414"/>
+    <polygon points="390,-20 402,-20 302,400 290,400" fill="#f2c230"/>
+
+    <!-- clube da casa (lado a do marcador) -->
+    <g transform="translate(165,165) scale(1.4)"><g class="el">
+      <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="#fff" stroke="#f2c230" stroke-width="6" stroke-linejoin="round"/>
+      <image id="imA" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" clip-path="url(#escudo)"/>
+      <text id="inA" x="0" y="16" text-anchor="middle" font-size="34" fill="#0a1a4a"></text>
+      <text id="nmA" x="0" y="104" text-anchor="middle" font-size="15" fill="#fff"></text>
+    </g></g>
+
+    <!-- clube visitante (lado b do marcador) -->
+    <g transform="translate(515,165) scale(1.4)"><g class="er">
+      <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="#fff" stroke="#ffffff" stroke-width="6" stroke-linejoin="round"/>
+      <image id="imB" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" clip-path="url(#escudo)"/>
+      <text id="inB" x="0" y="16" text-anchor="middle" font-size="34" fill="#6e1414"></text>
+      <text id="nmB" x="0" y="104" text-anchor="middle" font-size="15" fill="#fff"></text>
+    </g></g>
+
+    <g transform="translate(340,318)"><g class="pads">
+      <g transform="rotate(-35)"><rect x="-5" y="0" width="10" height="34" rx="4" fill="#c98a4b"/><circle cx="0" cy="-22" r="26" fill="#c62828" stroke="#fff" stroke-width="3"/></g>
+      <g transform="rotate(35)"><rect x="-5" y="0" width="10" height="34" rx="4" fill="#c98a4b"/><circle cx="0" cy="-22" r="26" fill="#1f3fa0" stroke="#fff" stroke-width="3"/></g>
+      <g transform="translate(0,-62)"><circle class="ball" r="9" fill="#ffa726" stroke="#fff" stroke-width="2"/></g>
+    </g></g>
+
+    <g transform="translate(340,150)"><g class="vs">
+      <g class="star"><polygon points="72,0 48.3,12.9 62.4,36 35.4,35.4 36,62.4 12.9,48.3 0,72 -12.9,48.3 -36,62.4 -35.4,35.4 -62.4,36 -48.3,12.9 -72,0 -48.3,-12.9 -62.4,-36 -35.4,-35.4 -36,-62.4 -12.9,-48.3 0,-72 12.9,-48.3 36,-62.4 35.4,-35.4 62.4,-36 48.3,-12.9" fill="#f2c230" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></g>
+      <text x="0" y="22" text-anchor="middle" font-size="64" font-style="italic" fill="#0a1a4a">VS</text>
+    </g></g>
+
+    <rect class="fl" x="-20" y="-20" width="720" height="420" fill="#fff"/>
+  </g></g>
+</svg>
+<div id="dica">Teste: toca no ecrã para ver o duelo</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import { firebaseConfig } from "./firebase-config.js";
+
+  const DURACAO = 8000;   // tempo no ecrã (ms), contando com a entrada
+  const teste = location.search.indexOf("teste") >= 0;
+  if (teste) document.body.className = "fundo-teste";
+
+  const db = getDatabase(initializeApp(firebaseConfig));
+  const $ = id => document.getElementById(id);
+  const stage = $("stage");
+  let logos = {}, estado = null, desvio = 0, visto = null, tEsconder = null;
+
+  // iniciais quando o clube não tem emblema ("AR Canidelo B" → "AC")
+  const iniciais = n => String(n || "").split(/[\s.]+/).filter(w => w.length > 1 && !/^(de|da|do|dos|das)$/i.test(w)).slice(0, 3).map(w => w[0]).join("").toUpperCase();
+  function lado(L, K) {
+    const eq = (estado && estado[L]) || {}, src = eq.logo === "slot" ? logos[eq.slot] : "";
+    const im = $("im" + K);
+    if (src) im.setAttribute("href", src); else im.removeAttribute("href");
+    $("in" + K).textContent = src ? "" : iniciais(eq.nome);
+    const nome = eq.nome || (L === "a" ? "Casa" : "Visitante");
+    const t = $("nm" + K); t.textContent = nome;
+    t.setAttribute("font-size", nome.length > 22 ? 11 : nome.length > 16 ? 13 : 15);
+  }
+  function mostrar() {
+    lado("a", "A"); lado("b", "B");
+    stage.classList.remove("play"); void stage.getBoundingClientRect(); stage.classList.add("play");
+    stage.classList.add("ver");
+    clearTimeout(tEsconder);
+    tEsconder = setTimeout(() => stage.classList.remove("ver"), DURACAO);
+  }
+
+  onValue(ref(db, ".info/serverTimeOffset"), s => { desvio = s.val() || 0; });
+  onValue(ref(db, "marcador/logos"), s => { logos = s.val() || {}; });
+  onValue(ref(db, "marcador/estado"), s => {
+    estado = s.val() || {};
+    const d = estado.duelo || 0;
+    // só mostra um pedido novo e recente (ao abrir a página não repete o último)
+    if (visto !== null && d && d !== visto && Date.now() + desvio - d < DURACAO) mostrar();
+    visto = d;
+  });
+  if (teste) document.body.addEventListener("click", mostrar);
+</script>
+</body>
+</html>

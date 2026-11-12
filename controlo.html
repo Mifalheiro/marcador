@@ -196,6 +196,7 @@
     <button id="btTrocar" onclick="enviar('trocar')">⇄ Trocar lados</button>
     <button id="btVis" onclick="enviar('visivel')">Esconder</button>
     <button class="perigo" id="btZerar" onclick="if (confirm('Pôr tudo a zero (jogos, sets, pontos e boletim de jogo)?')) enviar('zerar')">Zerar tudo</button>
+    <button id="btDuelo" onclick="enviar('duelo')">⚔ Duelo</button>
     <button class="bol" id="btBol" onclick="abrirBoletim()">📋 Boletim de jogo</button>
   </div>
 
@@ -230,6 +231,9 @@
     <label>Link do marcador para o PRISM (widget Web)</label>
     <div class="url" id="urlOverlay"></div>
     <div class="aviso">Para ver o marcador num browser com fundo verde, junta <b>?teste</b> ao fim do link.</div>
+    <label>Duelo dos clubes (segundo widget do direto, por baixo do marcador)</label>
+    <div class="url" id="urlDuelo"></div>
+    <div class="aviso">Aparece quando se carrega em ⚔ Duelo (antes do primeiro ponto do jogo) e desaparece sozinho ao fim de 8 s. Com <b>?teste</b>: fundo verde e toque no ecrã para ver.</div>
     <label>Ecrã da sala (tablet / TV)</label>
     <div class="url" id="urlSala"></div>
     <div class="aviso">"Trocar lados" troca aqui e no ecrã da sala; o marcador do direto fica sempre igual.</div>
@@ -269,6 +273,7 @@
 
   document.getElementById("urlOverlay").textContent = new URL("./", location.href).href;
   document.getElementById("urlSala").textContent = new URL("sala.html", location.href).href;
+  document.getElementById("urlDuelo").textContent = new URL("duelo.html", location.href).href;
 
   function inicial() {
     return { visivel: true, pontosSet: PONTOS_SET, setsJogo: SETS_JOGO, setFechado: false, fimJogo: false,
@@ -477,6 +482,8 @@
     const espera = esperaBoletim(s);
     document.getElementById("btBol").classList.toggle("chama", espera || (!s.teste && encontroTerminado(s) && !!s.boletim && !(window.boletimBloqueado && window.boletimBloqueado(s.boletim))));
     document.getElementById("btTrocar").disabled = espera;
+    // duelo: só com os dois clubes escolhidos e antes do primeiro ponto do jogo
+    document.getElementById("btDuelo").disabled = espera || jogoComecado(s) || !s.a.nome || !s.b.nome;
     if (espera) {
       // à espera do par o Anular continua a funcionar (como no fim de qualquer jogo)
       if (!esperaPar(s)) document.getElementById("btAnular").disabled = true;
@@ -494,7 +501,7 @@
   window.acao = function (tipo, lado, valor) {
     if (!estado) return;
     if (navigator.vibrate) navigator.vibrate(25);
-    if (esperaBoletim(estado) && !(tipo === "anular" && esperaPar(estado)) && ["ponto", "saque", "timeout", "trocar", "novoSet", "novoJogo", "visivel", "anular", "sets", "jogos"].includes(tipo)) {
+    if (esperaBoletim(estado) && !(tipo === "anular" && esperaPar(estado)) && ["ponto", "saque", "timeout", "trocar", "novoSet", "novoJogo", "visivel", "anular", "sets", "jogos", "duelo"].includes(tipo)) {
       msg(motivoEspera(estado), "erro"); if (navigator.vibrate) navigator.vibrate([60, 40, 60]); return;
     }
     if (tipo === "anular") {
@@ -583,6 +590,10 @@
         s.ladosTrocados = !s.ladosTrocados;
         if (s.trocarPendente) { s.trocarPendente = false; s.trocaFeita = true; }   // mudança de campo do set decisivo feita
         break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
+      case "duelo":   // não entra no Anular: o widget duelo.html mostra os dois clubes
+        hist.pop();
+        if (jogoComecado(s) || !s.a.nome || !s.b.nome) return;
+        s.duelo = agora(); break;
       case "visivel":   // não entra no Anular
         hist.pop();
         if (encontroTerminado(s) && !s.teste) { msg("Encontro terminado — o direto mostra o resultado final sozinho", "erro"); return; }
