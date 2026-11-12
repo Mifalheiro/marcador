@@ -127,9 +127,10 @@
   .bol-jogos td, .bol-jogos th { padding: 3px 2px; }
   .bol-vs { opacity: .6; font-size: 11px; }
   .bol-venc { font-size: 12px; min-width: 90px; }
-  .bol-par { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-  .bol-par select { padding: 6px; font-size: 13px; }
-  .bol-par span { grid-column: span 2; text-align: center; font-size: 11px; opacity: .6; }
+  .bol-par { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-areas: "c0 vs v0" "c1 vs v1"; gap: 4px 6px; align-items: center; }
+  .bol-par select { padding: 6px; font-size: 13px; min-width: 0; }
+  .bol-par .c0 { grid-area: c0; } .bol-par .c1 { grid-area: c1; } .bol-par .v0 { grid-area: v0; } .bol-par .v1 { grid-area: v1; }
+  .bol-par span { grid-area: vs; text-align: center; font-size: 11px; opacity: .6; }
   .bol-res { margin-top: 10px; padding: 10px; background: #0b1440; border-radius: 8px; font-size: 16px; }
   .bol-nav { display: flex; gap: 8px; margin: 8px; }
   .bol-nav button, .bol-cartao > button.bol-pri { flex: 1; height: 50px; border: 0; border-radius: 10px; font-size: 16px; font-weight: 700; }
@@ -255,7 +256,7 @@
   import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { firebaseConfig } from "./firebase-config.js";
-  import { instalarBoletim, resumo, lerListaFptm, ligarFptm } from "./boletim.js?v=37";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
+  import { instalarBoletim, resumo, lerListaFptm, ligarFptm } from "./boletim.js?v=38";   // mudar o número quando o boletim.js mudar (evita versões antigas em cache)
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app), auth = getAuth(app);

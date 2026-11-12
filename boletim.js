@@ -478,10 +478,11 @@ function passoJogos(b) {
     const ativo = b.atual === g, fora = !jogo.venc && !ativo && (decidido(b) || g !== prox);
     let nomes;
     if (o.par) {
-      nomes = '<div class="bol-par"><select onchange="bolPar(\'casa\',0,this.value)">' + opc("casa", b.par.casa[0], b.par.casa[1]) + "</select>" +
-        '<select onchange="bolPar(\'casa\',1,this.value)">' + opc("casa", b.par.casa[1], b.par.casa[0]) + "</select>" +
-        '<span>vs</span><select onchange="bolPar(\'vis\',0,this.value)">' + opc("vis", b.par.vis[0], b.par.vis[1]) + "</select>" +
-        '<select onchange="bolPar(\'vis\',1,this.value)">' + opc("vis", b.par.vis[1], b.par.vis[0]) + "</select></div>";
+      // casa à esquerda (um por baixo do outro), visitante à direita
+      nomes = '<div class="bol-par"><select class="c0" onchange="bolPar(\'casa\',0,this.value)">' + opc("casa", b.par.casa[0], b.par.casa[1]) + "</select>" +
+        '<select class="c1" onchange="bolPar(\'casa\',1,this.value)">' + opc("casa", b.par.casa[1], b.par.casa[0]) + "</select>" +
+        '<span>vs</span><select class="v0" onchange="bolPar(\'vis\',0,this.value)">' + opc("vis", b.par.vis[0], b.par.vis[1]) + "</select>" +
+        '<select class="v1" onchange="bolPar(\'vis\',1,this.value)">' + opc("vis", b.par.vis[1], b.par.vis[0]) + "</select></div>";
     } else nomes = esc(juntar(n.casa)) + " <span class=\"bol-vs\">vs</span> " + esc(juntar(n.vis));
     let sets = "";
     for (let k = 0; k < 5; k++) {
