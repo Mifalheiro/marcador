@@ -595,7 +595,9 @@
       case "duelo":   // não entra no Anular: o widget duelo.html mostra os dois clubes
         hist.pop();
         if (jogoComecado(s) || !s.a.nome || !s.b.nome) return;
-        s.duelo = agora(); break;
+        s.duelo = agora();
+        s.visivel = true;   // o duelo também faz o "Mostrar": no fim da animação o marcador aparece no direto
+        break;
       case "visivel":   // não entra no Anular
         hist.pop();
         if (encontroTerminado(s) && !s.teste) { msg("Encontro terminado — o direto mostra o resultado final sozinho", "erro"); return; }
