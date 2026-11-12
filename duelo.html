@@ -35,6 +35,8 @@
   .play .pads { animation: pad .4s ease-out 1.35s both; }
   .star { animation: spin 14s linear infinite; }
   .ball { animation: bounce .7s ease-in-out infinite; }
+  @keyframes reflexo { 0%, 55% { transform: skewX(-18deg) translateX(0) } 100% { transform: skewX(-18deg) translateX(260px) } }
+  .play .reflexo { animation: reflexo 2.6s ease-in-out 1.4s infinite; }
   svg text { font-family: inherit; font-weight: 800; }
 </style>
 </head>
@@ -58,13 +60,36 @@
       <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" result="b"/>
       <feSpecularLighting in="b" surfaceScale="5" specularConstant="1" specularExponent="22" lighting-color="#ffffff" result="s">
         <fePointLight x="-90" y="-150" z="140"/></feSpecularLighting>
-      <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+      <feComposite in="s" in2="corte" operator="in" result="s2"/>
       <feComposite in="SourceGraphic" in2="s2" operator="arithmetic" k1="0" k2="1" k3=".9" k4="0"/>
     </filter>
     <filter id="sombra" x="-30%" y="-30%" width="160%" height="170%">
       <feDropShadow dx="0" dy="9" stdDeviation="7" flood-color="#000" flood-opacity=".6"/></filter>
     <filter id="sombraTxt" x="-20%" y="-50%" width="140%" height="200%">
       <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#000" flood-opacity=".7"/></filter>
+    <!-- relevo do próprio emblema: a luminosidade da imagem serve de "altura" (linhas e cores ganham volume),
+         iluminado de cima à esquerda, com reflexos e uma sombra que o levanta da face do escudo -->
+    <filter id="relevoEmb" x="-15%" y="-15%" width="130%" height="135%" color-interpolation-filters="sRGB">
+      <!-- o fundo branco da imagem fica transparente, para o relevo e a sombra seguirem a forma do emblema -->
+      <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -2.2 -2.2 -2.2 0 6.4" result="semFundo"/>
+      <feComposite in="semFundo" in2="SourceAlpha" operator="in" result="corte"/>
+      <feColorMatrix in="corte" type="luminanceToAlpha" result="lum0"/>
+      <feComposite in="lum0" in2="corte" operator="in" result="lum"/>
+      <feComponentTransfer in="lum" result="alt"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feGaussianBlur in="alt" stdDeviation="1.1" result="h"/>
+      <feDiffuseLighting in="h" surfaceScale="4" diffuseConstant="1.25" lighting-color="#ffffff" result="d">
+        <feDistantLight azimuth="225" elevation="48"/></feDiffuseLighting>
+      <feComposite in="corte" in2="d" operator="arithmetic" k1="1.12" k2="0" k3="0" k4="0" result="luz"/>
+      <feSpecularLighting in="h" surfaceScale="3" specularConstant=".55" specularExponent="24" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="225" elevation="42"/></feSpecularLighting>
+      <feComposite in="s" in2="corte" operator="in" result="s2"/>
+      <feComposite in="luz" in2="s2" operator="arithmetic" k1="0" k2="1" k3=".55" k4="0" result="emb"/>
+      <feComposite in="emb" in2="corte" operator="in" result="emb2"/>
+      <feDropShadow in="emb2" dx="1.5" dy="3" stdDeviation="2" flood-color="#000" flood-opacity=".45"/>
+    </filter>
+    <!-- reflexo que passa por cima do emblema -->
+    <linearGradient id="reflexo" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
   </defs>
   <g clip-path="url(#card)"><g class="all">
     <polygon points="-20,-20 390,-20 290,400 -20,400" fill="#0a1a4a"/>
@@ -76,10 +101,11 @@
       <g filter="url(#sombra)">
         <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" transform="scale(1.13)" fill="url(#ouro)" filter="url(#bisel)"/>
         <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="#fff"/>
-        <image id="imA" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" clip-path="url(#escudo)"/>
+        <g clip-path="url(#escudo)"><image id="imA" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" filter="url(#relevoEmb)"/></g>
         <text id="inA" x="0" y="16" text-anchor="middle" font-size="34" fill="#0a1a4a"></text>
         <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="url(#vinheta)"/>
         <path d="M-50,-62 H50 V-14 C20,-4 -20,-24 -50,-8 Z" fill="url(#brilho)" clip-path="url(#escudo)"/>
+        <g clip-path="url(#escudo)"><rect class="reflexo" x="-140" y="-80" width="60" height="170" fill="url(#reflexo)" transform="skewX(-18)"/></g>
       </g>
       <text id="nmA" x="0" y="108" text-anchor="middle" font-size="15" fill="#fff" filter="url(#sombraTxt)"></text>
     </g></g>
@@ -89,10 +115,11 @@
       <g filter="url(#sombra)">
         <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" transform="scale(1.13)" fill="url(#prata)" filter="url(#bisel)"/>
         <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="#fff"/>
-        <image id="imB" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" clip-path="url(#escudo)"/>
+        <g clip-path="url(#escudo)"><image id="imB" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" filter="url(#relevoEmb)"/></g>
         <text id="inB" x="0" y="16" text-anchor="middle" font-size="34" fill="#6e1414"></text>
         <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="url(#vinheta)"/>
         <path d="M-50,-62 H50 V-14 C20,-4 -20,-24 -50,-8 Z" fill="url(#brilho)" clip-path="url(#escudo)"/>
+        <g clip-path="url(#escudo)"><rect class="reflexo" x="-140" y="-80" width="60" height="170" fill="url(#reflexo)" transform="skewX(-18)"/></g>
       </g>
       <text id="nmB" x="0" y="108" text-anchor="middle" font-size="15" fill="#fff" filter="url(#sombraTxt)"></text>
     </g></g>
