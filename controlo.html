@@ -484,6 +484,8 @@
     document.getElementById("btTrocar").disabled = espera;
     // duelo: só com os dois clubes escolhidos e antes do primeiro ponto do jogo
     document.getElementById("btDuelo").disabled = espera || jogoComecado(s) || !s.a.nome || !s.b.nome;
+    // depois de usado, o duelo desaparece até ao fim do encontro (volta com o Zerar tudo)
+    document.getElementById("btDuelo").style.display = s.duelo ? "none" : "";
     if (espera) {
       // à espera do par o Anular continua a funcionar (como no fim de qualquer jogo)
       if (!esperaPar(s)) document.getElementById("btAnular").disabled = true;
@@ -580,6 +582,7 @@
         // tudo a zero e sem clubes nem atletas: voltam a ser escolhidos no boletim
         ["a", "b"].forEach(k => { s[k] = { nome: "", clubeId: "", logo: "", slot: s[k].slot || (k === "a" ? "1" : "2"), atleta: "", pontos: 0, sets: 0, jogos: 0, timeout: 0 }; });
         s.ladosTrocados = false; s.setFechado = false; s.fimJogo = false; s.trocarPendente = false; s.trocaFeita = false;
+        s.duelo = null;
         s.visivel = false;   // o marcador do direto fica escondido até as equipas estarem no boletim (depois: Duelo / Mostrar)
         break;
       case "amigavel":
@@ -594,7 +597,7 @@
         break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "duelo":   // não entra no Anular: o widget duelo.html mostra os dois clubes
         hist.pop();
-        if (jogoComecado(s) || !s.a.nome || !s.b.nome) return;
+        if (s.duelo || jogoComecado(s) || !s.a.nome || !s.b.nome) return;
         s.duelo = agora();
         s.visivel = true;   // o duelo também faz o "Mostrar": no fim da animação o marcador aparece no direto
         break;
