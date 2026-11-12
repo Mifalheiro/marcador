@@ -132,7 +132,7 @@
     <rect class="fl" x="-20" y="-20" width="720" height="420" fill="#fff"/>
   </g></g>
 </svg>
-<iframe id="marcador" src="./?baixo" title="Marcador" allowtransparency="true"></iframe>
+<iframe id="marcador" title="Marcador" allowtransparency="true"></iframe>
 <div id="dica">Teste: toca no ecrã para ver o duelo</div>
 
 <script type="module">
@@ -140,6 +140,8 @@
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import { firebaseConfig } from "./firebase-config.js";
 
+  // o marcador de baixo carrega sempre a versão mais recente (a app de direto guarda páginas em cache)
+  document.getElementById("marcador").src = "./?baixo&v=" + Date.now();
   const DURACAO = 8000;   // tempo no ecrã (ms), contando com a entrada
   const teste = location.search.indexOf("teste") >= 0;
   // ?olhos = versão de desenho animado: emblemas lisos (sem relevo) com olhos zangados por cima
