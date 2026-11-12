@@ -89,6 +89,12 @@
       <mask id="mkA" style="mask-type:alpha"><image id="mkImA" x="-64" y="-72" width="128" height="146" preserveAspectRatio="xMidYMid meet"/></mask>
       <image id="imA" x="-64" y="-72" width="128" height="146" preserveAspectRatio="xMidYMid meet" filter="url(#relevoEmb)"/>
       <g mask="url(#mkA)"><rect class="reflexo" x="-150" y="-80" width="60" height="170" fill="url(#reflexo)" transform="skewX(-18)"/></g>
+      <g id="olhosA" style="display:none"><g transform="translate(0,-6)">
+        <circle cx="-17" cy="0" r="14" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="17" cy="0" r="14" fill="#fff" stroke="#111" stroke-width="3"/>
+        <circle cx="-11" cy="3" r="6.5" fill="#111"/><circle cx="23" cy="3" r="6.5" fill="#111"/>
+        <circle cx="-9" cy="1" r="2" fill="#fff"/><circle cx="25" cy="1" r="2" fill="#fff"/>
+        <path d="M-34,-17 L-6,-8 M34,-17 L6,-8" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+      </g></g>
       <text id="inA" x="0" y="18" text-anchor="middle" font-size="58" fill="#f2c230" stroke="#000" stroke-opacity=".25" filter="url(#bisel)"></text>
       <text id="nmA" x="0" y="106" text-anchor="middle" font-size="15" fill="#fff" filter="url(#sombraTxt)"></text>
     </g></g>
@@ -99,6 +105,12 @@
       <mask id="mkB" style="mask-type:alpha"><image id="mkImB" x="-64" y="-72" width="128" height="146" preserveAspectRatio="xMidYMid meet"/></mask>
       <image id="imB" x="-64" y="-72" width="128" height="146" preserveAspectRatio="xMidYMid meet" filter="url(#relevoEmb)"/>
       <g mask="url(#mkB)"><rect class="reflexo" x="-150" y="-80" width="60" height="170" fill="url(#reflexo)" transform="skewX(-18)"/></g>
+      <g id="olhosB" style="display:none"><g transform="translate(0,-6)">
+        <circle cx="-17" cy="0" r="14" fill="#fff" stroke="#111" stroke-width="3"/><circle cx="17" cy="0" r="14" fill="#fff" stroke="#111" stroke-width="3"/>
+        <circle cx="-23" cy="3" r="6.5" fill="#111"/><circle cx="11" cy="3" r="6.5" fill="#111"/>
+        <circle cx="-21" cy="1" r="2" fill="#fff"/><circle cx="13" cy="1" r="2" fill="#fff"/>
+        <path d="M-34,-17 L-6,-8 M34,-17 L6,-8" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+      </g></g>
       <text id="inB" x="0" y="18" text-anchor="middle" font-size="58" fill="#ffffff" stroke="#000" stroke-opacity=".25" filter="url(#bisel)"></text>
       <text id="nmB" x="0" y="106" text-anchor="middle" font-size="15" fill="#fff" filter="url(#sombraTxt)"></text>
     </g></g>
@@ -126,6 +138,8 @@
 
   const DURACAO = 8000;   // tempo no ecrã (ms), contando com a entrada
   const teste = location.search.indexOf("teste") >= 0;
+  // ?olhos = versão de desenho animado: emblemas lisos (sem relevo) com olhos zangados por cima
+  const comOlhos = /[?&]olhos/.test(location.search);
   if (teste) document.body.className = "fundo-teste";
 
   const db = getDatabase(initializeApp(firebaseConfig));
@@ -169,6 +183,16 @@
   async function lado(L, K) {
     const eq = (estado && estado[L]) || {}, src = await recortar(eq.logo === "slot" ? logos[eq.slot] : "");
     for (const id of ["im" + K, "mkIm" + K]) { const im = $(id); if (src) im.setAttribute("href", src); else im.removeAttribute("href"); }
+    if (comOlhos) {
+      $("im" + K).removeAttribute("filter");
+      // os olhos ficam encostados à borda de cima do desenho (a altura depende da proporção da imagem)
+      const g = $("olhos" + K);
+      g.style.display = "";
+      let topo = -72;
+      if (src) { const t = new Image(); t.src = src; await t.decode().catch(() => {}); if (t.width) { const dh = Math.min(146, 128 * t.height / t.width); topo = 1 - dh / 2; } }
+      else topo = -30;
+      g.setAttribute("transform", "translate(0," + topo + ")");
+    }
     $("in" + K).textContent = src ? "" : iniciais(eq.nome);
     const nome = eq.nome || (L === "a" ? "Casa" : "Visitante");
     const t = $("nm" + K); t.textContent = nome;
