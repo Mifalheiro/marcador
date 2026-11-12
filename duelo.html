@@ -43,6 +43,28 @@
   <defs>
     <clipPath id="card"><rect x="0" y="0" width="680" height="380" rx="16"/></clipPath>
     <clipPath id="escudo"><path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z"/></clipPath>
+    <!-- relevo: aro metálico com bisel, brilho de vidro, sombra por baixo -->
+    <linearGradient id="ouro" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff6c4"/><stop offset=".3" stop-color="#f2c230"/><stop offset=".55" stop-color="#a87405"/>
+      <stop offset=".8" stop-color="#f7d76a"/><stop offset="1" stop-color="#8a5e00"/></linearGradient>
+    <linearGradient id="prata" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="#d5dae2"/><stop offset=".55" stop-color="#7d8592"/>
+      <stop offset=".8" stop-color="#eef1f5"/><stop offset="1" stop-color="#5f6772"/></linearGradient>
+    <linearGradient id="brilho" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".65"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <radialGradient id="vinheta" cx=".5" cy=".42" r=".62">
+      <stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".38"/></radialGradient>
+    <filter id="bisel" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" result="b"/>
+      <feSpecularLighting in="b" surfaceScale="5" specularConstant="1" specularExponent="22" lighting-color="#ffffff" result="s">
+        <fePointLight x="-90" y="-150" z="140"/></feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+      <feComposite in="SourceGraphic" in2="s2" operator="arithmetic" k1="0" k2="1" k3=".9" k4="0"/>
+    </filter>
+    <filter id="sombra" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="9" stdDeviation="7" flood-color="#000" flood-opacity=".6"/></filter>
+    <filter id="sombraTxt" x="-20%" y="-50%" width="140%" height="200%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#000" flood-opacity=".7"/></filter>
   </defs>
   <g clip-path="url(#card)"><g class="all">
     <polygon points="-20,-20 390,-20 290,400 -20,400" fill="#0a1a4a"/>
@@ -51,18 +73,28 @@
 
     <!-- clube da casa (lado a do marcador) -->
     <g transform="translate(165,165) scale(1.4)"><g class="el">
-      <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="#fff" stroke="#f2c230" stroke-width="6" stroke-linejoin="round"/>
-      <image id="imA" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" clip-path="url(#escudo)"/>
-      <text id="inA" x="0" y="16" text-anchor="middle" font-size="34" fill="#0a1a4a"></text>
-      <text id="nmA" x="0" y="104" text-anchor="middle" font-size="15" fill="#fff"></text>
+      <g filter="url(#sombra)">
+        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" transform="scale(1.13)" fill="url(#ouro)" filter="url(#bisel)"/>
+        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="#fff"/>
+        <image id="imA" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" clip-path="url(#escudo)"/>
+        <text id="inA" x="0" y="16" text-anchor="middle" font-size="34" fill="#0a1a4a"></text>
+        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="url(#vinheta)"/>
+        <path d="M-50,-62 H50 V-14 C20,-4 -20,-24 -50,-8 Z" fill="url(#brilho)" clip-path="url(#escudo)"/>
+      </g>
+      <text id="nmA" x="0" y="108" text-anchor="middle" font-size="15" fill="#fff" filter="url(#sombraTxt)"></text>
     </g></g>
 
     <!-- clube visitante (lado b do marcador) -->
     <g transform="translate(515,165) scale(1.4)"><g class="er">
-      <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="#fff" stroke="#ffffff" stroke-width="6" stroke-linejoin="round"/>
-      <image id="imB" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" clip-path="url(#escudo)"/>
-      <text id="inB" x="0" y="16" text-anchor="middle" font-size="34" fill="#6e1414"></text>
-      <text id="nmB" x="0" y="104" text-anchor="middle" font-size="15" fill="#fff"></text>
+      <g filter="url(#sombra)">
+        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" transform="scale(1.13)" fill="url(#prata)" filter="url(#bisel)"/>
+        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="#fff"/>
+        <image id="imB" x="-42" y="-54" width="84" height="110" preserveAspectRatio="xMidYMid meet" clip-path="url(#escudo)"/>
+        <text id="inB" x="0" y="16" text-anchor="middle" font-size="34" fill="#6e1414"></text>
+        <path d="M-50,-62 H50 V10 C50,46 20,66 0,78 C-20,66 -50,46 -50,10 Z" fill="url(#vinheta)"/>
+        <path d="M-50,-62 H50 V-14 C20,-4 -20,-24 -50,-8 Z" fill="url(#brilho)" clip-path="url(#escudo)"/>
+      </g>
+      <text id="nmB" x="0" y="108" text-anchor="middle" font-size="15" fill="#fff" filter="url(#sombraTxt)"></text>
     </g></g>
 
     <g transform="translate(340,318)"><g class="pads">
@@ -72,8 +104,8 @@
     </g></g>
 
     <g transform="translate(340,150)"><g class="vs">
-      <g class="star"><polygon points="72,0 48.3,12.9 62.4,36 35.4,35.4 36,62.4 12.9,48.3 0,72 -12.9,48.3 -36,62.4 -35.4,35.4 -62.4,36 -48.3,12.9 -72,0 -48.3,-12.9 -62.4,-36 -35.4,-35.4 -36,-62.4 -12.9,-48.3 0,-72 12.9,-48.3 36,-62.4 35.4,-35.4 62.4,-36 48.3,-12.9" fill="#f2c230" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></g>
-      <text x="0" y="22" text-anchor="middle" font-size="64" font-style="italic" fill="#0a1a4a">VS</text>
+      <g class="star" filter="url(#bisel)"><polygon points="72,0 48.3,12.9 62.4,36 35.4,35.4 36,62.4 12.9,48.3 0,72 -12.9,48.3 -36,62.4 -35.4,35.4 -62.4,36 -48.3,12.9 -72,0 -48.3,-12.9 -62.4,-36 -35.4,-35.4 -36,-62.4 -12.9,-48.3 0,-72 12.9,-48.3 36,-62.4 35.4,-35.4 62.4,-36 48.3,-12.9" fill="#f2c230" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></g>
+      <text x="0" y="22" text-anchor="middle" font-size="64" font-style="italic" fill="#0a1a4a" stroke="#fff6c4" stroke-width="1.5" filter="url(#sombraTxt)">VS</text>
     </g></g>
 
     <rect class="fl" x="-20" y="-20" width="720" height="420" fill="#fff"/>
