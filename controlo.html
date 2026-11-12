@@ -276,7 +276,7 @@
   document.getElementById("urlDuelo").textContent = new URL("duelo.html?olhos", location.href).href;
 
   function inicial() {
-    return { visivel: true, pontosSet: PONTOS_SET, setsJogo: SETS_JOGO, setFechado: false, fimJogo: false,
+    return { visivel: false, pontosSet: PONTOS_SET, setsJogo: SETS_JOGO, setFechado: false, fimJogo: false,
       a: { nome: "", jogos: 0, sets: 0, pontos: 0, logo: "", slot: "1" },
       b: { nome: "", jogos: 0, sets: 0, pontos: 0, logo: "", slot: "2" } };
   }
@@ -579,7 +579,9 @@
       case "zerar": if (window.boletimZerar) window.boletimZerar(s); s.parciais = []; s.saqueInicial = null;
         // tudo a zero e sem clubes nem atletas: voltam a ser escolhidos no boletim
         ["a", "b"].forEach(k => { s[k] = { nome: "", clubeId: "", logo: "", slot: s[k].slot || (k === "a" ? "1" : "2"), atleta: "", pontos: 0, sets: 0, jogos: 0, timeout: 0 }; });
-        s.ladosTrocados = false; s.setFechado = false; s.fimJogo = false; s.trocarPendente = false; s.trocaFeita = false; break;
+        s.ladosTrocados = false; s.setFechado = false; s.fimJogo = false; s.trocarPendente = false; s.trocaFeita = false;
+        s.visivel = false;   // o marcador do direto fica escondido até as equipas estarem no boletim (depois: Duelo / Mostrar)
+        break;
       case "amigavel":
         if (!s.amigavel && boletimEmCurso(s)) {
           hist.pop(); alert("Há um boletim de jogo a decorrer. Para um jogo amigável, faz primeiro Zerar tudo."); mostrar(); return;
