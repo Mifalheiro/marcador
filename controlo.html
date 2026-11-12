@@ -231,9 +231,9 @@
     <label>Link do marcador para o PRISM (widget Web)</label>
     <div class="url" id="urlOverlay"></div>
     <div class="aviso">Para ver o marcador num browser com fundo verde, junta <b>?teste</b> ao fim do link.</div>
-    <label>Duelo dos clubes (segundo widget do direto, por baixo do marcador)</label>
+    <label>Direto com duelo (marcador em baixo + duelo dos clubes)</label>
     <div class="url" id="urlDuelo"></div>
-    <div class="aviso">Aparece quando se carrega em ⚔ Duelo (antes do primeiro ponto do jogo) e desaparece sozinho ao fim de 8 s. Com <b>?teste</b>: fundo verde e toque no ecrã para ver.</div>
+    <div class="aviso">Usa este widget em ecrã inteiro em vez do marcador de cima: mostra o marcador encostado ao fundo e, ao carregar em ⚔ Duelo (antes do primeiro ponto do jogo), o duelo durante 8 s. Com <b>&amp;teste</b>: fundo verde e toque no ecrã para ver.</div>
     <label>Ecrã da sala (tablet / TV)</label>
     <div class="url" id="urlSala"></div>
     <div class="aviso">"Trocar lados" troca aqui e no ecrã da sala; o marcador do direto fica sempre igual.</div>
@@ -273,7 +273,7 @@
 
   document.getElementById("urlOverlay").textContent = new URL("./", location.href).href;
   document.getElementById("urlSala").textContent = new URL("sala.html", location.href).href;
-  document.getElementById("urlDuelo").textContent = new URL("duelo.html", location.href).href;
+  document.getElementById("urlDuelo").textContent = new URL("duelo.html?olhos", location.href).href;
 
   function inicial() {
     return { visivel: true, pontosSet: PONTOS_SET, setsJogo: SETS_JOGO, setFechado: false, fimJogo: false,

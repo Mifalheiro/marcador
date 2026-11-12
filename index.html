@@ -62,6 +62,9 @@
   #final { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
     background: linear-gradient(180deg, #0f2366, #0a1748); color: #fff; opacity: 0; pointer-events: none; transition: opacity .6s; }
   #final.ver { opacity: 1; }
+  /* ?baixo = marcador encostado ao fundo do ecrã (usado dentro do widget do duelo) */
+  html.baixo #bug { position: fixed; left: 0; bottom: 0; }
+  html.baixo #final { top: auto; bottom: 0; }
   #final .t1 { color: #f2b705; font-weight: 800; letter-spacing: .12em; }
   #final .t2 { font-weight: 700; white-space: nowrap; }
   #final .t2 b { color: #ffd84a; margin: 0 .4em; }
@@ -105,6 +108,7 @@
 
   const DURACAO_TO = 60;
   if (location.search.indexOf("teste") >= 0) document.body.className = "fundo-teste";
+  if (/[?&]baixo/.test(location.search)) document.documentElement.classList.add("baixo");
 
   const db = getDatabase(initializeApp(firebaseConfig));
   let logos = {}, ultimo = null, desvio = 0;   // desvio = diferença entre o relógio deste aparelho e o da Firebase
@@ -202,7 +206,7 @@
   function porFinal(s) {
     const el = document.getElementById("final"), bug = document.getElementById("bug");
     const ja = s.a.jogos || 0, jb = s.b.jogos || 0;
-    const acabou = s.fimJogo && (ja >= 4 || jb >= 4);
+    const acabou = !!(s.fimJogo && (ja >= 4 || jb >= 4));   // sempre true/false (o toggle com undefined alternava a faixa)
     if (acabou) {
       const chave = ja + "-" + jb + "|" + s.a.nome + "|" + s.b.nome;
       if (chave !== chaveFinal) { chaveFinal = chave; inicioFinal = Date.now(); }
