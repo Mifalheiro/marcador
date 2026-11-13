@@ -494,9 +494,10 @@
     document.getElementById("btBol").classList.toggle("chama", espera || (!s.teste && encontroTerminado(s) && !!s.boletim && !(window.boletimBloqueado && window.boletimBloqueado(s.boletim))));
     document.getElementById("btTrocar").disabled = espera;
     // duelo: só com os dois clubes escolhidos e antes do primeiro ponto do jogo
-    document.getElementById("btDuelo").disabled = espera || jogoComecado(s) || !s.a.nome || !s.b.nome;
+    // em Teste: sempre visível e disponível (só precisa dos dois clubes)
+    document.getElementById("btDuelo").disabled = !s.a.nome || !s.b.nome || (!s.teste && (espera || jogoComecado(s)));
     // depois de usado, o duelo desaparece até ao fim do encontro (volta com o Zerar tudo)
-    document.getElementById("btDuelo").style.display = s.duelo ? "none" : "";
+    document.getElementById("btDuelo").style.display = s.duelo && !s.teste ? "none" : "";
     if (espera) {
       // à espera do par o Anular continua a funcionar (como no fim de qualquer jogo)
       if (!esperaPar(s)) document.getElementById("btAnular").disabled = true;
@@ -514,7 +515,7 @@
   window.acao = function (tipo, lado, valor) {
     if (!estado) return;
     if (navigator.vibrate) navigator.vibrate(25);
-    if (esperaBoletim(estado) && !(tipo === "anular" && esperaPar(estado)) && ["ponto", "saque", "timeout", "trocar", "novoSet", "novoJogo", "visivel", "anular", "sets", "jogos", "duelo"].includes(tipo)) {
+    if (esperaBoletim(estado) && !(tipo === "anular" && esperaPar(estado)) && !(tipo === "duelo" && estado.teste) && ["ponto", "saque", "timeout", "trocar", "novoSet", "novoJogo", "visivel", "anular", "sets", "jogos", "duelo"].includes(tipo)) {
       msg(motivoEspera(estado), "erro"); if (navigator.vibrate) navigator.vibrate([60, 40, 60]); return;
     }
     if (tipo === "anular") {
@@ -608,7 +609,7 @@
         break;   // troca no controlo e no ecrã da sala; o marcador do direto fica fixo
       case "duelo":   // não entra no Anular: o widget duelo.html mostra os dois clubes
         hist.pop();
-        if (s.duelo || jogoComecado(s) || !s.a.nome || !s.b.nome) return;
+        if (!s.a.nome || !s.b.nome || (!s.teste && (s.duelo || jogoComecado(s)))) return;
         s.duelo = agora();
         s.visivel = true;   // o duelo também faz o "Mostrar": no fim da animação o marcador aparece no direto
         break;
