@@ -691,6 +691,12 @@ window.bolPDF = async function () {
     escrever("clubeCasa", b.casa.nome, 11, 170); escrever("clubeVis", b.vis.nome, 11, 175);
     b.casa.atl.forEach((a, i) => { escrever("casaNome" + i, a.n, 8, 150); escrever("casaLic" + i, a.l, 8, 52, 0, false); });
     b.vis.atl.forEach((a, i) => { escrever("visNome" + i, a.n, 8, 150); escrever("visLic" + i, a.l, 8, 52, 0, false); });
+    // letras dos suplentes (D, E e V, W): o modelo só traz A-C e X-Z impressas; mesmas letra e posição das de cima
+    [3, 4].forEach(i => {
+      const base = H - (P["casaNome" + i][1] + 2.8);
+      pg.drawText(LET_C[i] + " -", { x: 135.6, y: base, size: 8.8, font: fB });
+      pg.drawText(LET_V[i] + "  -", { x: 365.2, y: base, size: 8.8, font: fB });
+    });
 
     ORDEM.forEach((o, g) => {
       const jogo = b.jogos[g], n0 = nomesJogo(b, g);
