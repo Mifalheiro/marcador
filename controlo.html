@@ -93,7 +93,9 @@
   details summary { font-weight: 600; }
   details label { display: block; margin: 10px 0 4px; font-size: 14px; }
   details input { width: 100%; padding: 8px; border-radius: 8px; border: 0; font-size: 15px; }
-  .url { word-break: break-all; font-size: 13px; background: #0b1440; padding: 8px; border-radius: 8px; margin-top: 6px; }
+  /* os links podem ser selecionados (o resto do controlo não, para não selecionar texto ao carregar nos botões) e copiam-se com um toque */
+  .url { word-break: break-all; font-size: 13px; background: #0b1440; padding: 8px; border-radius: 8px; margin-top: 6px; user-select: text; -webkit-user-select: text; cursor: copy; }
+  .url::after { content: "  📋 tocar para copiar"; opacity: .55; font-size: 11px; }
   .aviso { font-size: 12px; opacity: .75; margin-top: 6px; }
 
   /* ---- boletim ---- */
@@ -278,6 +280,11 @@
   document.getElementById("urlOverlay").textContent = new URL("./", location.href).href;
   document.getElementById("urlSala").textContent = new URL("sala.html", location.href).href;
   document.getElementById("urlDuelo").textContent = new URL("duelo.html?olhos", location.href).href;
+  // tocar num link copia-o
+  document.querySelectorAll(".url").forEach(el => el.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(el.textContent); msg("✓ Link copiado", "ok"); }
+    catch (e) { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); msg("Link selecionado — copia com o menu do telemóvel", "espera"); }
+  }));
 
   function inicial() {
     return { visivel: false, pontosSet: PONTOS_SET, setsJogo: SETS_JOGO, setFechado: false, fimJogo: false,
