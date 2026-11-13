@@ -12,7 +12,7 @@ const ORDEM = [
   { par: true, et: "PAR" },
   { c: 0, v: 0, et: "A - X" }, { c: 2, v: 1, et: "C - Y" }, { c: 1, v: 2, et: "B - Z" }
 ];
-const LET_C = ["A", "B", "C", "", ""], LET_V = ["X", "Y", "Z", "", ""];
+const LET_C = ["A", "B", "C", "D", "E"], LET_V = ["X", "Y", "Z", "V", "W"];
 const JOGOS_PARA_GANHAR = 4;
 
 // Posições (em pontos, folha A4 deitada 841.89 × 595.3) de cada campo no modelo da ATMP.
