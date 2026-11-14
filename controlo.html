@@ -130,8 +130,10 @@
   .bol-tab th { font-size: calc(12px * var(--f, 1)); font-weight: 600; opacity: .8; padding: 4px; }
   .bol-tab td { padding: 3px; border-top: 1px solid #24346f; font-size: calc(13px * var(--f, 1)); }
   .bol-tab td input { width: 100%; padding: 8px; border-radius: 6px; border: 0; font-size: calc(14px * var(--f, 1)); }
-  .bol-tab .bol-lic { width: 80px; }
-  .bol-let { width: 40px; font-weight: 700; white-space: nowrap; }
+  /* coluna da licença medida em "em": cresce com a letra (antes 80px fixos cortavam a licença no tablet) */
+  .bol-tab th:last-child { white-space: nowrap; width: 7.5em; }
+  .bol-tab .bol-lic { width: 100%; min-width: 6em; }
+  .bol-let { width: 2.6em; font-weight: 700; white-space: nowrap; }
   .bol-scroll { overflow-x: auto; }
   .bol-jogos td input { width: 44px; padding: 6px 1px; text-align: center; font-size: calc(13px * var(--f, 1)); }
   .bol-jogos td input.vivo::placeholder { color: #0f6b8a; font-weight: 700; }
