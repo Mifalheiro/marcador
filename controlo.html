@@ -64,6 +64,10 @@
     /* com letra maior (--f), os pontos e o "PONTO" nunca passam da largura da sua coluna */
     .linha-pts .pts { align-self: center; font-size: min(calc(clamp(64px, 14vh, 180px) * var(--f, 1)), 11vw); }
     .linha-pts .mais, .linha-pts .menos-pt { font-size: min(calc(clamp(24px, 3vw, 44px) * var(--f, 1)), 3.5vw); font-weight: 800; overflow: hidden; }
+    /* −1 e +1 PONTO ocupam a altura toda; no meio: pontos, e por baixo "− Sets +" e "− Jogos +" juntos */
+    .linha-pts .centro { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+    .linha-pts .centro .linha { grid-template-columns: 44px auto 44px; gap: 10px; }
+    .linha-pts .centro .rot { min-width: 48px; }
   }
   /* telemóvel em pé: como antes — pontos em cima, +1 PONTO grande por baixo e −1 PONTO pequeno no fim */
   @media (orientation: portrait) and (max-width: 700px) {
@@ -72,6 +76,8 @@
     .linha-pts .mais { order: 2; height: 96px; }
     .linha-pts .menos-pt { order: 3; height: 40px; font-size: calc(15px * var(--f, 1)); font-weight: 400; }
     .linha-pts .q { display: none; }   /* em pé: "+1 PONTO" numa linha só */
+    .linha-pts .centro { display: contents; }   /* em pé: pontos em cima, sets e jogos no fim, como antes */
+    .linha-pts .centro .linha { order: 4; }
   }
   .teste-so { visibility: hidden; }
   body.modo-teste .teste-so { visibility: visible; }
@@ -365,14 +371,15 @@
       '<input class="atl" id="atl_' + L + '" list="dl_' + L + '" placeholder="Atleta(s) a jogar" onchange="mudarAtleta(\'' + L + '\',this)"><datalist id="dl_' + L + '"></datalist>' +
       '<div class="linha-pts">' +
       '<button class="menos-pt" onclick="acao(\'ponto\',\'' + L + '\',-1)">−1 <br class="q">PONTO</button>' +
-      '<div class="pts" id="pts_' + L + '">0</div>' +
-      '<button class="mais" onclick="acao(\'ponto\',\'' + L + '\',1)">+1 <br class="q">PONTO</button></div>' +
+      // coluna do meio: pontos e, por baixo, sets e jogos (com os − / + do modo Teste ao lado)
+      '<div class="centro"><div class="pts" id="pts_' + L + '">0</div>' +
       '<div class="linha"><button class="peq teste-so" onclick="acao(\'sets\',\'' + L + '\',-1)">−</button>' +
       '<div class="rot">Sets<span class="val" id="sets_' + L + '">0</span></div>' +
       '<button class="peq teste-so" onclick="acao(\'sets\',\'' + L + '\',1)">+</button></div>' +
       '<div class="linha"><button class="peq teste-so" onclick="acao(\'jogos\',\'' + L + '\',-1)">−</button>' +
       '<div class="rot">Jogos<span class="val" id="jogos_' + L + '">0</span></div>' +
-      '<button class="peq teste-so" onclick="acao(\'jogos\',\'' + L + '\',1)">+</button></div>' +
+      '<button class="peq teste-so" onclick="acao(\'jogos\',\'' + L + '\',1)">+</button></div></div>' +
+      '<button class="mais" onclick="acao(\'ponto\',\'' + L + '\',1)">+1 <br class="q">PONTO</button></div>' +
       '<button class="tobt" id="to_' + L + '" onclick="acao(\'timeout\',\'' + L + '\')">Time out</button>';
   }
   document.getElementById("eq_a").innerHTML = cartao("a");
