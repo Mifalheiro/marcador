@@ -14,11 +14,12 @@
   :root { --f: 1; }
   @media (any-pointer: coarse) { :root { --f: 1.9; } }   /* any-pointer: inclui tablets Windows com teclado/touchpad */
   body { margin: 0; font-family: system-ui, -apple-system, Roboto, Arial, sans-serif; background: #0b1440; color: #fff; touch-action: manipulation; user-select: none; }
+  /* a barra de cima (Marcador / Boletim de jogo) fica sempre do mesmo tamanho, sem o aumento de letra (--f) */
   header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #071034; }
-  header h1 { font-size: calc(16px * var(--f, 1)); margin: 0; }
-  #estado { font-size: calc(13px * var(--f, 1)); opacity: .85; }
+  header h1 { font-size: 16px; margin: 0; }
+  #estado { font-size: 13px; opacity: .85; }
   .direita { display: flex; align-items: center; gap: 10px; }
-  #btEcra { border: 0; border-radius: 8px; background: #2a3c86; color: #fff; font-size: calc(13px * var(--f, 1)); padding: 6px 10px; }
+  #btEcra { border: 0; border-radius: 8px; background: #2a3c86; color: #fff; font-size: 13px; padding: 6px 10px; }
   .ok { color: #7be08a; } .erro { color: #ff7b7b; } .espera { color: #ffd84a; }
 
   .equipas { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 8px; padding: 8px; }
@@ -107,8 +108,8 @@
   #bolFaixa { display: none; margin: 8px 8px 0; padding: 10px 12px; border-radius: 10px; background: #f2b705; color: #0a1748; font-size: calc(14px * var(--f, 1)); font-weight: 700; }
   .barra .bol { grid-column: span 3; background: #0f6b8a; }
   #bolPainel { display: none; position: fixed; inset: 0; z-index: 8; overflow-y: auto; background: #0b1440; padding-bottom: 30px; user-select: text; }
-  .bol-topo { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #071034; position: sticky; top: 0; z-index: 2; }
-  .bol-topo button { border: 0; border-radius: 8px; background: #2a3c86; color: #fff; padding: 8px 12px; font-size: calc(14px * var(--f, 1)); }
+  .bol-topo { display: flex; justify-content: space-between; align-items: center; padding: 12px; font-size: 16px; background: #071034; position: sticky; top: 0; z-index: 2; }
+  .bol-topo button { border: 0; border-radius: 8px; background: #2a3c86; color: #fff; padding: 8px 12px; font-size: 14px; }
   .bol-passos { display: flex; gap: 4px; padding: 8px; overflow-x: auto; }
   .bol-passos span { flex: none; font-size: calc(12px * var(--f, 1)); padding: 6px 8px; border-radius: 8px; background: #13225e; opacity: .7; }
   .bol-passos span.sel { background: #f2b705; color: #0a1748; opacity: 1; font-weight: 700; }
