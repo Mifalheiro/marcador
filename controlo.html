@@ -12,7 +12,7 @@
   /* tamanho das letras: --f multiplica todos os tamanhos. Em aparelhos com ecrã tátil (tablet, telemóvel) as letras ficam maiores;
      no PC sem ecrã tátil ficam como estão. Para mudar, altera o número da linha "any-pointer". */
   :root { --f: 1; }
-  @media (any-pointer: coarse) { :root { --f: 1.2; } }   /* any-pointer: inclui tablets Windows com teclado/touchpad */
+  @media (any-pointer: coarse) { :root { --f: 1.5; } }   /* any-pointer: inclui tablets Windows com teclado/touchpad */
   body { margin: 0; font-family: system-ui, -apple-system, Roboto, Arial, sans-serif; background: #0b1440; color: #fff; touch-action: manipulation; user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #071034; }
   header h1 { font-size: calc(16px * var(--f, 1)); margin: 0; }
