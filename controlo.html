@@ -9,62 +9,66 @@
 <title>Marcador – Controlo</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* tamanho das letras: --f multiplica todos os tamanhos. Em ecrãs de toque (tablet, telemóvel) as letras ficam 20% maiores;
+     no PC (rato) ficam como estão. Para mudar, altera o 1.2. */
+  :root { --f: 1; }
+  @media (pointer: coarse) { :root { --f: 1.2; } }
   body { margin: 0; font-family: system-ui, -apple-system, Roboto, Arial, sans-serif; background: #0b1440; color: #fff; touch-action: manipulation; user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #071034; }
-  header h1 { font-size: 16px; margin: 0; }
-  #estado { font-size: 13px; opacity: .85; }
+  header h1 { font-size: calc(16px * var(--f, 1)); margin: 0; }
+  #estado { font-size: calc(13px * var(--f, 1)); opacity: .85; }
   .direita { display: flex; align-items: center; gap: 10px; }
-  #btEcra { border: 0; border-radius: 8px; background: #2a3c86; color: #fff; font-size: 13px; padding: 6px 10px; }
+  #btEcra { border: 0; border-radius: 8px; background: #2a3c86; color: #fff; font-size: calc(13px * var(--f, 1)); padding: 6px 10px; }
   .ok { color: #7be08a; } .erro { color: #ff7b7b; } .espera { color: #ffd84a; }
 
   .equipas { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 8px; padding: 8px; }
   .eq { min-width: 0; background: #13225e; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
-  select.clube { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; background: #2a3c86; color: #fff; }
+  select.clube { width: 100%; font-size: calc(15px * var(--f, 1)); padding: 8px; border-radius: 8px; border: 0; background: #2a3c86; color: #fff; }
   .lista-clubes div { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #24346f; }
   .lista-clubes img { width: 32px; height: 32px; object-fit: contain; background: #fff; border-radius: 4px; }
   .lista-clubes span { flex: 1; }
   .lista-clubes button { border: 0; border-radius: 8px; background: #8a2b2b; color: #fff; padding: 6px 10px; }
   .lista-clubes small { opacity: .75; }
   .clubes-guardados { margin: 12px 0 0; padding: 0; background: none; }
-  .clubes-guardados > summary { cursor: pointer; padding: 10px 12px; background: #1d2c66; border-radius: 10px; font-size: 14px; }
-  .lista-clubes a { color: #ff9c9c; font-size: 12px; margin-left: 6px; }
+  .clubes-guardados > summary { cursor: pointer; padding: 10px 12px; background: #1d2c66; border-radius: 10px; font-size: calc(14px * var(--f, 1)); }
+  .lista-clubes a { color: #ff9c9c; font-size: calc(12px * var(--f, 1)); margin-left: 6px; }
   .clube-linha { display: flex; gap: 8px; align-items: center; }
   .clube-linha img { width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; }
   .clube-linha .sem { width: 44px; height: 44px; border-radius: 6px; background: #e8ebf5; flex: none; }
   .clube-linha select { flex: 1; min-width: 0; }
   #novoPrev img { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 6px; }
-  .tobt { height: 44px; border: 0; border-radius: 10px; background: #000; color: #fff; font-size: 14px; font-weight: 700; }
+  .tobt { height: 44px; border: 0; border-radius: 10px; background: #000; color: #fff; font-size: calc(14px * var(--f, 1)); font-weight: 700; }
   .tobt.ativo { background: #f2b705; color: #0a1748; }
   .tobt.usado { background: #2a3c86; opacity: .5; }
   .tobt:disabled { opacity: .35; }
   select.clube:disabled { opacity: 1; color: #fff; -webkit-text-fill-color: #fff; appearance: none; -webkit-appearance: none; }
   .atl.fixo { background: #e8ebf5; color: #0a1748; font-weight: 600; }
-  .atl { width: 100%; font-size: 15px; padding: 8px; border-radius: 8px; border: 0; }
-  .sqbt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 14px; font-weight: 700; }
+  .atl { width: 100%; font-size: calc(15px * var(--f, 1)); padding: 8px; border-radius: 8px; border: 0; }
+  .sqbt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: calc(14px * var(--f, 1)); font-weight: 700; }
   .sqbt.chama { background: #f2b705; color: #0a1748; animation: chama 1s ease-in-out infinite; }
   .sqbt:disabled:not(.sim) { opacity: .45; }
   .sqbt.sim { background: #22c55e; color: #05230f; }
-  .pts { font-size: 64px; font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
-  .mais { width: 100%; height: 96px; font-size: 28px; font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
+  .pts { font-size: calc(64px * var(--f, 1)); font-weight: 800; text-align: center; line-height: 1; font-variant-numeric: tabular-nums; }
+  .mais { width: 100%; height: 96px; font-size: calc(28px * var(--f, 1)); font-weight: 800; border: 0; border-radius: 12px; background: #f2b705; color: #0a1748; }
   .linha-pts { display: grid; grid-template-columns: 1fr 0.8fr 1fr; gap: 8px; align-items: center; }
   .linha-pts button { line-height: 1.15; }
   /* PC / tablet / telemóvel deitado: o controlo ocupa o ecrã todo e os botões dos pontos
      crescem para preencher o espaço livre; as Definições ficam no fundo */
   @media not ((orientation: portrait) and (max-width: 700px)) {
-    body { display: flex; flex-direction: column; min-height: calc(100vh / var(--z, 1)); min-height: calc(100dvh / var(--z, 1)); }   /* --z = tamanho escolhido */
+    body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
     .equipas { flex: 1 0 auto; }
     .eq { height: 100%; }
     .linha-pts { flex: 1 0 auto; min-height: 150px; align-items: stretch; }
     .linha-pts .mais, .linha-pts .menos-pt { height: auto; }
-    .linha-pts .pts { align-self: center; font-size: clamp(64px, 14vh, 180px); }
-    .linha-pts .mais, .linha-pts .menos-pt { font-size: clamp(24px, 3vw, 44px); font-weight: 800; }
+    .linha-pts .pts { align-self: center; font-size: calc(clamp(64px, 14vh, 180px) * var(--f, 1)); }
+    .linha-pts .mais, .linha-pts .menos-pt { font-size: calc(clamp(24px, 3vw, 44px) * var(--f, 1)); font-weight: 800; }
   }
   /* telemóvel em pé: como antes — pontos em cima, +1 PONTO grande por baixo e −1 PONTO pequeno no fim */
   @media (orientation: portrait) and (max-width: 700px) {
     .linha-pts { grid-template-columns: 1fr; gap: 8px; }
     .linha-pts .pts { order: 1; }
     .linha-pts .mais { order: 2; height: 96px; }
-    .linha-pts .menos-pt { order: 3; height: 40px; font-size: 15px; font-weight: 400; }
+    .linha-pts .menos-pt { order: 3; height: 40px; font-size: calc(15px * var(--f, 1)); font-weight: 400; }
     .linha-pts .q { display: none; }   /* em pé: "+1 PONTO" numa linha só */
   }
   .teste-so { visibility: hidden; }
@@ -75,81 +79,78 @@
   @keyframes chama { 50% { filter: brightness(1.3); box-shadow: 0 0 0 3px rgba(242,183,5,.45); } }
   .mais:active { transform: scale(.97); filter: brightness(1.15); }
   .linha { display: grid; grid-template-columns: 44px minmax(0,1fr) 44px; align-items: center; gap: 6px; }
-  .linha .rot { text-align: center; font-size: 13px; opacity: .8; }
-  .linha .val { display: block; font-size: 24px; font-weight: 800; opacity: 1; }
-  .peq { height: 44px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 22px; font-weight: 700; }
-  .menos-pt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 15px; }
+  .linha .rot { text-align: center; font-size: calc(13px * var(--f, 1)); opacity: .8; }
+  .linha .val { display: block; font-size: calc(24px * var(--f, 1)); font-weight: 800; opacity: 1; }
+  .peq { height: 44px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: calc(22px * var(--f, 1)); font-weight: 700; }
+  .menos-pt { height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: calc(15px * var(--f, 1)); }
   .logo-linha { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .logo-linha img { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 6px; }
-  .logo-linha button, .logo-linha label { flex: 1 1 30%; min-width: 0; font-size: 12px; padding: 8px 4px; border-radius: 8px; border: 0; background: #2a3c86; color: #fff; text-align: center; }
+  .logo-linha button, .logo-linha label { flex: 1 1 30%; min-width: 0; font-size: calc(12px * var(--f, 1)); padding: 8px 4px; border-radius: 8px; border: 0; background: #2a3c86; color: #fff; text-align: center; }
 
   .barra { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 8px 8px; }
-  .barra button { height: 52px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 15px; font-weight: 600; }
+  .barra button { height: 52px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: calc(15px * var(--f, 1)); font-weight: 600; }
   .barra .anular { background: #6b3fa0; }
   .barra .perigo { background: #8a2b2b; }
   .barra .ativo { background: #2f8a46; }
 
   details { margin: 0 8px 8px; background: #13225e; border-radius: 10px; padding: 10px; }
   details summary { font-weight: 600; }
-  details label { display: block; margin: 10px 0 4px; font-size: 14px; }
-  details input { width: 100%; padding: 8px; border-radius: 8px; border: 0; font-size: 15px; }
+  details label { display: block; margin: 10px 0 4px; font-size: calc(14px * var(--f, 1)); }
+  details input { width: 100%; padding: 8px; border-radius: 8px; border: 0; font-size: calc(15px * var(--f, 1)); }
   /* os links podem ser selecionados (o resto do controlo não, para não selecionar texto ao carregar nos botões) e copiam-se com um toque */
-  .tamanho { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
-  .tamanho button { width: auto; min-width: 54px; height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 16px; font-weight: 700; padding: 0 12px; }
-  .tamanho span { min-width: 56px; text-align: center; font-weight: 700; }
-  .url { word-break: break-all; font-size: 13px; background: #0b1440; padding: 8px; border-radius: 8px; margin-top: 6px; user-select: text; -webkit-user-select: text; cursor: copy; }
-  .url::after { content: "  📋 tocar para copiar"; opacity: .55; font-size: 11px; }
-  .aviso { font-size: 12px; opacity: .75; margin-top: 6px; }
+  .url { word-break: break-all; font-size: calc(13px * var(--f, 1)); background: #0b1440; padding: 8px; border-radius: 8px; margin-top: 6px; user-select: text; -webkit-user-select: text; cursor: copy; }
+  .url::after { content: "  📋 tocar para copiar"; opacity: .55; font-size: calc(11px * var(--f, 1)); }
+  .aviso { font-size: calc(12px * var(--f, 1)); opacity: .75; margin-top: 6px; }
 
   /* ---- boletim ---- */
-  #bolFaixa { display: none; margin: 8px 8px 0; padding: 10px 12px; border-radius: 10px; background: #f2b705; color: #0a1748; font-size: 14px; font-weight: 700; }
+  #bolFaixa { display: none; margin: 8px 8px 0; padding: 10px 12px; border-radius: 10px; background: #f2b705; color: #0a1748; font-size: calc(14px * var(--f, 1)); font-weight: 700; }
   .barra .bol { grid-column: span 3; background: #0f6b8a; }
   #bolPainel { display: none; position: fixed; inset: 0; z-index: 8; overflow-y: auto; background: #0b1440; padding-bottom: 30px; user-select: text; }
   .bol-topo { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #071034; position: sticky; top: 0; z-index: 2; }
-  .bol-topo button { border: 0; border-radius: 8px; background: #2a3c86; color: #fff; padding: 8px 12px; font-size: 14px; }
+  .bol-topo button { border: 0; border-radius: 8px; background: #2a3c86; color: #fff; padding: 8px 12px; font-size: calc(14px * var(--f, 1)); }
   .bol-passos { display: flex; gap: 4px; padding: 8px; overflow-x: auto; }
-  .bol-passos span { flex: none; font-size: 12px; padding: 6px 8px; border-radius: 8px; background: #13225e; opacity: .7; }
+  .bol-passos span { flex: none; font-size: calc(12px * var(--f, 1)); padding: 6px 8px; border-radius: 8px; background: #13225e; opacity: .7; }
   .bol-passos span.sel { background: #f2b705; color: #0a1748; opacity: 1; font-weight: 700; }
   .bol-cartao { margin: 8px; padding: 12px; background: #13225e; border-radius: 12px; }
   .bol-sub { font-weight: 700; margin-bottom: 8px; }
   .bol-grelha { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .bol-campo span { display: block; font-size: 12px; opacity: .8; margin-bottom: 3px; }
-  .bol-campo input, .bol-cartao select, .bol-ass input { width: 100%; padding: 9px; border-radius: 8px; border: 0; font-size: 15px; }
-  .bol-check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .bol-campo span { display: block; font-size: calc(12px * var(--f, 1)); opacity: .8; margin-bottom: 3px; }
+  .bol-campo input, .bol-cartao select, .bol-ass input { width: 100%; padding: 9px; border-radius: 8px; border: 0; font-size: calc(15px * var(--f, 1)); }
+  .bol-check { display: flex; align-items: center; gap: 8px; font-size: calc(14px * var(--f, 1)); }
   .bol-check input { width: 22px; height: 22px; }
   .bol-tab { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  .bol-tab th { font-size: 12px; font-weight: 600; opacity: .8; padding: 4px; }
-  .bol-tab td { padding: 3px; border-top: 1px solid #24346f; font-size: 13px; }
-  .bol-tab td input { width: 100%; padding: 8px; border-radius: 6px; border: 0; font-size: 14px; }
+  .bol-tab th { font-size: calc(12px * var(--f, 1)); font-weight: 600; opacity: .8; padding: 4px; }
+  .bol-tab td { padding: 3px; border-top: 1px solid #24346f; font-size: calc(13px * var(--f, 1)); }
+  .bol-tab td input { width: 100%; padding: 8px; border-radius: 6px; border: 0; font-size: calc(14px * var(--f, 1)); }
   .bol-tab .bol-lic { width: 80px; }
   .bol-let { width: 40px; font-weight: 700; white-space: nowrap; }
   .bol-scroll { overflow-x: auto; }
-  .bol-jogos td input { width: 44px; padding: 6px 1px; text-align: center; font-size: 13px; }
+  .bol-jogos td input { width: 44px; padding: 6px 1px; text-align: center; font-size: calc(13px * var(--f, 1)); }
   .bol-jogos td input.vivo::placeholder { color: #0f6b8a; font-weight: 700; }
   .bol-jogos tr.atual { background: rgba(242,183,5,.18); }
   .bol-jogos tr.fora { opacity: .4; }
-  .bol-jogos td:nth-child(2) { min-width: 120px; font-size: 12px; }
+  .bol-jogos td:nth-child(2) { min-width: 120px; font-size: calc(12px * var(--f, 1)); }
   .bol-jogos td, .bol-jogos th { padding: 3px 2px; }
-  .bol-vs { opacity: .6; font-size: 11px; }
-  .bol-venc { font-size: 12px; min-width: 90px; }
+  .bol-vs { opacity: .6; font-size: calc(11px * var(--f, 1)); }
+  .bol-venc { font-size: calc(12px * var(--f, 1)); min-width: 90px; }
   .bol-par { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-areas: "c0 vs v0" "c1 vs v1"; gap: 4px 6px; align-items: center; }
-  .bol-par select { padding: 6px; font-size: 13px; min-width: 0; }
+  .bol-par select { padding: 6px; font-size: calc(13px * var(--f, 1)); min-width: 0; }
   .bol-par .c0 { grid-area: c0; } .bol-par .c1 { grid-area: c1; } .bol-par .v0 { grid-area: v0; } .bol-par .v1 { grid-area: v1; }
   .bol-editar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
   .bol-editar button { width: auto; padding: 8px 14px; }
   .bol-jogos input[readonly] { background: #dfe3ee; color: #222; cursor: default; }
-  .bol-par span { grid-area: vs; text-align: center; font-size: 11px; opacity: .6; }
-  .bol-res { margin-top: 10px; padding: 10px; background: #0b1440; border-radius: 8px; font-size: 16px; }
+  .bol-par span { grid-area: vs; text-align: center; font-size: calc(11px * var(--f, 1)); opacity: .6; }
+  .bol-res { margin-top: 10px; padding: 10px; background: #0b1440; border-radius: 8px; font-size: calc(16px * var(--f, 1)); }
   .bol-nav { display: flex; gap: 8px; margin: 8px; }
-  .bol-nav button, .bol-cartao > button.bol-pri { flex: 1; height: 50px; border: 0; border-radius: 10px; font-size: 16px; font-weight: 700; }
+  .bol-nav button, .bol-cartao > button.bol-pri { flex: 1; height: 50px; border: 0; border-radius: 10px; font-size: calc(16px * var(--f, 1)); font-weight: 700; }
   .bol-cartao > button.bol-pri { width: 100%; margin-top: 10px; }
   .bol-pri { background: #f2b705; color: #0a1748; }
   .bol-sec { background: #2a3c86; color: #fff; }
-  .bol-prot { display: flex; align-items: center; gap: 8px; margin: 6px 0 10px; font-size: 14px; }
+  .bol-prot { display: flex; align-items: center; gap: 8px; margin: 6px 0 10px; font-size: calc(14px * var(--f, 1)); }
   .bol-prot button { border: 0; border-radius: 8px; padding: 8px 14px; background: #2a3c86; color: #fff; }
   .bol-prot button.sel { background: #f2b705; color: #0a1748; font-weight: 700; }
   .bol-ass { margin: 8px 0; }
-  .bol-ass-rot { font-size: 13px; opacity: .85; margin-bottom: 4px; }
+  .bol-ass-rot { font-size: calc(13px * var(--f, 1)); opacity: .85; margin-bottom: 4px; }
   /* as três assinaturas lado a lado quando há largura; cada quadro nunca passa de 35% da altura do ecrã,
      para sobrar sempre espaço à volta onde se pode deslizar o dedo */
   .bol-assinaturas { display: grid; grid-template-columns: 1fr; align-items: start; }
@@ -161,26 +162,26 @@
     .bol-assinaturas .bol-arb { justify-self: center; width: calc(50% - 8px); }
   }
   .bol-ass canvas { display: block; width: min(100%, calc(35vh * 600 / 180)); aspect-ratio: 600 / 180; margin: 6px auto 0; background: #fff; border-radius: 8px; touch-action: none; }
-  .bol-limpar { margin-top: 4px; border: 0; border-radius: 8px; padding: 6px 10px; background: #2a3c86; color: #fff; font-size: 12px; }
+  .bol-limpar { margin-top: 4px; border: 0; border-radius: 8px; padding: 6px 10px; background: #2a3c86; color: #fff; font-size: calc(12px * var(--f, 1)); }
   .bol-ok { margin-top: 6px; color: #7be08a; font-weight: 700; }
   .bol-ass-img { display: block; max-width: 100%; max-height: 90px; background: #fff; border-radius: 8px; padding: 4px; }
   .bol-nav button:disabled { opacity: .45; }
   .bol-formacoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-  .bol-form-tit { font-size: 14px; margin-bottom: 2px; }
+  .bol-form-tit { font-size: calc(14px * var(--f, 1)); margin-bottom: 2px; }
   .bol-form .bol-tab { margin-top: 4px; }
   .bol-form .bol-tab td { padding: 5px 4px; }
   .bol-form .bol-tab td:last-child, .bol-form .bol-tab th:last-child { text-align: right; width: 70px; }
-  .bol-atl { width: 100%; padding: 8px; border-radius: 6px; border: 0; font-size: 14px; background: #fff; color: #111; }
-  .bol-alerta { margin: 8px; padding: 10px; background: #8a2b2b; border-radius: 8px; opacity: 1; font-size: 13px; }
+  .bol-atl { width: 100%; padding: 8px; border-radius: 6px; border: 0; font-size: calc(14px * var(--f, 1)); background: #fff; color: #111; }
+  .bol-alerta { margin: 8px; padding: 10px; background: #8a2b2b; border-radius: 8px; opacity: 1; font-size: calc(13px * var(--f, 1)); }
 
   #pinEcra { position: fixed; inset: 0; background: #0b1440; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 9; }
-  #pinEcra input { font-size: 20px; width: 260px; text-align: center; padding: 10px; border-radius: 10px; border: 0; }
-  #pinEcra button { font-size: 18px; padding: 12px 30px; border-radius: 10px; border: 0; background: #f2b705; color: #0a1748; font-weight: 700; }
+  #pinEcra input { font-size: calc(20px * var(--f, 1)); width: 260px; text-align: center; padding: 10px; border-radius: 10px; border: 0; }
+  #pinEcra button { font-size: calc(18px * var(--f, 1)); padding: 12px 30px; border-radius: 10px; border: 0; background: #f2b705; color: #0a1748; font-weight: 700; }
 </style>
 </head>
 <body>
   <div id="pinEcra">
-    <div style="font-size:20px;font-weight:700">Marcador – Controlo</div>
+    <div style="font-size: calc(20px * var(--f, 1));font-weight:700">Marcador – Controlo</div>
     <form id="formEntrar" onsubmit="event.preventDefault(); if (window.entrar) entrar();" style="display:flex;flex-direction:column;align-items:center;gap:12px">
       <input id="email" type="email" placeholder="Email" autocomplete="username">
       <input id="pass" type="password" placeholder="Palavra-passe" autocomplete="current-password">
@@ -213,9 +214,6 @@
 
   <details id="defs">
     <summary onclick="abrirDefinicoes(event)">🔒 Definições</summary>
-    <label>Tamanho do ecrã neste aparelho</label>
-    <div class="tamanho"><button onclick="mudarTamanho(-5)">A−</button><span id="tamanhoTxt">100%</span><button onclick="mudarTamanho(5)">A+</button><button onclick="mudarTamanho(0)">Repor</button></div>
-    <div class="aviso">Aumenta ou diminui tudo (botões, letras, campos). Fica guardado só neste aparelho — o PC e o tablet podem ter tamanhos diferentes.</div>
     <label><input type="checkbox" id="teste" style="width:auto" onchange="enviar('teste')"> Teste</label>
     <div class="aviso">Para experimentar sem um encontro a sério: não espera pelo boletim, mostra os + e − dos sets e jogos e o Zerar tudo, e deixa o Anular, o Novo jogo e o Assinar sempre disponíveis.</div>
     <label><input type="checkbox" id="amigavel" style="width:auto" onchange="enviar('amigavel')"> Jogo amigável (sem boletim)</label>
@@ -276,20 +274,6 @@
   // regras fixas do campeonato: sets a 11 pontos, jogos à melhor de 5 (3 sets)
   const PONTOS_SET = 11, SETS_JOGO = 3;
   let estado = null, logos = {}, clubes = {}, hist = [], ligado = false, desvio = 0;
-  // tamanho de tudo (zoom), escolhido em Definições e guardado só neste aparelho
-  function aplicarTamanho() {
-    let z = 100; try { z = parseInt(localStorage.getItem("marcadorTamanho"), 10) || 100; } catch (e) {}
-    document.documentElement.style.zoom = z / 100;
-    document.documentElement.style.setProperty("--z", z / 100);
-    const t = document.getElementById("tamanhoTxt"); if (t) t.textContent = z + "%";
-    return z;
-  }
-  window.mudarTamanho = function (d) {
-    const z = d ? Math.min(200, Math.max(50, aplicarTamanho() + d)) : 100;
-    try { localStorage.setItem("marcadorTamanho", z); } catch (e) {}
-    aplicarTamanho();
-  };
-  aplicarTamanho();
   // o histórico do Anular fica guardado neste aparelho, para não se perder ao recarregar a página
   try { hist = JSON.parse(localStorage.getItem("marcadorHist") || "[]"); if (!Array.isArray(hist)) hist = []; } catch (e) { hist = []; }
   const DURACAO_TO = 60;
