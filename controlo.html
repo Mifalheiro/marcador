@@ -51,7 +51,7 @@
   /* PC / tablet / telemóvel deitado: o controlo ocupa o ecrã todo e os botões dos pontos
      crescem para preencher o espaço livre; as Definições ficam no fundo */
   @media not ((orientation: portrait) and (max-width: 700px)) {
-    body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+    body { display: flex; flex-direction: column; min-height: calc(100vh / var(--z, 1)); min-height: calc(100dvh / var(--z, 1)); }   /* --z = tamanho escolhido */
     .equipas { flex: 1 0 auto; }
     .eq { height: 100%; }
     .linha-pts { flex: 1 0 auto; min-height: 150px; align-items: stretch; }
@@ -94,6 +94,9 @@
   details label { display: block; margin: 10px 0 4px; font-size: 14px; }
   details input { width: 100%; padding: 8px; border-radius: 8px; border: 0; font-size: 15px; }
   /* os links podem ser selecionados (o resto do controlo não, para não selecionar texto ao carregar nos botões) e copiam-se com um toque */
+  .tamanho { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .tamanho button { width: auto; min-width: 54px; height: 40px; border: 0; border-radius: 10px; background: #2a3c86; color: #fff; font-size: 16px; font-weight: 700; padding: 0 12px; }
+  .tamanho span { min-width: 56px; text-align: center; font-weight: 700; }
   .url { word-break: break-all; font-size: 13px; background: #0b1440; padding: 8px; border-radius: 8px; margin-top: 6px; user-select: text; -webkit-user-select: text; cursor: copy; }
   .url::after { content: "  📋 tocar para copiar"; opacity: .55; font-size: 11px; }
   .aviso { font-size: 12px; opacity: .75; margin-top: 6px; }
@@ -210,6 +213,9 @@
 
   <details id="defs">
     <summary onclick="abrirDefinicoes(event)">🔒 Definições</summary>
+    <label>Tamanho do ecrã neste aparelho</label>
+    <div class="tamanho"><button onclick="mudarTamanho(-5)">A−</button><span id="tamanhoTxt">100%</span><button onclick="mudarTamanho(5)">A+</button><button onclick="mudarTamanho(0)">Repor</button></div>
+    <div class="aviso">Aumenta ou diminui tudo (botões, letras, campos). Fica guardado só neste aparelho — o PC e o tablet podem ter tamanhos diferentes.</div>
     <label><input type="checkbox" id="teste" style="width:auto" onchange="enviar('teste')"> Teste</label>
     <div class="aviso">Para experimentar sem um encontro a sério: não espera pelo boletim, mostra os + e − dos sets e jogos e o Zerar tudo, e deixa o Anular, o Novo jogo e o Assinar sempre disponíveis.</div>
     <label><input type="checkbox" id="amigavel" style="width:auto" onchange="enviar('amigavel')"> Jogo amigável (sem boletim)</label>
@@ -270,6 +276,20 @@
   // regras fixas do campeonato: sets a 11 pontos, jogos à melhor de 5 (3 sets)
   const PONTOS_SET = 11, SETS_JOGO = 3;
   let estado = null, logos = {}, clubes = {}, hist = [], ligado = false, desvio = 0;
+  // tamanho de tudo (zoom), escolhido em Definições e guardado só neste aparelho
+  function aplicarTamanho() {
+    let z = 100; try { z = parseInt(localStorage.getItem("marcadorTamanho"), 10) || 100; } catch (e) {}
+    document.documentElement.style.zoom = z / 100;
+    document.documentElement.style.setProperty("--z", z / 100);
+    const t = document.getElementById("tamanhoTxt"); if (t) t.textContent = z + "%";
+    return z;
+  }
+  window.mudarTamanho = function (d) {
+    const z = d ? Math.min(200, Math.max(50, aplicarTamanho() + d)) : 100;
+    try { localStorage.setItem("marcadorTamanho", z); } catch (e) {}
+    aplicarTamanho();
+  };
+  aplicarTamanho();
   // o histórico do Anular fica guardado neste aparelho, para não se perder ao recarregar a página
   try { hist = JSON.parse(localStorage.getItem("marcadorHist") || "[]"); if (!Array.isArray(hist)) hist = []; } catch (e) { hist = []; }
   const DURACAO_TO = 60;
@@ -503,7 +523,7 @@
       if (!esperaPar(s)) document.getElementById("btAnular").disabled = true;
       document.getElementById("btNovoJogo").classList.remove("chama");
       ["btNovoSet", "btNovoJogo", "btTrocar", "btVis", "sq_a", "sq_b"].forEach(id => { document.getElementById(id).disabled = true; });
-      ["sq_a", "sq_b"].forEach(id => document.getElementById(id).classList.remove("chama"));
+      ["sq_a", "sq_b", "btVis"].forEach(id => document.getElementById(id).classList.remove("chama"));
       paradoBase = true; bloquearPontos();
       msg(motivoEspera(s), "espera");
     } else if (/Começa pelo|atletas do par/.test(document.getElementById("estado").textContent)) msg("✓ Ligado", "ok");
